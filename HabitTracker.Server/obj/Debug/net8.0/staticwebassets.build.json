@@ -1,0 +1,23 @@
+{
+  "Version": 1,
+  "Hash": "s//xsA2xGNm14WVkAYQ9ojj6PSpmGaJ4i2WoSeesDf0=",
+  "Source": "HabitTracker.Server",
+  "BasePath": "_content/HabitTracker.Server",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [
+    {
+      "Identity": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\habittracker.client\\habittracker.client.esproj",
+      "Version": 2,
+      "Source": "habittracker.client",
+      "GetPublishAssetsTargets": "GetCurrentProjectPublishStaticWebAssetItems",
+      "AdditionalPublishProperties": "Configuration=Debug;Platform=AnyCPU",
+      "AdditionalPublishPropertiesToRemove": "WebPublishProfileFile;TargetFramework;RuntimeIdentifier;SelfContained",
+      "GetBuildAssetsTargets": "GetCurrentProjectBuildStaticWebAssetItems",
+      "AdditionalBuildProperties": "Configuration=Debug;Platform=AnyCPU",
+      "AdditionalBuildPropertiesToRemove": "WebPublishProfileFile;TargetFramework;RuntimeIdentifier;SelfContained"
+    }
+  ],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
