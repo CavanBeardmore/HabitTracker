@@ -24,18 +24,6 @@ namespace HabitTracker.Server.Classes.Habit
             }
         }
 
-        public void CloseConnection(SQLiteConnection sqlite_conn)
-        {
-            try
-            {
-                sqlite_conn.Close();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error closing connection" + ex.Message);
-            }
-        }
-
         public IEnumerable<Habit> GetAllByUserId(int id)
         {
             List<Habit> habits = new List<Habit>();

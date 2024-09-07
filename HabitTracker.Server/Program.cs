@@ -1,5 +1,6 @@
 using HabitTracker.Server.Classes.Habit;
 using HabitTracker.Server.Classes.HabitLog;
+using HabitTracker.Server.Classes.User;
 using System.Data.SQLite;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,9 @@ builder.Services.AddScoped<HabitService>();
 
 builder.Services.AddScoped<IHabitLogRepository>(provider => new HabitLogRepository(connectionString));
 builder.Services.AddScoped<HabitLogService>();
+
+builder.Services.AddScoped<IUserRepository>(provider => new UserRepository(connectionString));
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

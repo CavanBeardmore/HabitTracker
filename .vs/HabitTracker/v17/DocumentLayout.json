@@ -3,32 +3,36 @@
   "WorkspaceRootPath": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\controllers\\habitcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\controllers\\habitcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\user\\createuserrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\user\\createuserrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\habitlog\\habitlogrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\habitlog\\habitlogrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\auth\\passwordservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\auth\\passwordservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\habitlog\\habitlogservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\habitlog\\habitlogservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\user\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\user\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\controllers\\habitlogcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\controllers\\habitlogcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\user\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\user\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\habitlog\\createhabitlogrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\habitlog\\createhabitlogrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\user\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\user\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\habitlog\\habitlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\habitlog\\habitlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|c:\\users\\cavan\\source\\repos\\habittracker\\habittracker.server\\classes\\user\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BD8EF860-CEAC-40A4-A622-4041478E60B6}|HabitTracker.Server\\HabitTracker.Server.csproj|solutionrelative:habittracker.server\\classes\\user\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -38,98 +42,109 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Program.cs",
               "RelativeDocumentMoniker": "HabitTracker.Server\\Program.cs",
               "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Program.cs",
               "RelativeToolTip": "HabitTracker.Server\\Program.cs",
-              "ViewState": "AQIAAAIAAAAAAAAAAAAcwCkAAAAAAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABEAAAAqAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-29T16:40:04.033Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "HabitController.cs",
-              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Controllers\\HabitController.cs",
-              "RelativeDocumentMoniker": "HabitTracker.Server\\Controllers\\HabitController.cs",
-              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Controllers\\HabitController.cs",
-              "RelativeToolTip": "HabitTracker.Server\\Controllers\\HabitController.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAIAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-22T17:13:39.123Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "HabitLogService.cs",
-              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\HabitLog\\HabitLogService.cs",
-              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\HabitLog\\HabitLogService.cs",
-              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\HabitLog\\HabitLogService.cs",
-              "RelativeToolTip": "HabitTracker.Server\\Classes\\HabitLog\\HabitLogService.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAQAAAAtAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-22T16:43:46.911Z",
+              "WhenOpened": "2024-09-07T13:25:11.358Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "HabitLogRepository.cs",
-              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\HabitLog\\HabitLogRepository.cs",
-              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\HabitLog\\HabitLogRepository.cs",
-              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\HabitLog\\HabitLogRepository.cs",
-              "RelativeToolTip": "HabitTracker.Server\\Classes\\HabitLog\\HabitLogRepository.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA0AAABAAAAA",
+              "Title": "CreateUserRequest.cs",
+              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\CreateUserRequest.cs",
+              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\User\\CreateUserRequest.cs",
+              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\CreateUserRequest.cs",
+              "RelativeToolTip": "HabitTracker.Server\\Classes\\User\\CreateUserRequest.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-22T16:43:25.206Z",
+              "WhenOpened": "2024-09-07T13:17:11.536Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "UserController.cs",
+              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Controllers\\UserController.cs",
+              "RelativeDocumentMoniker": "HabitTracker.Server\\Controllers\\UserController.cs",
+              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Controllers\\UserController.cs",
+              "RelativeToolTip": "HabitTracker.Server\\Controllers\\UserController.cs",
+              "ViewState": "AQIAACYAAAAAAAAAAAAIwEwAAAANAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-07T13:04:45.819Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 5,
-              "Title": "CreateHabitLogRequest.cs",
-              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\HabitLog\\CreateHabitLogRequest.cs",
-              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\HabitLog\\CreateHabitLogRequest.cs",
-              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\HabitLog\\CreateHabitLogRequest.cs",
-              "RelativeToolTip": "HabitTracker.Server\\Classes\\HabitLog\\CreateHabitLogRequest.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAXAAAA",
+              "Title": "UserService.cs",
+              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\UserService.cs",
+              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\User\\UserService.cs",
+              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\UserService.cs",
+              "RelativeToolTip": "HabitTracker.Server\\Classes\\User\\UserService.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABIAAAAbAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-22T16:43:16.136Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "HabitLog.cs",
-              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\HabitLog\\HabitLog.cs",
-              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\HabitLog\\HabitLog.cs",
-              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\HabitLog\\HabitLog.cs",
-              "RelativeToolTip": "HabitTracker.Server\\Classes\\HabitLog\\HabitLog.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAoAAAA8AAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-22T16:42:24.105Z",
+              "WhenOpened": "2024-09-07T13:01:10.052Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "HabitLogController.cs",
-              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Controllers\\HabitLogController.cs",
-              "RelativeDocumentMoniker": "HabitTracker.Server\\Controllers\\HabitLogController.cs",
-              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Controllers\\HabitLogController.cs",
-              "RelativeToolTip": "HabitTracker.Server\\Controllers\\HabitLogController.cs",
-              "ViewState": "AQIAADgAAAAAAAAAAAAIwEoAAAAvAAAA",
+              "Title": "UserRepository.cs",
+              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\UserRepository.cs",
+              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\User\\UserRepository.cs",
+              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\UserRepository.cs",
+              "RelativeToolTip": "HabitTracker.Server\\Classes\\User\\UserRepository.cs",
+              "ViewState": "AQIAACwAAAAAAAAAAAAwwEIAAABGAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-22T16:42:23.091Z",
+              "WhenOpened": "2024-08-29T17:38:40.984Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "IUserRepository.cs",
+              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\IUserRepository.cs",
+              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\User\\IUserRepository.cs",
+              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\IUserRepository.cs",
+              "RelativeToolTip": "HabitTracker.Server\\Classes\\User\\IUserRepository.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAsAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-08-29T17:36:07.718Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PasswordService.cs",
+              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\Auth\\PasswordService.cs",
+              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\Auth\\PasswordService.cs",
+              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\Auth\\PasswordService.cs",
+              "RelativeToolTip": "HabitTracker.Server\\Classes\\Auth\\PasswordService.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABgAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-08-29T17:07:21.551Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\User.cs",
+              "RelativeDocumentMoniker": "HabitTracker.Server\\Classes\\User\\User.cs",
+              "ToolTip": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\Classes\\User\\User.cs",
+              "RelativeToolTip": "HabitTracker.Server\\Classes\\User\\User.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAgAAABTAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-08-29T17:16:35.64Z"
             }
           ]
         }

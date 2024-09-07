@@ -59,3 +59,5 @@ C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\obj\Debug\net8.0\re
 C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\obj\Debug\net8.0\HabitTracker.Server.pdb
 C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\obj\Debug\net8.0\HabitTracker.Server.genruntimeconfig.cache
 C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\obj\Debug\net8.0\ref\HabitTracker.Server.dll
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\BCrypt.Net-Next.dll
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\obj\Debug\net8.0\HabitTracker.Server.sourcelink.json

@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "457Sv0S+TTI=",
+  "dgSpecHash": "NHYkJcOxxC8=",
   "success": true,
   "projectFilePath": "C:\\Users\\cavan\\source\\repos\\HabitTracker\\HabitTracker.Server\\HabitTracker.Server.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\cavan\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\cavan\\.nuget\\packages\\entityframework\\6.4.4\\entityframework.6.4.4.nupkg.sha512",
     "C:\\Users\\cavan\\.nuget\\packages\\microsoft.aspnetcore.spaproxy\\8.0.8\\microsoft.aspnetcore.spaproxy.8.0.8.nupkg.sha512",
     "C:\\Users\\cavan\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
