@@ -1,8 +1,9 @@
 ﻿namespace HabitTracker.Server.Classes.User
 {
-    public class CreateUserRequest
+    public class UpdateUserRequest
     {
-        public string Username { get; set; }
+        public string OldUsername { get; set; }
+        public string NewUsername { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
     }

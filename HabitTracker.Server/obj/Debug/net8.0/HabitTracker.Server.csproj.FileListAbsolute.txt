@@ -61,3 +61,11 @@ C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\obj\Debug\net8.0\Ha
 C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\obj\Debug\net8.0\ref\HabitTracker.Server.dll
 C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\BCrypt.Net-Next.dll
 C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\obj\Debug\net8.0\HabitTracker.Server.sourcelink.json
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\cavan\source\repos\HabitTracker\HabitTracker.Server\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll

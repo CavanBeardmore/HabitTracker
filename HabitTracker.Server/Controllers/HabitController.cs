@@ -1,8 +1,10 @@
 ﻿using HabitTracker.Server.Classes.Habit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HabitTracker.Server.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("habits/[controller]")]
     public class HabitController : ControllerBase
@@ -15,6 +17,7 @@ namespace HabitTracker.Server.Controllers
             _habitService = habitService;
         }
 
+        [Authorize]
         [HttpGet("{habit_id}")]
         public IActionResult GetHabit(int habit_id)
         {
@@ -28,10 +31,11 @@ namespace HabitTracker.Server.Controllers
             return Ok(habit);
         }
 
-        [HttpGet("user/{user_id}")]
-        public IActionResult GetUserHabits(int user_id)
+        [Authorize]
+        [HttpGet("user/{username}")]
+        public IActionResult GetUserHabits(string username)
         {
-            var habits = _habitService.GetAllHabitsByUserId(user_id);
+            var habits = _habitService.GetAllHabitsByUsername(username);
             if (habits == null || !habits.Any())
             {
                 return NotFound();
@@ -45,6 +49,7 @@ namespace HabitTracker.Server.Controllers
             return Ok(habits);
         }
 
+        [Authorize]
         [HttpPost]
         public IActionResult CreateHabit([FromBody] CreateHabitRequest data)
         {
@@ -55,7 +60,7 @@ namespace HabitTracker.Server.Controllers
 
             try
             {
-                Habit habit = new Habit(data.HabitId, data.UserId, data.Name);
+                Habit habit = new Habit(data.HabitId, data.username, data.Name);
                 _habitService.AddHabit(habit);
                 return CreatedAtAction(nameof(GetHabit), new { habit_id = habit.habit_id }, habit);
             }
@@ -65,12 +70,13 @@ namespace HabitTracker.Server.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("update")]
         public IActionResult UpdateHabit([FromBody] CreateHabitRequest data)
         {
             try
             { 
-                Habit habit = new Habit(data.HabitId, data.UserId, data.Name);
+                Habit habit = new Habit(data.HabitId, data.username, data.Name);
                 _habitService.UpdateHabit(habit);
 
                 return Ok(habit);
@@ -81,6 +87,7 @@ namespace HabitTracker.Server.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("delete/{habit_id}")]
         public IActionResult DeleteHabit(int habit_id)
         {

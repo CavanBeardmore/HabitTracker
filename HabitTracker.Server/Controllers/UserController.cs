@@ -1,9 +1,11 @@
 ﻿using HabitTracker.Server.Classes.PasswordService;
 using HabitTracker.Server.Classes.User;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HabitTracker.Server.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("user/[controller]")]
     public class UserController : Controller
@@ -15,22 +17,31 @@ namespace HabitTracker.Server.Controllers
             _userService = userService;
         }
 
-        [HttpGet("{user_id}")]
-        public IActionResult GetUser(int user_id)
+        [Authorize]
+        [HttpGet("{username}")]
+        public IActionResult GetUser(string username)
         {
-            var user = _userService.GetById(user_id);
+            var user = _userService.GetByUsername(username);
             if (user == null)
             {
                 return NotFound();
             }
-            Console.WriteLine($"Fetched User: {user.user_id}, email: {user.email}");
+            Console.WriteLine($"Fetched User: {user.username}, email: {user.email}");
 
             return Ok(user);
         }
 
+        [Authorize]
         [HttpPost]
         public IActionResult AddUser([FromBody] CreateUserRequest data)
         {
+            var existingUser = _userService.GetByUsername(data.Username);
+
+            if (existingUser != null)
+            {
+                return BadRequest("User exists");
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -40,9 +51,9 @@ namespace HabitTracker.Server.Controllers
             {
                 PasswordService passwordService = new PasswordService(data.Password);
                 string hashedPassword = passwordService.HashPassword();
-                User user = new User(data.UserId, data.Username, data.Email, hashedPassword);
+                User user = new User(data.Username, data.Email, hashedPassword);
                 _userService.AddUser(user);
-                return CreatedAtAction(nameof(GetUser), new { user_id = user.user_id }, user);
+                return CreatedAtAction(nameof(GetUser), new { username = user.username}, user);
             }
             catch(Exception ex)
             {
@@ -50,8 +61,9 @@ namespace HabitTracker.Server.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("update")]
-        public IActionResult UpdateUser([FromBody] CreateUserRequest data)
+        public IActionResult UpdateUser([FromBody] UpdateUserRequest data)
         {
             if (!ModelState.IsValid)
             {
@@ -66,8 +78,8 @@ namespace HabitTracker.Server.Controllers
                     PasswordService passwordService = new PasswordService(data.Password);
                     password = passwordService.HashPassword();
                 }
-                User user = new User(data.UserId, data.Username, data.Email, password);
-                _userService.UpdateUser(user);
+                User user = new User(data.NewUsername, data.Email, password);
+                _userService.UpdateUser(user, data.OldUsername);
 
                 return Ok(user);
             }
@@ -77,12 +89,28 @@ namespace HabitTracker.Server.Controllers
             }
         }
 
-        [HttpDelete("delete/{user_id}")]
-        public IActionResult DeleteUser(int user_id)
+        [Authorize]
+        [HttpDelete("delete")]
+        public IActionResult DeleteUser([FromBody] CreateUserRequest data)
         {
+
+            var user = _userService.GetByUsername(data.Username);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            PasswordService passwordService = new PasswordService(user.password);
+            bool isPasswordCorrect = passwordService.VerifyPassword(data.Password);
+
+            if (!isPasswordCorrect)
+            {
+                return Unauthorized("Incorrect password");
+            }
+
             try
             {
-                _userService.DeleteUser(user_id);
+                _userService.DeleteUser(data.Username);
 
                 return NoContent();
             }

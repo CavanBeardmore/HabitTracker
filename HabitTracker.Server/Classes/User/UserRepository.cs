@@ -23,7 +23,7 @@ namespace HabitTracker.Server.Classes.User
             }
         }
 
-        public User? GetById(int id)
+        public User? GetByUsername(string username)
         {
             using (SQLiteConnection sqlite_conn = new SQLiteConnection(_connectionString))
             {
@@ -32,18 +32,18 @@ namespace HabitTracker.Server.Classes.User
 
                 using (SQLiteCommand sqlite_cmd = sqlite_conn.CreateCommand())
                 {
-                    sqlite_cmd.CommandText = "SELECT * FROM Users WHERE Users.user_id = @id;";
-                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@id", id));
+                    sqlite_cmd.CommandText = "SELECT * FROM Users WHERE Users.username = @username;";
+                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@username", username));
 
                     using (SQLiteDataReader sqlite_datareader = sqlite_cmd.ExecuteReader())
                     {
                         while (sqlite_datareader.Read())
                         {
-                            int user_id = (int)sqlite_datareader["user_id"];
-                            string username = (string)sqlite_datareader["username"];
+                            string userName = (string)sqlite_datareader["username"];
                             string email = (string)sqlite_datareader["email"];
+                            string password = (string)sqlite_datareader["password"];
 
-                            return new User(user_id, username, email);
+                            return new User(userName, email, password);
                         }
                     }
                 }
@@ -61,9 +61,8 @@ namespace HabitTracker.Server.Classes.User
 
                 using (SQLiteCommand sqlite_cmd = sqlite_conn.CreateCommand())
                 {
-                    sqlite_cmd.CommandText = "INSERT INTO Users (user_id, username, email, password) VALUES (@user_id, @username, @email, @password);";
+                    sqlite_cmd.CommandText = "INSERT INTO Users (username, email, password) VALUES (@username, @email, @password);";
 
-                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@user_id", user.user_id));
                     sqlite_cmd.Parameters.Add(new SQLiteParameter("@username", user.username));
                     sqlite_cmd.Parameters.Add(new SQLiteParameter("@email", user.email));
                     sqlite_cmd.Parameters.Add(new SQLiteParameter("@password", user.password));
@@ -73,7 +72,7 @@ namespace HabitTracker.Server.Classes.User
             }
         }
 
-        public void Delete(int id)
+        public void Delete(string username)
         {
             using (SQLiteConnection sqlite_conn = new SQLiteConnection(_connectionString))
             {
@@ -82,15 +81,15 @@ namespace HabitTracker.Server.Classes.User
 
                 using (SQLiteCommand sqlite_cmd = sqlite_conn.CreateCommand())
                 {
-                    sqlite_cmd.CommandText = "DELETE FROM Users WHERE Users.user_id = @id;";
-                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@id", id));
+                    sqlite_cmd.CommandText = "DELETE FROM Users WHERE Users.username = @username;";
+                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@username", username));
 
                     sqlite_cmd.ExecuteNonQuery();
                 }
             }
         }
 
-        public void Update(User user)
+        public void Update(User user, string oldUsername)
         {
             using (SQLiteConnection sqlite_conn = new SQLiteConnection(_connectionString))
             {
@@ -99,10 +98,10 @@ namespace HabitTracker.Server.Classes.User
 
                 using (SQLiteCommand sqlite_cmd = sqlite_conn.CreateCommand())
                 {
-                    sqlite_cmd.CommandText = "UPDATE Users SET username = @username, email = @email, password = @password WHERE user_id = @user_id;";
+                    sqlite_cmd.CommandText = "UPDATE Users SET username = @newUsername, email = @email, password = @password WHERE username = @oldUsername;";
 
-                    sqlite_cmd.Parameters.AddWithValue("@user_id", user.user_id);
-                    sqlite_cmd.Parameters.AddWithValue("@username", user.username);
+                    sqlite_cmd.Parameters.AddWithValue("@newUsername", user.username);
+                    sqlite_cmd.Parameters.AddWithValue("@oldUsername", oldUsername);
                     sqlite_cmd.Parameters.AddWithValue("@email", user.email);
                     sqlite_cmd.Parameters.AddWithValue("@password", user.password);
 

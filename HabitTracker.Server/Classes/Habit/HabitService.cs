@@ -14,9 +14,9 @@
             return _habitRepository.GetById(habitId);
         }
 
-        public IEnumerable<Habit> GetAllHabitsByUserId(int userId)
+        public IEnumerable<Habit> GetAllHabitsByUsername(string username)
         {
-            return _habitRepository.GetAllByUserId(userId);
+            return _habitRepository.GetAllByUsername(username);
         }
 
         public void AddHabit(Habit habit)

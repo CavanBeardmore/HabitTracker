@@ -9,9 +9,9 @@
             _userRepository = userRepository;
         }
 
-        public User? GetById(int id)
+        public User? GetByUsername(string username)
         {
-            return _userRepository.GetById(id);
+            return _userRepository.GetByUsername(username);
         }
 
         public void AddUser(User user)
@@ -19,14 +19,14 @@
             _userRepository.Add(user);
         }
 
-        public void UpdateUser(User user)
+        public void UpdateUser(User user, string oldUsername)
         {
-            _userRepository.Update(user);
+            _userRepository.Update(user, oldUsername);
         }
 
-        public void DeleteUser(int id)
+        public void DeleteUser(string username)
         {
-            _userRepository.Delete(id);
+            _userRepository.Delete(username);
         }
     }
 }

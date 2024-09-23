@@ -5,7 +5,7 @@ namespace HabitTracker.Server.Classes.Habit
     public interface IHabitRepository
     {
         void OpenConnection(SQLiteConnection sqlite_conn);
-        IEnumerable<Habit> GetAllByUserId(int id);
+        IEnumerable<Habit> GetAllByUsername(string username);
         Habit? GetById(int id);
         void Add(Habit habit);
         void Update(Habit habit);

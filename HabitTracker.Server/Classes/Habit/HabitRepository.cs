@@ -24,7 +24,7 @@ namespace HabitTracker.Server.Classes.Habit
             }
         }
 
-        public IEnumerable<Habit> GetAllByUserId(int id)
+        public IEnumerable<Habit> GetAllByUsername(string username)
         {
             List<Habit> habits = new List<Habit>();
             using (SQLiteConnection sqlite_conn = new SQLiteConnection(_connectionString))
@@ -33,18 +33,18 @@ namespace HabitTracker.Server.Classes.Habit
 
                 using (SQLiteCommand sqlite_cmd = sqlite_conn.CreateCommand())
                 {
-                    sqlite_cmd.CommandText = "SELECT * FROM Habits WHERE Habits.user_id = @id";
-                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@id", id));
+                    sqlite_cmd.CommandText = "SELECT * FROM Habits WHERE Habits.username = @username";
+                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@username", username));
 
                     using (SQLiteDataReader sqlite_datareader = sqlite_cmd.ExecuteReader())
                     {
                         while (sqlite_datareader.Read())
                         {
                             int habit_id = (int)sqlite_datareader["habit_id"];
-                            int user_id = (int)sqlite_datareader["user_id"];
+                            string userName = (string)sqlite_datareader["username"];
                             string name = (string)sqlite_datareader["name"];
 
-                            habits.Add(new Habit(habit_id, user_id, name));
+                            habits.Add(new Habit(habit_id, userName, name));
                         }
                     }
                 }
@@ -70,10 +70,10 @@ namespace HabitTracker.Server.Classes.Habit
                         while (sqlite_datareader.Read())
                         {
                             int habit_id = (int)sqlite_datareader["habit_id"];
-                            int user_id = (int)sqlite_datareader["user_id"];
+                            string username = (string)sqlite_datareader["username"];
                             string name = (string)sqlite_datareader["name"];
 
-                            return new Habit(habit_id, user_id, name);
+                            return new Habit(habit_id, username, name);
                         }
                     }
                 }
@@ -84,10 +84,6 @@ namespace HabitTracker.Server.Classes.Habit
 
         public void Add(Habit habit)
         {
-            int habit_id = habit.habit_id;
-            int user_id = habit.user_id;
-            string name = habit.name;
-
             using (SQLiteConnection sqlite_conn = new SQLiteConnection(_connectionString))
             {
 
@@ -95,11 +91,11 @@ namespace HabitTracker.Server.Classes.Habit
 
                 using (SQLiteCommand sqlite_cmd = sqlite_conn.CreateCommand())
                 {
-                    sqlite_cmd.CommandText = "INSERT INTO Habits (habit_id, user_id, name) VALUES (@habit_id, @user_id, @name);";
+                    sqlite_cmd.CommandText = "INSERT INTO Habits (habit_id, username, name) VALUES (@habit_id, @username, @name);";
 
-                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@habit_id", habit_id));
-                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@user_id", user_id));
-                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@name", name));
+                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@habit_id", habit.habit_id));
+                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@username", habit.username));
+                    sqlite_cmd.Parameters.Add(new SQLiteParameter("@name", habit.name));
 
                     sqlite_cmd.ExecuteNonQuery();
                 }

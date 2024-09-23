@@ -1,9 +1,11 @@
 ﻿using HabitTracker.Server.Classes.Habit;
 using HabitTracker.Server.Classes.HabitLog;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HabitTracker.Server.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("habitLogs/[controller]")]
     public class HabitLogController : ControllerBase
@@ -16,6 +18,7 @@ namespace HabitTracker.Server.Controllers
             _habitLogService = habitLogService;
         }
 
+        [Authorize]
         [HttpGet("{habitLog_id}")]
         public IActionResult GetHabitLog(int habitLog_id)
         {
@@ -29,6 +32,7 @@ namespace HabitTracker.Server.Controllers
             return Ok(habitLog);
         }
 
+        [Authorize]
         [HttpGet("habit/{habit_id}")]
         public IActionResult GetHabitLogsFromHabit(int habit_id)
         {
@@ -46,6 +50,7 @@ namespace HabitTracker.Server.Controllers
             return Ok(habitlogs);
         }
 
+        [Authorize]
         [HttpPost]
         public IActionResult CreateHabitLog([FromBody] CreateHabitLogRequest data)
         {
@@ -66,6 +71,7 @@ namespace HabitTracker.Server.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("update")]
         public IActionResult UpdateHabit([FromBody] CreateHabitLogRequest data)
         {
@@ -82,6 +88,7 @@ namespace HabitTracker.Server.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("delete/{habitLog_id}")]
         public IActionResult DeleteHabit(int habitLog_id)
         {
