@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\HabitTracker.Server.props" />
-</Project>

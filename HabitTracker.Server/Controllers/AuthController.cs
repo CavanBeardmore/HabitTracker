@@ -1,6 +1,6 @@
-﻿using HabitTracker.Server.Classes.Auth;
-using HabitTracker.Server.Classes.PasswordService;
-using HabitTracker.Server.Classes.User;
+﻿using HabitTracker.Server.Auth;
+using HabitTracker.Server.Models;
+using HabitTracker.Server.Repository;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HabitTracker.Server.Controllers
@@ -10,33 +10,34 @@ namespace HabitTracker.Server.Controllers
     public class AuthController : Controller
     {
         private readonly AuthenticationService _authService;
-        private readonly UserService _userService;
+        private readonly UserRepository _userRepository;
 
-        public AuthController(AuthenticationService authService, UserService userService)
+        public AuthController(AuthenticationService authService, UserRepository userService)
         {
             _authService = authService;
-            _userService = userService;
+            _userRepository = userService;
         }
 
         [HttpGet("login")]
-        public IActionResult Login([FromQuery] CreateUserRequest data)
+        public IActionResult Login([FromQuery] AuthUser user)
         {
-            var user = _userService.GetByUsername(data.Username);
-            if (user == null)
+
+            var foundUser = _userRepository.GetByUsername(user.Username);
+            if (foundUser == null)
             {
                 return NotFound();
             }
-
-            PasswordService passwordService = new PasswordService(user.password);
-            bool isPasswordCorrect = passwordService.VerifyPassword(data.Password);
+            Console.WriteLine(user.Password);
+            PasswordService passwordService = new PasswordService(user.Password);
+            Console.WriteLine(foundUser.Password);
+            bool isPasswordCorrect = passwordService.VerifyPassword(foundUser.Password);
 
             if (!isPasswordCorrect)
             {
                 return Unauthorized("Incorrect password");
             }
 
-            var jwt = _authService.GenerateJWTToken(data.Username);
-            Console.WriteLine("jwt secret", jwt);
+            var jwt = _authService.GenerateJWTToken(foundUser.Username);
 
             return Ok(jwt);
         }

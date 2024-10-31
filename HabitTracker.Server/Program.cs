@@ -1,8 +1,7 @@
-using HabitTracker.Server.Classes.Auth;
-using HabitTracker.Server.Classes.Habit;
-using HabitTracker.Server.Classes.HabitLog;
-using HabitTracker.Server.Classes.User;
+using HabitTracker.Server.Auth;
+using HabitTracker.Server.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using HabitTracker.Server.Facade;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -10,7 +9,9 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-string connectionString = @"Data Source=C:\Users\cavan\OneDrive\Desktop\HabitTracker\Habit-DB.db; Version=3; Compress=True;";
+string connectionString = @"Data Source=C:\Users\cavan\OneDrive\Desktop\HabitTracker\Habit-DB.db;";
+
+
 
 // Add appsettings.json to the configuration
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -37,14 +38,10 @@ builder.Services.AddAuthentication(cfg => {
 
 builder.Services.AddScoped<AuthenticationService>(provider => new AuthenticationService(builder.Configuration["ApplicationSettings:JWT_Secret"]));
 
-builder.Services.AddScoped<IHabitRepository>(provider => new HabitRepository(connectionString));
-builder.Services.AddScoped<HabitService>();
-
-builder.Services.AddScoped<IHabitLogRepository>(provider => new HabitLogRepository(connectionString));
-builder.Services.AddScoped<HabitLogService>();
-
-builder.Services.AddScoped<IUserRepository>(provider => new UserRepository(connectionString));
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ISqliteFacade>(provider => new SqliteFacade(connectionString));
+builder.Services.AddScoped<HabitRepository>();
+builder.Services.AddScoped<HabitLogRepository>();
+builder.Services.AddScoped<UserRepository>();
 
 builder.Services.AddControllers();
 

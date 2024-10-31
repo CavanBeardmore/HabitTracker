@@ -1,5 +1,5 @@
-﻿using HabitTracker.Server.Classes.Habit;
-using HabitTracker.Server.Classes.HabitLog;
+﻿using HabitTracker.Server.Repository;
+using HabitTracker.Server.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,23 +11,22 @@ namespace HabitTracker.Server.Controllers
     public class HabitLogController : ControllerBase
     {
 
-        private readonly HabitLogService _habitLogService;
+        private readonly HabitLogRepository _habitLogRepository;
 
-        public HabitLogController(HabitLogService habitLogService)
+        public HabitLogController(HabitLogRepository habitLogRepository)
         {
-            _habitLogService = habitLogService;
+            _habitLogRepository = habitLogRepository;
         }
 
         [Authorize]
-        [HttpGet("{habitLog_id}")]
-        public IActionResult GetHabitLog(int habitLog_id)
+        [HttpGet("{id}")]
+        public IActionResult GetHabitLog(int id)
         {
-            var habitLog = _habitLogService.GetById(habitLog_id);
+            var habitLog = _habitLogRepository.GetById(id);
             if (habitLog == null)
             {
                 return NotFound();
             }
-            Console.WriteLine($"Fetched habit: {habitLog.start_date}, Id: {habitLog.habitLog_id}, habitId: {habitLog.habit_id}");
 
             return Ok(habitLog);
         }
@@ -36,15 +35,11 @@ namespace HabitTracker.Server.Controllers
         [HttpGet("habit/{habit_id}")]
         public IActionResult GetHabitLogsFromHabit(int habit_id)
         {
-            var habitlogs = _habitLogService.GetAllHabitlogsByHabitId(habit_id);
+            var habitlogs = _habitLogRepository.GetAllByHabitId(habit_id);
             if (habitlogs == null || !habitlogs.Any())
             {
                 return NotFound();
 
-            }
-            foreach (HabitLog habitLog in habitlogs)
-            {
-                Console.WriteLine($"Fetched habit: {habitLog.start_date}, Id: {habitLog.habitLog_id}, habitId: {habitLog.habit_id}");
             }
 
             return Ok(habitlogs);
@@ -52,7 +47,7 @@ namespace HabitTracker.Server.Controllers
 
         [Authorize]
         [HttpPost]
-        public IActionResult CreateHabitLog([FromBody] CreateHabitLogRequest data)
+        public IActionResult CreateHabitLog([FromBody] PostHabitLog habitLog)
         {
             if (!ModelState.IsValid)
             {
@@ -61,26 +56,35 @@ namespace HabitTracker.Server.Controllers
 
             try
             {
-                HabitLog habitLog = new HabitLog(data.habitLog_id, data.habit_id, data.start_date, data.habit_logged, data.period_type);
-                _habitLogService.AddHabitLog(habitLog);
-                return CreatedAtAction(nameof(GetHabitLog), new { habitlog_id = habitLog.habitLog_id }, habitLog);
+                bool success = _habitLogRepository.Add(habitLog);
+
+                if (success)
+                {
+                    return StatusCode(200);
+                }
+
+                return StatusCode(500, "0 records updated");
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while creating the habit log.");
+                return StatusCode(500, ex.Message);
             }
         }
 
         [Authorize]
         [HttpPut("update")]
-        public IActionResult UpdateHabit([FromBody] CreateHabitLogRequest data)
+        public IActionResult UpdateHabit([FromBody] PatchHabitLog habitLog)
         {
             try
             {
-                HabitLog habitLog = new HabitLog(data.habitLog_id, data.habit_id, data.start_date, data.habit_logged, data.period_type);
-                _habitLogService.UpdateHabitLog(habitLog);
+                bool success = _habitLogRepository.Update(habitLog);
 
-                return Ok(habitLog);
+                if (success)
+                {
+                    return Ok(habitLog);
+                }
+
+                return StatusCode(500, "0 records updated");
             }
             catch
             {
@@ -89,14 +93,19 @@ namespace HabitTracker.Server.Controllers
         }
 
         [Authorize]
-        [HttpDelete("delete/{habitLog_id}")]
-        public IActionResult DeleteHabit(int habitLog_id)
+        [HttpDelete("delete/{id}")]
+        public IActionResult DeleteHabit(int id)
         {
             try
             {
-                _habitLogService.DeleteHabitLog(habitLog_id);
+                bool success = _habitLogRepository.Delete(id);
 
-                return NoContent();
+                if (success)
+                {
+                    return NoContent();
+                }
+
+                return StatusCode(500, "0 records updated");
             }
             catch
             {

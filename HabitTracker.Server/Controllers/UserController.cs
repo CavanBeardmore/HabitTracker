@@ -1,7 +1,8 @@
-﻿using HabitTracker.Server.Classes.PasswordService;
-using HabitTracker.Server.Classes.User;
+﻿using HabitTracker.Server.Auth;
+using HabitTracker.Server.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HabitTracker.Server.Models;
 
 namespace HabitTracker.Server.Controllers
 {
@@ -10,32 +11,31 @@ namespace HabitTracker.Server.Controllers
     [Route("user/[controller]")]
     public class UserController : Controller
     {
-        private readonly UserService _userService;
+        private readonly UserRepository _userRepository;
 
-        public UserController(UserService userService)
+        public UserController(UserRepository userService)
         {
-            _userService = userService;
+            _userRepository = userService;
         }
 
         [Authorize]
-        [HttpGet("{username}")]
+        [HttpGet("{User_id}")]
         public IActionResult GetUser(string username)
         {
-            var user = _userService.GetByUsername(username);
+            var user = _userRepository.GetByUsername(username);
             if (user == null)
             {
                 return NotFound();
             }
-            Console.WriteLine($"Fetched User: {user.username}, email: {user.email}");
 
             return Ok(user);
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost]
-        public IActionResult AddUser([FromBody] CreateUserRequest data)
+        public IActionResult AddUser([FromBody] PostUser user)
         {
-            var existingUser = _userService.GetByUsername(data.Username);
+            var existingUser = _userRepository.GetByUsername(user.Username);
 
             if (existingUser != null)
             {
@@ -49,11 +49,18 @@ namespace HabitTracker.Server.Controllers
 
             try
             {
-                PasswordService passwordService = new PasswordService(data.Password);
+                PasswordService passwordService = new PasswordService(user.Password);
                 string hashedPassword = passwordService.HashPassword();
-                User user = new User(data.Username, data.Email, hashedPassword);
-                _userService.AddUser(user);
-                return CreatedAtAction(nameof(GetUser), new { username = user.username}, user);
+                user.Password = hashedPassword;
+
+                bool success = _userRepository.Add(user);
+
+                if (success)
+                {
+                    return StatusCode(201);
+                }
+
+                return StatusCode(500, "0 records updated");
             }
             catch(Exception ex)
             {
@@ -62,8 +69,8 @@ namespace HabitTracker.Server.Controllers
         }
 
         [Authorize]
-        [HttpPut("update")]
-        public IActionResult UpdateUser([FromBody] UpdateUserRequest data)
+        [HttpPatch("update")]
+        public IActionResult UpdateUser([FromBody] PatchUser user)
         {
             if (!ModelState.IsValid)
             {
@@ -72,16 +79,21 @@ namespace HabitTracker.Server.Controllers
 
             try
             {
-                string password = data.Password;
-                if (data.Password != null)
+                string password = user.Password;
+                if (user.Password != null)
                 {
-                    PasswordService passwordService = new PasswordService(data.Password);
+                    PasswordService passwordService = new PasswordService(user.Password);
                     password = passwordService.HashPassword();
                 }
-                User user = new User(data.NewUsername, data.Email, password);
-                _userService.UpdateUser(user, data.OldUsername);
 
-                return Ok(user);
+                bool success = _userRepository.Update(user);
+
+                if (success)
+                {
+                    return Ok();
+                }
+
+                return StatusCode(500, "0 records updated");
             }
             catch
             {
@@ -91,17 +103,18 @@ namespace HabitTracker.Server.Controllers
 
         [Authorize]
         [HttpDelete("delete")]
-        public IActionResult DeleteUser([FromBody] CreateUserRequest data)
+        public IActionResult DeleteUser([FromBody] AuthUser user)
         {
 
-            var user = _userService.GetByUsername(data.Username);
+            var existingUser = _userRepository.GetByUsername(user.Username);
             if (user == null)
             {
                 return NotFound();
             }
 
-            PasswordService passwordService = new PasswordService(user.password);
-            bool isPasswordCorrect = passwordService.VerifyPassword(data.Password);
+            PasswordService passwordService = new PasswordService(user.Password);
+            string hashedPassword = passwordService.HashPassword();
+            bool isPasswordCorrect = passwordService.VerifyPassword(hashedPassword);
 
             if (!isPasswordCorrect)
             {
@@ -110,9 +123,14 @@ namespace HabitTracker.Server.Controllers
 
             try
             {
-                _userService.DeleteUser(data.Username);
+                bool success = _userRepository.Delete(user.Username);
 
-                return NoContent();
+                if (success)
+                {
+                    return NoContent();
+                }
+
+                return StatusCode(500, "0 records updated");
             }
             catch
             {
