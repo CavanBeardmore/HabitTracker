@@ -1,4 +1,6 @@
-﻿namespace HabitTracker.Server.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace HabitTracker.Server.Models
 {
     public class AuthUser
     {

@@ -35,16 +35,16 @@ namespace HabitTracker.Server.Controllers
         [HttpPost]
         public IActionResult AddUser([FromBody] PostUser user)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var existingUser = _userRepository.GetByUsername(user.Username);
 
             if (existingUser != null)
             {
                 return BadRequest("User exists");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
             }
 
             try
@@ -79,11 +79,10 @@ namespace HabitTracker.Server.Controllers
 
             try
             {
-                string password = user.Password;
                 if (user.Password != null)
                 {
                     PasswordService passwordService = new PasswordService(user.Password);
-                    password = passwordService.HashPassword();
+                    user.Password = passwordService.HashPassword();
                 }
 
                 bool success = _userRepository.Update(user);
@@ -105,6 +104,10 @@ namespace HabitTracker.Server.Controllers
         [HttpDelete("delete")]
         public IActionResult DeleteUser([FromBody] AuthUser user)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             var existingUser = _userRepository.GetByUsername(user.Username);
             if (user == null)

@@ -21,15 +21,19 @@ namespace HabitTracker.Server.Controllers
         [HttpGet("login")]
         public IActionResult Login([FromQuery] AuthUser user)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             var foundUser = _userRepository.GetByUsername(user.Username);
             if (foundUser == null)
             {
                 return NotFound();
             }
-            Console.WriteLine(user.Password);
+
             PasswordService passwordService = new PasswordService(user.Password);
-            Console.WriteLine(foundUser.Password);
+
             bool isPasswordCorrect = passwordService.VerifyPassword(foundUser.Password);
 
             if (!isPasswordCorrect)

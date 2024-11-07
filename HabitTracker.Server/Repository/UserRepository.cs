@@ -77,15 +77,31 @@ namespace HabitTracker.Server.Repository
 
         public bool Update(PatchUser user)
         {
-            string query = "UPDATE Users SET Username = @newUsername, Email = @email, Password = @password WHERE Username = @oldUsername;";
 
-            Dictionary<string, object> parameters = new Dictionary<string, object>
-            {
-                { "@newUsername", user.NewUsername },
-                { "@email", user.Email },
-                { "@password", user.Password },
-                { "@oldUsername", user.OldUsername },
+            List<string> setClauses = new List<string>();
+            Dictionary<string, object> parameters = new Dictionary<string, object>{
+                { "@oldUsername", user.OldUsername }
             };
+
+            if (!string.IsNullOrEmpty(user.NewUsername))
+            {
+                setClauses.Add("Username = @newUsername");
+                parameters.Add("@newUsername", user.NewUsername);
+            }
+
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                setClauses.Add("Email = @email");
+                parameters.Add("@email", user.Email);
+            }
+
+            if (!string.IsNullOrEmpty(user.Password))
+            {
+                setClauses.Add("Password = @password");
+                parameters.Add("@password", user.Password);
+            }
+
+            string query = $"UPDATE Users SET {string.Join(", ", setClauses)} WHERE Username = @oldUsername;";
 
             int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
 

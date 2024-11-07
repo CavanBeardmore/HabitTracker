@@ -75,6 +75,11 @@ namespace HabitTracker.Server.Controllers
         [HttpPut("update")]
         public IActionResult UpdateHabit([FromBody] PatchHabitLog habitLog)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 bool success = _habitLogRepository.Update(habitLog);
