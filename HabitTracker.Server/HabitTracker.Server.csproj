@@ -35,4 +35,8 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Services\HabitLogService.cs" />
+  </ItemGroup>
+
 </Project>

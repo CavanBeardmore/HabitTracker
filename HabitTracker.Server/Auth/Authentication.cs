@@ -5,11 +5,11 @@ using System.Text;
 
 namespace HabitTracker.Server.Auth
 {
-    public class AuthenticationService
+    public class Authentication
     {
         private readonly string _jwtSecret;
 
-        public AuthenticationService(string jwtSecret)
+        public Authentication(string jwtSecret)
         {
             _jwtSecret = jwtSecret;
         }

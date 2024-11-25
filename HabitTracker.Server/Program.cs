@@ -1,5 +1,6 @@
 using HabitTracker.Server.Auth;
 using HabitTracker.Server.Repository;
+using HabitTracker.Server.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using HabitTracker.Server.Facade;
 using Microsoft.IdentityModel.Tokens;
@@ -36,12 +37,15 @@ builder.Services.AddAuthentication(cfg => {
     };
 });
 
-builder.Services.AddScoped<AuthenticationService>(provider => new AuthenticationService(builder.Configuration["ApplicationSettings:JWT_Secret"]));
+builder.Services.AddScoped<Authentication>(provider => new Authentication(builder.Configuration["ApplicationSettings:JWT_Secret"]));
 
 builder.Services.AddScoped<ISqliteFacade>(provider => new SqliteFacade(connectionString));
 builder.Services.AddScoped<HabitRepository>();
 builder.Services.AddScoped<HabitLogRepository>();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<HabitService>();
+builder.Services.AddScoped<HabitLogService>();
 
 builder.Services.AddControllers();
 

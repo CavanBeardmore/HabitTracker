@@ -9,12 +9,12 @@ namespace HabitTracker.Server.Controllers
     [Route("auth/[controller]")]
     public class AuthController : Controller
     {
-        private readonly AuthenticationService _authService;
+        private readonly Authentication _auth;
         private readonly UserRepository _userRepository;
 
-        public AuthController(AuthenticationService authService, UserRepository userService)
+        public AuthController(Authentication auth, UserRepository userService)
         {
-            _authService = authService;
+            _auth = auth;
             _userRepository = userService;
         }
 
@@ -41,7 +41,7 @@ namespace HabitTracker.Server.Controllers
                 return Unauthorized("Incorrect password");
             }
 
-            var jwt = _authService.GenerateJWTToken(foundUser.Username);
+            var jwt = _auth.GenerateJWTToken(foundUser.Username);
 
             return Ok(jwt);
         }
