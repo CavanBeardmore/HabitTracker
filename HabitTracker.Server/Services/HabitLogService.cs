@@ -103,31 +103,8 @@ namespace HabitTracker.Server.Services
         {
             try
             {
-                int habitsToAdd = 0;
 
-                var habitlog = _habitLogRepository.GetMostRecentHabitLog(postHabitLog.Habit_id, postHabitLog.User_id);
-
-                if (habitlog != null)
-                {
-                    DateTime lastLogStartDate = habitlog.Start_date;
-
-                    int differenceInDays = postHabitLog.Start_date.Subtract(lastLogStartDate).Days;
-
-                    Console.WriteLine($"DIFFERENCE IN DAYS {differenceInDays}");
-
-                    int daysForMissingLogs = differenceInDays - postHabitLog.Length_in_days;
-
-                    Console.WriteLine($"DAYS FOR MISSING LOGS {daysForMissingLogs}");
-
-                    if (daysForMissingLogs > postHabitLog.Length_in_days)
-                    {
-                        habitsToAdd = daysForMissingLogs / postHabitLog.Length_in_days;
-                    }
-                }
-
-                Console.WriteLine($"ADDING HABIT LOG WITH {habitsToAdd} LOGS TO ADD");
-
-                var addHabitWithMissingLogs = new AddHabitLogWithMissingLogs(habitsToAdd, postHabitLog, _habitLogRepository);
+                var addHabitWithMissingLogs = new AddHabitLogWithMissingLogs(postHabitLog, _habitLogRepository);
 
                 UnitOfWorkResult<bool> addResult = addHabitWithMissingLogs.execute();
 
