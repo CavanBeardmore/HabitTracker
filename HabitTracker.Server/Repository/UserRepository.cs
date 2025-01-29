@@ -1,16 +1,20 @@
 ﻿using HabitTracker.Server.Models;
 using HabitTracker.Server.Facade;
 using HabitTracker.Server.DTOs;
+using Microsoft.EntityFrameworkCore;
+using HabitTracker.Server.Database;
 
 namespace HabitTracker.Server.Repository
 {
     public class UserRepository : IUserRepository
     {
-        private readonly ISqliteFacade _sqliteFacade;
+        private readonly IStorage _sqliteFacade;
+        private readonly IHabitTrackerDbContext _dbContext;
 
-        public UserRepository(ISqliteFacade sqliteFacade)
+        public UserRepository(IStorage sqliteFacade, IHabitTrackerDbContext dbContext)
         {
             _sqliteFacade = sqliteFacade;
+            _dbContext = dbContext;
         }
 
         public User? GetByUsername(string username)
@@ -22,7 +26,7 @@ namespace HabitTracker.Server.Repository
                 { "@Username", username }
             };
 
-            List<User> users = _sqliteFacade.ExecuteQuery<User>(
+            IReadOnlyCollection<User> users = _sqliteFacade.ExecuteQuery<User>(
                 query,
                 reader =>
                 {
@@ -37,12 +41,7 @@ namespace HabitTracker.Server.Repository
                 parameters
             );
 
-            if (users.Count > 0)
-            {
-                return users[0];
-            }
-
-            return null;
+            return users.FirstOrDefault();
         }
 
         public bool Add(PostUser user)
@@ -56,23 +55,24 @@ namespace HabitTracker.Server.Repository
                 { "@Password", user.Password }
             };
 
-            int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;
         }
 
         public bool Delete(string username)
         {
-            string query = "DELETE FROM Users WHERE Users.Username = @Username;";
+            var user = _dbContext.Users.Include(u => u.Habits).ThenInclude(h => h.HabitLogs)
+                                       .FirstOrDefault(u => u.Username == username);
 
-            Dictionary<string, object> parameters = new Dictionary<string, object>
+            if (user != null)
             {
-                { "@Username", username }
-            };
+                _dbContext.Users.Remove(user);
+                _dbContext.SaveChanges();
+                return true;
+            }
 
-            int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
-
-            return rowsAffected > 0;
+            return false;
         }
 
         public bool Update(PatchUser user)
@@ -95,15 +95,15 @@ namespace HabitTracker.Server.Repository
                 parameters.Add("@email", user.Email);
             }
 
-            if (!string.IsNullOrEmpty(user.Password))
+            if (!string.IsNullOrEmpty(user.NewPassword))
             {
                 setClauses.Add("Password = @password");
-                parameters.Add("@password", user.Password);
+                parameters.Add("@password", user.NewPassword);
             }
 
             string query = $"UPDATE Users SET {string.Join(", ", setClauses)} WHERE Username = @oldUsername;";
 
-            int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;
         }

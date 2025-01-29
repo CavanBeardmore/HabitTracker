@@ -1,5 +1,5 @@
 ﻿using HabitTracker.Server.Auth;
-using HabitTracker.Server.Repository;
+using HabitTracker.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Models;
@@ -11,60 +11,36 @@ namespace HabitTracker.Server.Controllers
     [Route("user/[controller]")]
     public class UserController : Controller
     {
-        private readonly UserRepository _userRepository;
+        private readonly UserService _userService;
 
-        public UserController(UserRepository userService)
+        public UserController(UserService userService)
         {
-            _userRepository = userService;
-        }
-
-        [Authorize]
-        [HttpGet("{User_id}")]
-        public IActionResult GetUser(string username)
-        {
-            var user = _userRepository.GetByUsername(username);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(user);
+            _userService = userService;
         }
 
         [AllowAnonymous]
         [HttpPost]
         public IActionResult AddUser([FromBody] PostUser user)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var existingUser = _userRepository.GetByUsername(user.Username);
-
-            if (existingUser != null)
-            {
-                return BadRequest("User exists");
-            }
-
             try
             {
-                PasswordService passwordService = new PasswordService(user.Password);
-                string hashedPassword = passwordService.HashPassword();
-                user.Password = hashedPassword;
-
-                bool success = _userRepository.Add(user);
-
-                if (success)
+                if (!ModelState.IsValid)
                 {
-                    return StatusCode(201);
+                    return BadRequest(ModelState);
                 }
 
-                return StatusCode(500, "0 records updated");
+                IServiceResponseWithStatusCode response = _userService.Add(user);
+
+                if (response.Success)
+                {
+                    return StatusCode((int)response.StatusCode);
+                }
+
+                return StatusCode((int)response.StatusCode, response.Error);
             }
             catch(Exception ex)
             {
-                return StatusCode(500, $"An error occured when creating the user: {ex.Message}");
+                return StatusCode(500, ex.Message);
             }
         }
 
@@ -72,31 +48,25 @@ namespace HabitTracker.Server.Controllers
         [HttpPatch("update")]
         public IActionResult UpdateUser([FromBody] PatchUser user)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             try
             {
-                if (user.Password != null)
+                if (!ModelState.IsValid)
                 {
-                    PasswordService passwordService = new PasswordService(user.Password);
-                    user.Password = passwordService.HashPassword();
+                    return BadRequest(ModelState);
                 }
 
-                bool success = _userRepository.Update(user);
+                IServiceResponseWithStatusCode response = _userService.Update(user);
 
-                if (success)
+                if (response.Success)
                 {
                     return Ok();
                 }
 
-                return StatusCode(500, "0 records updated");
+                return StatusCode((int)response.StatusCode, response.Error);
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "An error occured when updating the user");
+                return StatusCode(500, ex.Message);
             }
         }
 
@@ -104,40 +74,25 @@ namespace HabitTracker.Server.Controllers
         [HttpDelete("delete")]
         public IActionResult DeleteUser([FromBody] AuthUser user)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var existingUser = _userRepository.GetByUsername(user.Username);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            PasswordService passwordService = new PasswordService(user.Password);
-            string hashedPassword = passwordService.HashPassword();
-            bool isPasswordCorrect = passwordService.VerifyPassword(hashedPassword);
-
-            if (!isPasswordCorrect)
-            {
-                return Unauthorized("Incorrect password");
-            }
-
             try
             {
-                bool success = _userRepository.Delete(user.Username);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-                if (success)
+                IServiceResponseWithStatusCode response = _userService.Delete(user);
+
+                if (response.Success)
                 {
                     return NoContent();
                 }
 
-                return StatusCode(500, "0 records updated");
+                return StatusCode((int)response.StatusCode, response.Error);
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "An error occured while deleting the user");
+                return StatusCode(500, ex.Message);
             }
         }
     }

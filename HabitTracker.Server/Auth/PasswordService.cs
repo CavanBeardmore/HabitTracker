@@ -2,23 +2,17 @@
 
 namespace HabitTracker.Server.Auth
 {
-    public class PasswordService
+    public class PasswordService : IPasswordService
     {
-        private readonly string _password;
-
-        public PasswordService(string password)
+        public PasswordService() { }
+        public string HashPassword(string password)
         {
-            _password = password;
+            return BCrypt.Net.BCrypt.EnhancedHashPassword(password);
         }
 
-        public string HashPassword()
+        public bool VerifyPassword(string password, string hashedPassword)
         {
-            return BCrypt.Net.BCrypt.EnhancedHashPassword(_password);
-        }
-
-        public bool VerifyPassword(string hashedPassword)
-        {
-            return BCrypt.Net.BCrypt.EnhancedVerify(_password, hashedPassword);
+            return BCrypt.Net.BCrypt.EnhancedVerify(password, hashedPassword);
         }
     }
 }

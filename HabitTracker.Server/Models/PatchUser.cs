@@ -15,7 +15,11 @@ namespace HabitTracker.Server.Models
         [OptionalEmailAddress]
         public string Email { get; set; }
 
+        [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public string OldPassword { get; set; }
+
+        [DataType(DataType.Password)]
+        public string NewPassword { get; set; }
     }
 }

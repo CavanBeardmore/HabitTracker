@@ -1,71 +1,72 @@
 ﻿using HabitTracker.Server.UnitsOfWork;
 
-namespace HabitTracker.Server.Transactions
-{
-    public class TransactionResult {
-        private List<UnitOfWorkResult> UnitOfWorkResults { get; }
-        public TransactionResult() 
-        {
-            UnitOfWorkResults = new List<UnitOfWorkResult>();
-        }
+//namespace habittracker.server.transactions
+//{
+//    public class transactionresult
+//    {
+//        private list<unitofworkresult> unitofworkresults { get; }
+//        public transactionresult()
+//        {
+//            unitofworkresults = new list<unitofworkresult>();
+//        }
 
-        public void AddUnitOfWorkResult(UnitOfWorkResult unitOfWorkResult)
-        {
-            UnitOfWorkResults.Add(unitOfWorkResult);
-        }
-    }
+//        public void addunitofworkresult(unitofworkresult unitofworkresult)
+//        {
+//            unitofworkresults.add(unitofworkresult);
+//        }
+//    }
 
-    public abstract class Transaction
-    {
-        protected readonly List<IUnitOfWork> UnitsOfWork;
+//    public abstract class transaction
+//    {
+//        protected readonly list<iunitofwork> unitsofwork;
 
-        public Transaction(List<IUnitOfWork> unitsOfWork)
-        {
-            UnitsOfWork = unitsOfWork;
-        }
+//        public transaction(list<iunitofwork> unitsofwork)
+//        {
+//            unitsofwork = unitsofwork;
+//        }
 
-        public async Task<TransactionResult> Execute()
-        {
-            int lastSuccessfulIndex = -1;
-            TransactionResult transactionResult = new TransactionResult();
+//        public async task<transactionresult> execute()
+//        {
+//            int lastsuccessfulindex = -1;
+//            transactionresult transactionresult = new transactionresult();
 
-            for (var i = 0; i < UnitsOfWork.Count; i++)
-            {
-                UnitOfWorkResult result = await UnitsOfWork[i].execute();
-                transactionResult.AddUnitOfWorkResult(result);
+//            for (var i = 0; i < unitsofwork.count; i++)
+//            {
+//                unitofworkresult result = await unitsofwork[i].execute();
+//                transactionresult.addunitofworkresult(result);
 
-                if (!result.Success)
-                {
-                    if (lastSuccessfulIndex >= 0) 
-                    {
-                        await Rollback(lastSuccessfulIndex);
-                    }
-                    return transactionResult;
-                }
+//                if (!result.success)
+//                {
+//                    if (lastsuccessfulindex >= 0)
+//                    {
+//                        await rollback(lastsuccessfulindex);
+//                    }
+//                    return transactionresult;
+//                }
 
-                lastSuccessfulIndex++;
-            }
+//                lastsuccessfulindex++;
+//            }
 
-            return transactionResult;
-        }
+//            return transactionresult;
+//        }
 
-        public async Task<TransactionResult> Rollback(int lastSuccessfulIndex)
-        {
-            TransactionResult transactionResult = new TransactionResult();
+//        public async task<transactionresult> rollback(int lastsuccessfulindex)
+//        {
+//            transactionresult transactionresult = new transactionresult();
 
-            for (var i = 0; i < lastSuccessfulIndex; i++)
-            {
-                UnitOfWorkResult result = await UnitsOfWork[i].rollback();
-                transactionResult.AddUnitOfWorkResult(result);
+//            for (var i = 0; i < lastsuccessfulindex; i++)
+//            {
+//                unitofworkresult result = await unitsofwork[i].rollback();
+//                transactionresult.addunitofworkresult(result);
 
-                if (!result.Success)
-                {
-                    throw new Exception("Failed to perform rollback");
-                }
-            }
+//                if (!result.success)
+//                {
+//                    throw new exception("failed to perform rollback");
+//                }
+//            }
 
-            return transactionResult;
-        }
+//            return transactionresult;
+//        }
 
-    }
-}
+//    }
+//}

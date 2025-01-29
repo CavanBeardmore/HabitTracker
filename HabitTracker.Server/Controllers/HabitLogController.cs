@@ -2,6 +2,8 @@
 using HabitTracker.Server.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HabitTracker.Server.Services;
+using HabitTracker.Server.DTOs;
 
 namespace HabitTracker.Server.Controllers
 {
@@ -11,59 +13,26 @@ namespace HabitTracker.Server.Controllers
     public class HabitLogController : ControllerBase
     {
 
-        private readonly HabitLogRepository _habitLogRepository;
+        private readonly HabitLogService _habitLogService; 
 
-        public HabitLogController(HabitLogRepository habitLogRepository)
+        public HabitLogController(HabitLogService habitLogService)
         {
-            _habitLogRepository = habitLogRepository;
+            _habitLogService = habitLogService;
         }
 
         [Authorize]
-        [HttpGet("{id}")]
-        public IActionResult GetHabitLog(int id)
+        [HttpGet("{habitLogId}")]
+        public IActionResult GetHabitLog(int habitLogId, [FromQuery] int userId)
         {
-            var habitLog = _habitLogRepository.GetById(id);
-            if (habitLog == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(habitLog);
-        }
-
-        [Authorize]
-        [HttpGet("habit/{habit_id}")]
-        public IActionResult GetHabitLogsFromHabit(int habit_id)
-        {
-            var habitlogs = _habitLogRepository.GetAllByHabitId(habit_id);
-            if (habitlogs == null || !habitlogs.Any())
-            {
-                return NotFound();
-
-            }
-
-            return Ok(habitlogs);
-        }
-
-        [Authorize]
-        [HttpPost]
-        public IActionResult CreateHabitLog([FromBody] PostHabitLog habitLog)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             try
             {
-                bool success = _habitLogRepository.Add(habitLog);
-
-                if (success)
+                IServiceResponseWithData<HabitLog?> response = _habitLogService.GetById(habitLogId, userId);
+                if (response.Success == false)
                 {
-                    return StatusCode(200);
+                    return NotFound(response.Error);
                 }
 
-                return StatusCode(500, "0 records updated");
+                return Ok(response.Data);
             }
             catch (Exception ex)
             {
@@ -72,49 +41,96 @@ namespace HabitTracker.Server.Controllers
         }
 
         [Authorize]
-        [HttpPut("update")]
-        public IActionResult UpdateHabit([FromBody] PatchHabitLog habitLog)
+        [HttpGet("habit/{habitId}")]
+        public IActionResult GetHabitLogsFromHabit(int habitId, [FromQuery] int userId, int pageNumber)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             try
             {
-                bool success = _habitLogRepository.Update(habitLog);
-
-                if (success)
+                IServiceResponseWithData<IReadOnlyCollection<HabitLog?>> response = _habitLogService.GetAllByHabitId(habitId, userId, pageNumber);
+                if (response.Success == false)
                 {
-                    return Ok(habitLog);
+                    return NotFound(response.Error);
+
                 }
 
-                return StatusCode(500, "0 records updated");
+                return Ok(response.Data);
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while updating the habit log.");
+                return StatusCode(500, ex.Message);
             }
         }
 
         [Authorize]
-        [HttpDelete("delete/{id}")]
-        public IActionResult DeleteHabit(int id)
+        [HttpPost]
+        public IActionResult CreateHabitLog([FromBody] PostHabitLog habitLog)
         {
             try
             {
-                bool success = _habitLogRepository.Delete(id);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-                if (success)
+                IServiceResponse response = _habitLogService.Add(habitLog);
+                
+                if (response.Success)
+                {
+                    return StatusCode(200);
+                }
+
+                return StatusCode(500, response.Error);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpPatch("update")]
+        public IActionResult UpdateHabitLog([FromBody] PatchHabitLog habitLog)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                IServiceResponse response = _habitLogService.Update(habitLog);
+
+                if (response.Success)
+                {
+                    return Ok(habitLog);
+                }
+
+                return StatusCode(500, response.Error);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpDelete("delete/{habitLogId}")]
+        public IActionResult DeleteHabitLog(int habitLogId, [FromQuery] int userId)
+        {
+            try
+            {
+                IServiceResponse response = _habitLogService.Delete(habitLogId, userId);
+
+                if (response.Success)
                 {
                     return NoContent();
                 }
 
-                return StatusCode(500, "0 records updated");
+                return StatusCode(500, response.Error);
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while deleting the habit log.");
+                return StatusCode(500, ex.Message);
             }
         }
     }

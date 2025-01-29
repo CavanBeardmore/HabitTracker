@@ -6,6 +6,10 @@ using HabitTracker.Server.Facade;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using HabitTracker.Server.DTOs;
+using HabitTracker.Server.Transformer;
+using System.Data;
+using HabitTracker.Server.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,13 +43,17 @@ builder.Services.AddAuthentication(cfg => {
 
 builder.Services.AddScoped<Authentication>(provider => new Authentication(builder.Configuration["ApplicationSettings:JWT_Secret"]));
 
-builder.Services.AddScoped<ISqliteFacade>(provider => new SqliteFacade(connectionString));
-builder.Services.AddScoped<HabitRepository>();
-builder.Services.AddScoped<HabitLogRepository>();
-builder.Services.AddScoped<UserRepository>();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IStorage>(provider => new SqliteFacade(connectionString));
+builder.Services.AddScoped<IHabitTrackerDbContext, HabitTrackerDbContext>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<ITransformer<Habit, IDataReader>, HabitTransformer>();
+builder.Services.AddScoped<ITransformer<HabitLog, IDataReader>, HabitLogTransformer>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IHabitRepository, HabitRepository>();
+builder.Services.AddScoped<IHabitLogRepository, HabitLogRepository>();
 builder.Services.AddScoped<HabitService>();
 builder.Services.AddScoped<HabitLogService>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddControllers();
 

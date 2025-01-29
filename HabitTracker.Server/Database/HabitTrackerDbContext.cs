@@ -3,7 +3,7 @@ using HabitTracker.Server.Database.Entities;
 
 namespace HabitTracker.Server.Database
 {
-    public class HabitTrackerDbContext: DbContext
+    public class HabitTrackerDbContext: DbContext, IHabitTrackerDbContext
     {   
         public DbSet<TUser> Users { get; set; }
         public DbSet<THabit> Habits { get; set; }

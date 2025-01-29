@@ -5,10 +5,14 @@ namespace HabitTracker.Server.Repository
 {
     public interface IHabitLogRepository
     {
-        IEnumerable<HabitLog> GetAllByHabitId(int id);
-        HabitLog? GetById(int id);
+        IReadOnlyCollection<HabitLog> GetAllByHabitId(int id, int userId, int pageNumber);
+        HabitLog? GetById(int habitLogId, int userId);
+
+        HabitLog? GetMostRecentHabitLog(int habitId, int userId);
         bool Add(PostHabitLog habitLog);
         bool Update(PatchHabitLog habitLog);
-        bool Delete(int id);
+        bool Delete(int habitLogId, int userId);
+
+        bool DeleteByHabitIdAndStartDate(int habitId, DateTime startDate);
     }
 }

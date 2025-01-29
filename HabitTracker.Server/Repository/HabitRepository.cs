@@ -1,22 +1,26 @@
 ﻿using HabitTracker.Server.Models;
 using HabitTracker.Server.Facade;
 using HabitTracker.Server.DTOs;
+using HabitTracker.Server.Transformer;
+using System.Data;
 
 
 namespace HabitTracker.Server.Repository
 {
     public class HabitRepository : IHabitRepository
     {
-        private readonly ISqliteFacade _sqliteFacade;
+        private readonly IStorage _sqliteFacade;
+        private readonly ITransformer<Habit, IDataReader> _transformer;
 
-        public HabitRepository(ISqliteFacade sqliteFacade)
+        public HabitRepository(IStorage sqliteFacade, ITransformer<Habit, IDataReader> transformer)
         {
             _sqliteFacade = sqliteFacade;
+            _transformer = transformer;
         }
 
-        public IEnumerable<Habit> GetAllByUserId(int user_id)
+        public IReadOnlyCollection<Habit> GetAllByUserId(int user_id)
         {
-            string query = "SELECT * FROM Habits WHERE Habits.User_id = @User_id";
+            string query = "SELECT h.* FROM Habits h INNER JOIN Users u ON h.User_id = u.Id WHERE h.User_id = @User_id;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -25,48 +29,28 @@ namespace HabitTracker.Server.Repository
 
             return _sqliteFacade.ExecuteQuery<Habit>(
                 query, 
-                reader =>
-                {
-                    return new Habit
-                    (
-                        Convert.ToInt32(reader["Id"]),
-                        Convert.ToInt32(reader["User_id"]),
-                        (string)reader["name"]
-                    );
-                },
+                _transformer.Transform,
                 parameters
             );
         }
 
-        public Habit? GetById(int id)
+        public Habit? GetById(int habitId, int userId)
         {
-            string query = "SELECT * FROM Habits WHERE Habits.Id = @id;";
+            string query = "SELECT h.* FROM Habits h INNER JOIN Users u On h.User_id WHERE h.Id = @id AND h.User_id = @userId;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                { "@id", id }
+                { "@id", habitId },
+                { "@userId", userId }
             };
             
-            List<Habit> habits = _sqliteFacade.ExecuteQuery<Habit>(
+            IReadOnlyCollection<Habit> habits = _sqliteFacade.ExecuteQuery<Habit>(
                 query,
-                reader =>
-                {
-                    return new Habit
-                    (
-                        Convert.ToInt32(reader["Id"]),
-                        Convert.ToInt32(reader["User_id"]),
-                        (string)reader["name"]
-                    );
-                },
+                _transformer.Transform,
                 parameters
             );
 
-            if ( habits.Count > 0)
-            {
-                return habits[0];
-            }
-
-            return null;
+            return habits.FirstOrDefault();
         }
 
         public bool Add(PostHabit habit)
@@ -79,36 +63,38 @@ namespace HabitTracker.Server.Repository
                 { "@name", habit.Name }
             };
 
-            int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int habitId, int userId)
         {
-            string query = "DELETE FROM Habits WHERE Habits.Id = @id;";
-
+            string query = "DELETE FROM Habits WHERE Habits.Id = @id AND Habits.User_id = @userId;";
+             
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                { "@id", id },
+                { "@id", habitId },
+                { "@userId", userId }
             };
 
-            int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;
         }
 
         public bool Update(PatchHabit habit)
         {
-            string query = "UPDATE Habits SET name = @name WHERE Id = @id;";
+            string query = "UPDATE Habits SET name = @name WHERE Id = @id AND User_id = @userId;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", habit.Id },
                 { "@name", habit.Name },
+                { "@userId", habit.UserId },
             };
 
-            int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;
         }

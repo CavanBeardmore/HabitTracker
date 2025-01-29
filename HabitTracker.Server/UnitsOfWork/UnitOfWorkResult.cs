@@ -1,10 +1,12 @@
-﻿namespace HabitTracker.Server.UnitsOfWork
+﻿using HabitTracker.Server.Services;
+
+namespace HabitTracker.Server.UnitsOfWork
 {
-    public class UnitOfWorkResult
+    public class UnitOfWorkResult<T>
     {
         public bool Success { get; }
-        public object Data { get; }
-        public UnitOfWorkResult(bool success, object data) 
+        public T Data { get; }
+        public UnitOfWorkResult(bool success, T data) 
         {
             Success = success;
             Data = data;

@@ -1,7 +1,8 @@
-﻿using HabitTracker.Server.Repository;
+﻿using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HabitTracker.Server.Services;
 
 namespace HabitTracker.Server.Controllers
 {
@@ -11,38 +12,56 @@ namespace HabitTracker.Server.Controllers
     public class HabitController : ControllerBase
     {
 
-        private readonly HabitRepository _habitRepository;
+        private readonly HabitService _habitService;
 
-        public HabitController(HabitRepository habitRepository)
+        public HabitController(HabitService habitService)
         {
-            _habitRepository = habitRepository;
+            _habitService = habitService;
         }
 
         [Authorize]
-        [HttpGet("{habit_id}")]
-        public IActionResult GetHabit(int habit_id)
+        [HttpGet("{habitId}")]
+        public IActionResult GetHabit(int habitId, [FromQuery] int userId)
         {
-            var habit = _habitRepository.GetById(habit_id);
-            if (habit == null)
+            try
             {
-                return NotFound();
+                IServiceResponseWithData<Habit?> response = _habitService.GetById(habitId, userId);
+                if (response.Success == false)
+                {
+                    return NotFound(response.Error);
+                }
+
+                return Ok(response.Data);
+            } 
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
-
-            return Ok(habit);
         }
 
         [Authorize]
-        [HttpGet("user/{user_id}")]
-        public IActionResult GetUserHabits(int user_id)
+        [HttpGet("user/{userId}")]
+        public IActionResult GetUserHabits(int userId)
         {
-            var habits = _habitRepository.GetAllByUserId(user_id);
-            if (habits == null || !habits.Any())
+            try
             {
-                return NotFound();
+                IServiceResponseWithData<IReadOnlyCollection<Habit>> response = _habitService.GetAllByUserId(userId);
                 
-            }
+                Console.WriteLine($"GET HABITS BY USER ID RES - {response.Success}");
 
-            return Ok(habits);
+                if (response.Success == false)
+                {
+                    Console.WriteLine($"FAILED TO GET HABITS BY USER ID - {userId}");
+                    return NotFound(response.Error);
+                }
+
+                Console.WriteLine($"SUCCESFULLY GOT HABITS BY USER ID - {userId}");
+                return Ok(response.Data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize]
@@ -56,19 +75,18 @@ namespace HabitTracker.Server.Controllers
 
             try
             {
-                bool success = _habitRepository.Add(habit);
+                IServiceResponse response = _habitService.Add(habit);
 
-                if (success)
+                if (response.Success)
                 {
                     return StatusCode(201);
                 }
 
-                return StatusCode(500, "0 records updated");
+                return StatusCode(500, response.Error);
             }
             catch(Exception ex)
             {
-                Console.WriteLine($"error when adding {ex.Message}");
-                return StatusCode(500, "An error occurred while creating the habit.");
+                return StatusCode(500, ex.Message);
             }
         }
 
@@ -82,36 +100,36 @@ namespace HabitTracker.Server.Controllers
             }
 
             try
-            { 
-                bool success = _habitRepository.Update(habit);
+            {
+                IServiceResponse response = _habitService.Update(habit);
 
-                if (success)
+                if (response.Success)
                 {
                     return Ok();
                 }
 
-                return StatusCode(500, "0 records updated");
+                return StatusCode(500, response.Error);
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while updating the habit.");
+                return StatusCode(500, ex.Message);
             }
         }
 
         [Authorize]
-        [HttpDelete("delete/{habit_id}")]
-        public IActionResult DeleteHabit(int habit_id)
+        [HttpDelete("delete/{habitId}")]
+        public IActionResult DeleteHabit(int habitId, [FromQuery] int userId)
         {
             try
             {
-                bool success = _habitRepository.Delete(habit_id);
+                IServiceResponse response = _habitService.Delete(habitId, userId);
 
-                if (success)
+                if (response.Success)
                 {
                     return NoContent();
                 }
 
-                return StatusCode(500, "0 records updated");
+                return StatusCode(500, response.Error);
             }
             catch
             {

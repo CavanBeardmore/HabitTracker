@@ -1,8 +1,8 @@
 ﻿namespace HabitTracker.Server.UnitsOfWork
 {
-    public interface IUnitOfWork
+    public interface IUnitOfWork<T>
     {
-        Task<UnitOfWorkResult> execute();
-        Task<UnitOfWorkResult> rollback();
+        UnitOfWorkResult<T> execute();
+        UnitOfWorkResult<T> rollback();
     }
 }

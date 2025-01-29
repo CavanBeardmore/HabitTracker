@@ -1,8 +1,9 @@
-﻿using System.Data.SQLite;
+﻿using System.Data;
+using System.Data.SQLite;
 
 namespace HabitTracker.Server.Facade
 {
-    public class SqliteFacade : ISqliteFacade
+    public class SqliteFacade : IStorage
     {
         private readonly string _connectionString;
 
@@ -28,7 +29,7 @@ namespace HabitTracker.Server.Facade
             }
         }
 
-        public List<T> ExecuteQuery<T>(string query, Func<SQLiteDataReader, T> map, Dictionary<string, object> parameters)
+        public IReadOnlyCollection<T> ExecuteQuery<T>(string query, Func<IDataReader, T> transform, Dictionary<string, object> parameters)
         {
             using (SQLiteConnection connection = CreateConnection())
             {
@@ -43,12 +44,12 @@ namespace HabitTracker.Server.Facade
                         command.Parameters.Add(new SQLiteParameter(param.Key, param.Value));
                     }
 
-                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    using (IDataReader reader = command.ExecuteReader())
                     {
                         List<T> result = new List<T>();
                         while (reader.Read())
                         {
-                            result.Add(map(reader));
+                            result.Add(transform(reader));
                         }
                         return result;
                     }
@@ -56,7 +57,7 @@ namespace HabitTracker.Server.Facade
             }
         }
 
-        public int ExecuteNonQuery(string query, Dictionary<string, object> parameters)
+        public uint ExecuteNonQuery(string query, Dictionary<string, object> parameters)
         {
             using (SQLiteConnection connection = CreateConnection())
             {
@@ -70,7 +71,7 @@ namespace HabitTracker.Server.Facade
                         command.Parameters.Add(new SQLiteParameter(param.Key, param.Value));
                     }
 
-                    return command.ExecuteNonQuery();
+                    return Convert.ToUInt32(command.ExecuteNonQuery());
                 }
             }
         }

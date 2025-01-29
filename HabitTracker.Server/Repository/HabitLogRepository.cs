@@ -1,75 +1,76 @@
 ﻿using HabitTracker.Server.Models;
 using HabitTracker.Server.Facade;
 using HabitTracker.Server.DTOs;
+using HabitTracker.Server.Transformer;
+using System.Data;
 
 namespace HabitTracker.Server.Repository
 {
     public class HabitLogRepository : IHabitLogRepository
     {
-        private readonly ISqliteFacade _sqliteFacade;
+        private readonly IStorage _storage;
+        private readonly ITransformer<HabitLog, IDataReader> _transformer;
 
-        public HabitLogRepository(ISqliteFacade sqliteFacade)
+        public HabitLogRepository(IStorage storage, ITransformer<HabitLog, IDataReader> transformer)
         {
-            _sqliteFacade = sqliteFacade;
+            _storage = storage;
+            _transformer = transformer;
         }
 
-        public IEnumerable<HabitLog> GetAllByHabitId(int id)
+        public IReadOnlyCollection<HabitLog> GetAllByHabitId(int id, int userId, int pageNumber)
         {
-            string query = "SELECT * FROM HabitLogs WHERE HabitLogs.Habit_id = @id";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId ORDER BY Start_date DESC LIMIT 30 OFFSET @offset;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                { "@id", id }
+                { "@id", id },
+                { "@userId", userId },
+                {"@offset", pageNumber }
             };
 
-            return _sqliteFacade.ExecuteQuery<HabitLog>(
+            return _storage.ExecuteQuery<HabitLog>(
                 query,
-                reader =>
-                {
-                    return new HabitLog
-                    (
-                        Convert.ToInt32(reader["Id"]),
-                        Convert.ToInt32(reader["Habit_id"]),
-                        Convert.ToDateTime(reader["Start_date"]),
-                        Convert.ToBoolean(reader["Habit_logged"]),
-                        Convert.ToInt32(reader["Length_in_days"])
-                    );
-                },
+                _transformer.Transform,
                 parameters
             );
         }
 
-        public HabitLog? GetById(int id)
+        public HabitLog? GetById(int habitLogId, int userId)
         {
-            string query = "SELECT * FROM HabitLogs WHERE HabitLogs.Id = @id";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Id = @id AND u.Id = @userId;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                { "@id", id }
+                { "@id", habitLogId },
+                { "@userId", userId }
             };
 
-            List<HabitLog> habitLogs = _sqliteFacade.ExecuteQuery<HabitLog>(
+            IReadOnlyCollection<HabitLog> habitLogs = _storage.ExecuteQuery<HabitLog>(
                 query,
-                reader =>
-                {
-                    return new HabitLog
-                    (
-                        Convert.ToInt32(reader["Id"]),
-                        Convert.ToInt32(reader["Habit_id"]),
-                        Convert.ToDateTime(reader["Start_date"]),
-                        Convert.ToBoolean(reader["Habit_logged"]),
-                        Convert.ToInt32(reader["Length_in_days"])
-                    );
-                },
+                _transformer.Transform,
                 parameters
             );
 
-            if (habitLogs.Count > 0)
-            {
-                return habitLogs[0];
-            }
+            return habitLogs.FirstOrDefault();
+        }
 
-            return null;
+        public HabitLog? GetMostRecentHabitLog(int habitId, int userId)
+        {
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id ORDER BY Start_date DESC LIMIT 1";
+
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@id", habitId },
+                { "@userId", userId }
+            };
+
+            IReadOnlyCollection<HabitLog> habitLogs = _storage.ExecuteQuery<HabitLog>(
+                query,
+                _transformer.Transform,
+                parameters
+            );
+
+            return habitLogs.FirstOrDefault();
         }
 
         public bool Add(PostHabitLog habitLog)
@@ -84,7 +85,7 @@ namespace HabitTracker.Server.Repository
                 { "@Length_in_days", habitLog.Length_in_days }
             };
 
-            int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            uint rowsAffected = _storage.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;
         }
@@ -99,21 +100,36 @@ namespace HabitTracker.Server.Repository
                 { "@Habit_logged", habitLog.Habit_logged },
             };
 
-            int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            uint rowsAffected = _storage.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int habitLogId, int userId)
         {
-            string query = "DELETE FROM HabitLogs WHERE HabitLogs.Id = @id;";
+            string query = "DELETE FROM HabitLogs WHERE Id = @id AND Habit_id IN (SELECT h.Id FROM Habits h INNER JOIN Users u ON h.User_id = u.Id WHERE u.Id = @userId);";
+    
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@id", habitLogId },
+                { "@userId", userId },
+            };
+            uint rowsAffected = _storage.ExecuteNonQuery(query, parameters);
+
+            return rowsAffected > 0;
+        }
+
+        public bool DeleteByHabitIdAndStartDate(int habitId, DateTime startDate)
+        {
+            string query = "DELETE FROM HabitLogs WHERE HabitLogs.Habit_id = @habitId AND HabitLogs.Start_date = @startDate;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                { "@id", id },
+                { "@habitId", habitId },
+                { "@startDate", startDate },
             };
 
-            int rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            uint rowsAffected = _storage.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;
         }
