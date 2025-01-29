@@ -48,6 +48,7 @@ builder.Services.AddScoped<IHabitTrackerDbContext, HabitTrackerDbContext>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITransformer<Habit, IDataReader>, HabitTransformer>();
 builder.Services.AddScoped<ITransformer<HabitLog, IDataReader>, HabitLogTransformer>();
+builder.Services.AddScoped<ITransformer<User, IDataReader>, UserTransformer>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IHabitRepository, HabitRepository>();
 builder.Services.AddScoped<IHabitLogRepository, HabitLogRepository>();

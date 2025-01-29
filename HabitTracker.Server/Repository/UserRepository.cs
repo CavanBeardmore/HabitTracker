@@ -3,6 +3,8 @@ using HabitTracker.Server.Facade;
 using HabitTracker.Server.DTOs;
 using Microsoft.EntityFrameworkCore;
 using HabitTracker.Server.Database;
+using HabitTracker.Server.Transformer;
+using System.Data;
 
 namespace HabitTracker.Server.Repository
 {
@@ -10,11 +12,13 @@ namespace HabitTracker.Server.Repository
     {
         private readonly IStorage _sqliteFacade;
         private readonly IHabitTrackerDbContext _dbContext;
+        private readonly ITransformer<User, IDataReader> _transformer;
 
-        public UserRepository(IStorage sqliteFacade, IHabitTrackerDbContext dbContext)
+        public UserRepository(IStorage sqliteFacade, IHabitTrackerDbContext dbContext, ITransformer<User, IDataReader> transformer)
         {
             _sqliteFacade = sqliteFacade;
             _dbContext = dbContext;
+            _transformer = transformer;
         }
 
         public User? GetByUsername(string username)
@@ -28,16 +32,7 @@ namespace HabitTracker.Server.Repository
 
             IReadOnlyCollection<User> users = _sqliteFacade.ExecuteQuery<User>(
                 query,
-                reader =>
-                {
-                    return new User
-                    (
-                        Convert.ToInt32(reader["Id"]),
-                        (string)reader["Username"],
-                        (string)reader["Email"],
-                        (string)reader["Password"]
-                    );
-                },
+                _transformer.Transform,
                 parameters
             );
 
