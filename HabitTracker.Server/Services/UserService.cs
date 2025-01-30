@@ -39,11 +39,15 @@ namespace HabitTracker.Server.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IHabitRepository _habitRepository;
+        private readonly IHabitLogRepository _habitLogRepository;
         private readonly IPasswordService _passwordService;
 
-        public UserService(IUserRepository userRepository, IPasswordService passwordService)
+        public UserService(IUserRepository userRepository, IHabitLogRepository habitLogRepository, IHabitRepository HabitRepository, IPasswordService passwordService)
         {
             _userRepository = userRepository;
+            _habitLogRepository = habitLogRepository;
+            _habitRepository = HabitRepository; 
             _passwordService = passwordService;
         }
 

@@ -23,7 +23,7 @@ namespace HabitTracker.Server.Repository
 
         public User? GetByUsername(string username)
         {
-            string query = "SELECT * FROM Users WHERE Users.Username = @Username;";
+            string query = "SELECT * FROM Users WHERE Users.Username = @Username AND IsDeleted = 0;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -57,17 +57,16 @@ namespace HabitTracker.Server.Repository
 
         public bool Delete(string username)
         {
-            var user = _dbContext.Users.Include(u => u.Habits).ThenInclude(h => h.HabitLogs)
-                                       .FirstOrDefault(u => u.Username == username);
+            string query = "UPDATE Users SET IsDeleted = 1 WHERE Username = @Username AND IsDeleted = 0;";
 
-            if (user != null)
+            Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                _dbContext.Users.Remove(user);
-                _dbContext.SaveChanges();
-                return true;
-            }
+                { "@Username", username }
+            };
 
-            return false;
+            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+
+            return rowsAffected > 0;
         }
 
         public bool Update(PatchUser user)
@@ -96,7 +95,7 @@ namespace HabitTracker.Server.Repository
                 parameters.Add("@password", user.NewPassword);
             }
 
-            string query = $"UPDATE Users SET {string.Join(", ", setClauses)} WHERE Username = @oldUsername;";
+            string query = $"UPDATE Users SET {string.Join(", ", setClauses)} WHERE Username = @oldUsername AND IsDeleted = 0;";
 
             uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
 

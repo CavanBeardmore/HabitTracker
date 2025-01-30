@@ -29,20 +29,22 @@ namespace HabitTracker.Server.Database
             .ValueGeneratedOnAdd();
 
             modelBuilder.Entity<TUser>()
+             .Property(t => t.IsDeleted)
+             .HasDefaultValue(false);
+
+            modelBuilder.Entity<TUser>()
             .HasIndex(u => u.Username)
             .IsUnique();
 
             modelBuilder.Entity<THabit>()
-                .HasOne(h => h.User)  
-                .WithMany(u => u.Habits) 
-                .HasForeignKey(h => h.User_id)
-                .OnDelete(DeleteBehavior.Cascade); 
+                .HasOne(h => h.User)
+                .WithMany(u => u.Habits)
+                .HasForeignKey(h => h.User_id);
 
             modelBuilder.Entity<THabitLog>()
-                .HasOne(hl => hl.Habit)     
+                .HasOne(hl => hl.Habit)
                 .WithMany(h => h.HabitLogs)
-                .HasForeignKey(hl => hl.Habit_id)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(hl => hl.Habit_id);
         }
     }
 }
