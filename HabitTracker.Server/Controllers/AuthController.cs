@@ -2,6 +2,7 @@
 using HabitTracker.Server.Models;
 using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Services;
+using HabitTracker.Server.Services.Responses;
 
 namespace HabitTracker.Server.Controllers
 {

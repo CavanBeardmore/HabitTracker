@@ -36,10 +36,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="UnitsOfWork\HabitUnits\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="Services\HabitLogService.cs" />
   </ItemGroup>
 

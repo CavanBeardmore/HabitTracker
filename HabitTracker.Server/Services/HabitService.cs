@@ -2,49 +2,11 @@
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Database.Entities;
+using HabitTracker.Server.Services.Responses;
+using HabitTracker.Server.Services.Responses.HabitResponses;
 
 namespace HabitTracker.Server.Services
 {
-    public class GetHabitByIdResponse : IServiceResponseWithData<Habit?>
-    {
-        public bool Success { get; }
-        public Habit? Data { get; }
-        public string? Error { get; }
-
-        public GetHabitByIdResponse(bool success, Habit? habitLog, string? error)
-        {
-            Success = success;
-            Data = habitLog;
-            Error = error;
-        }
-    }
-
-    public class GetAllHabitByUserIdResponse : IServiceResponseWithData<IReadOnlyCollection<Habit>>
-    {
-        public bool Success { get; }
-        public IReadOnlyCollection<Habit?> Data { get; }
-        public string? Error { get; }
-
-        public GetAllHabitByUserIdResponse(bool success, IReadOnlyCollection<Habit> habitLogs, string? error)
-        {
-            Success = success;
-            Data = habitLogs;
-            Error = error;
-        }
-    }
-
-    public class HabitResponse : IServiceResponse
-    {
-        public bool Success { get; }
-        public string? Error { get; }
-
-        public HabitResponse(bool success, string? error)
-        {
-            Success = success;
-            Error = error;
-        }
-    }
-
     public class HabitService : IHabitService
     {
         private readonly IHabitRepository _habitRepository;

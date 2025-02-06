@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
+using HabitTracker.Server.Services.Responses;
 using Microsoft.AspNetCore.Components.Web;
 
 namespace HabitTracker.Server.Services

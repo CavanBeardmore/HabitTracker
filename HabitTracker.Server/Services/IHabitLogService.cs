@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Server.Models;
 using HabitTracker.Server.DTOs;
+using HabitTracker.Server.Services.Responses;
 
 namespace HabitTracker.Server.Services
 {

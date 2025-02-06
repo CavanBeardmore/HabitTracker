@@ -3,18 +3,25 @@ using System.Data;
 
 namespace HabitTracker.Server.Transformer
 {
-    public class HabitTransformer : ITransformer<Habit, IDataReader>
+    public class HabitTransformer : ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>
     {
         public HabitTransformer() { }
 
-        public Habit Transform(IDataReader reader)
+        public IReadOnlyCollection<Habit> Transform(IReadOnlyCollection<IReadOnlyDictionary<string, object>> data)
         {
-            return new Habit
-                (
-                    Convert.ToInt32(reader["Id"]),
-                    Convert.ToInt32(reader["User_id"]),
-                    Convert.ToString(reader["Name"])
-                );
+            List<Habit> habits = new List<Habit>();
+
+            foreach (IReadOnlyDictionary<string, object> d in data)
+            {
+
+                habits.Add(new Habit(
+                        Convert.ToInt32(d["Id"]),
+                        Convert.ToInt32(d["User_id"]),
+                        (string)d["Name"]
+                ));
+            }
+
+            return habits;
         }
     }
 }

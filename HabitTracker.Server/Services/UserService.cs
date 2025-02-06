@@ -2,40 +2,11 @@
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Auth;
-using HabitTracker.Server.Database.Entities;
+using HabitTracker.Server.Services.Responses;
+using HabitTracker.Server.Services.Responses.UserResponses;
 
 namespace HabitTracker.Server.Services
 {
-    public class GetUserByUsernameResponse : IServiceResponseWithDataAndStatusCode<User?>
-    {
-        public bool Success { get; }
-        public User? Data { get; }
-        public string? Error { get; }
-        public EStatusCodes? StatusCode { get; }
-
-        public GetUserByUsernameResponse(bool success, User? data, string? error, EStatusCodes statusCode) 
-        {
-            Success = success;
-            Data = data;
-            Error = error;
-            StatusCode = statusCode;
-        }
-    }
-
-    public class UserResponse : IServiceResponseWithStatusCode
-    {
-        public bool Success { get; }
-        public string? Error { get; }
-        public EStatusCodes? StatusCode { get; }
-
-        public UserResponse(bool success, string? error, EStatusCodes? statusCode = EStatusCodes.INTERNAL_SERVER_ERROR)
-        {
-            Success = success;
-            Error = error;
-            StatusCode = statusCode;
-        }
-    }
-
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;

@@ -20,13 +20,13 @@ namespace HabitTracker.Server.Tests.Repository
         private readonly UserRepository _repository;
         private readonly Mock<IHabitTrackerDbContext> _mockDbContext;
         private readonly Mock<IStorage> _mockFacade;
-        private readonly Mock<ITransformer<User, IDataReader>> _mockTransformer;
+        private readonly Mock<ITransformer<IReadOnlyCollection<User>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>> _mockTransformer;
 
         public UserRepositoryTests()
         {
             _mockDbContext = new Mock<IHabitTrackerDbContext>();
             _mockFacade = new Mock<IStorage>();
-            _mockTransformer = new Mock<ITransformer<User, IDataReader>>();
+            _mockTransformer = new Mock<ITransformer<IReadOnlyCollection<User>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>>();
             _repository = new UserRepository(_mockFacade.Object, _mockDbContext.Object, _mockTransformer.Object);
         }
 
@@ -42,7 +42,7 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@Username", username }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, _mockTransformer.Object.Transform, parameters)).Returns(new List<User> { new User(1234, "test", "test1", "test2") });
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, , parameters)).Returns(new List<User> { new Dictionary<string, object>(1234, "test", "test1", "test2") });
 
             var result = _repository.GetByUsername(username);
 

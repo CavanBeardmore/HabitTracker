@@ -9,9 +9,9 @@ namespace HabitTracker.Server.Repository
     public class HabitLogRepository : IHabitLogRepository
     {
         private readonly IStorage _storage;
-        private readonly ITransformer<HabitLog, IDataReader> _transformer;
+        private readonly ITransformer<IReadOnlyCollection<HabitLog>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>> _transformer;
 
-        public HabitLogRepository(IStorage storage, ITransformer<HabitLog, IDataReader> transformer)
+        public HabitLogRepository(IStorage storage, ITransformer<IReadOnlyCollection<HabitLog>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>> transformer)
         {
             _storage = storage;
             _transformer = transformer;
@@ -28,11 +28,12 @@ namespace HabitTracker.Server.Repository
                 {"@offset", pageNumber }
             };
 
-            return _storage.ExecuteQuery<HabitLog>(
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(
                 query,
-                _transformer.Transform,
                 parameters
             );
+
+            return _transformer.Transform(result);
         }
 
         public HabitLog? GetById(int habitLogId, int userId)
@@ -45,11 +46,12 @@ namespace HabitTracker.Server.Repository
                 { "@userId", userId }
             };
 
-            IReadOnlyCollection<HabitLog> habitLogs = _storage.ExecuteQuery<HabitLog>(
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(
                 query,
-                _transformer.Transform,
                 parameters
             );
+
+            IReadOnlyCollection<HabitLog> habitLogs = _transformer.Transform(result);
 
             return habitLogs.FirstOrDefault();
         }
@@ -64,11 +66,12 @@ namespace HabitTracker.Server.Repository
                 { "@userId", userId }
             };
 
-            IReadOnlyCollection<HabitLog> habitLogs = _storage.ExecuteQuery<HabitLog>(
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(
                 query,
-                _transformer.Transform,
                 parameters
             );
+
+            IReadOnlyCollection<HabitLog> habitLogs = _transformer.Transform(result);
 
             return habitLogs.FirstOrDefault();
         }

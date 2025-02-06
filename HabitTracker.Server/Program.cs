@@ -46,9 +46,9 @@ builder.Services.AddScoped<Authentication>(provider => new Authentication(builde
 builder.Services.AddScoped<IStorage>(provider => new SqliteFacade(connectionString));
 builder.Services.AddScoped<IHabitTrackerDbContext, HabitTrackerDbContext>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
-builder.Services.AddScoped<ITransformer<Habit, IDataReader>, HabitTransformer>();
-builder.Services.AddScoped<ITransformer<HabitLog, IDataReader>, HabitLogTransformer>();
-builder.Services.AddScoped<ITransformer<User, IDataReader>, UserTransformer>();
+builder.Services.AddScoped<ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, HabitTransformer>();
+builder.Services.AddScoped<ITransformer<IReadOnlyCollection<HabitLog>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, HabitLogTransformer>();
+builder.Services.AddScoped<ITransformer<IReadOnlyCollection<User>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, UserTransformer>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IHabitRepository, HabitRepository>();
 builder.Services.AddScoped<IHabitLogRepository, HabitLogRepository>();

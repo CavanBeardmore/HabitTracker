@@ -3,49 +3,11 @@ using HabitTracker.Server.DTOs;
 using HabitTracker.Server.UnitsOfWork.HabitLogUnits;
 using HabitTracker.Server.UnitsOfWork;
 using HabitTracker.Server.Models;
+using HabitTracker.Server.Services.Responses;
+using HabitTracker.Server.Services.Responses.HabitLogResponses;
 
 namespace HabitTracker.Server.Services
 {
-
-    public class GetHabitLogByIdResponse : IServiceResponseWithData<HabitLog?>
-    {
-        public bool Success { get; }
-        public HabitLog? Data { get; }
-        public string? Error { get; }
-
-        public GetHabitLogByIdResponse(bool success, HabitLog? habitLog, string? error)
-        {
-            Success = success;
-            Data = habitLog;
-            Error = error;
-        }
-    }
-
-    public class GetAllHabitLogsByIdResponse : IServiceResponseWithData<IReadOnlyCollection<HabitLog?>>
-    {
-        public bool Success { get; }
-        public IReadOnlyCollection<HabitLog?> Data { get; }
-        public string? Error { get; }
-
-        public GetAllHabitLogsByIdResponse(bool success, IReadOnlyCollection<HabitLog?> habitLogs, string? error)
-        {
-            Success = success;
-            Data = habitLogs;
-            Error = error;
-        }
-    }
-
-    public class HabitLogsResponse : IServiceResponse
-    {
-        public bool Success { get; }
-        public string? Error { get; }
-
-        public HabitLogsResponse(bool success, string? error)
-        {
-            Success = success;
-            Error = error;
-        }
-    }
 
     public class HabitLogService : IHabitLogService
     {
@@ -60,13 +22,11 @@ namespace HabitTracker.Server.Services
         {
             try
             {
-                var unitOfWork = new GetHabitLogBelongingToUser(habitLogId, userId, _habitLogRepository);
+                HabitLog? habitLog = _habitLogRepository.GetById(habitLogId, userId);
 
-                UnitOfWorkResult<HabitLog?> result = unitOfWork.execute();
-
-                if (result.Success)
+                if (habitLog != null)
                 {
-                    return new GetHabitLogByIdResponse(true, result.Data, null);
+                    return new GetHabitLogByIdResponse(true, habitLog, null);
                 }
 
                 return new GetHabitLogByIdResponse(false, null, null);
@@ -78,17 +38,15 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public IServiceResponseWithData<IReadOnlyCollection<HabitLog?>> GetAllByHabitId(int habitLogId, int userId, int pageNumber)
+        public IServiceResponseWithData<IReadOnlyCollection<HabitLog?>> GetAllByHabitId(int habitId, int userId, int pageNumber)
         {
             try
             {
-                var unitOfWork = new GetCollectionOfHabitLogsBelongingToUser(habitLogId, userId, pageNumber, _habitLogRepository);
+                IReadOnlyCollection<HabitLog> habitLogs = _habitLogRepository.GetAllByHabitId(habitId, userId, pageNumber);
 
-                UnitOfWorkResult<IReadOnlyCollection<HabitLog>> result = unitOfWork.execute();
-
-                if (result.Success)
+                if (habitLogs.Count() != 0)
                 {
-                    return new GetAllHabitLogsByIdResponse(true, result.Data, null);
+                    return new GetAllHabitLogsByIdResponse(true, habitLogs, null);
                 }
 
                 return new GetAllHabitLogsByIdResponse(false, null, null);

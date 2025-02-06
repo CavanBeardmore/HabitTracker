@@ -29,7 +29,7 @@ namespace HabitTracker.Server.Facade
             }
         }
 
-        public IReadOnlyCollection<T> ExecuteQuery<T>(string query, Func<IDataReader, T> transform, Dictionary<string, object> parameters)
+        public IReadOnlyCollection<IReadOnlyDictionary<string, object>> ExecuteQuery(string query, Dictionary<string, object> parameters)
         {
             using (SQLiteConnection connection = CreateConnection())
             {
@@ -46,10 +46,17 @@ namespace HabitTracker.Server.Facade
 
                     using (IDataReader reader = command.ExecuteReader())
                     {
-                        List<T> result = new List<T>();
+                        List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
+
                         while (reader.Read())
                         {
-                            result.Add(transform(reader));
+                            Dictionary<string, object> row = new Dictionary<string, object>();
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                row[reader.GetName(i)] = reader.GetValue(i);
+                            }
+
+                            result.Add(row);
                         }
                         return result;
                     }

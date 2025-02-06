@@ -10,9 +10,9 @@ namespace HabitTracker.Server.Repository
     public class HabitRepository : IHabitRepository
     {
         private readonly IStorage _sqliteFacade;
-        private readonly ITransformer<Habit, IDataReader> _transformer;
+        private readonly ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>> _transformer;
 
-        public HabitRepository(IStorage sqliteFacade, ITransformer<Habit, IDataReader> transformer)
+        public HabitRepository(IStorage sqliteFacade, ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>> transformer)
         {
             _sqliteFacade = sqliteFacade;
             _transformer = transformer;
@@ -27,11 +27,12 @@ namespace HabitTracker.Server.Repository
                 { "@User_id", user_id }
             };
 
-            return _sqliteFacade.ExecuteQuery<Habit>(
-                query, 
-                _transformer.Transform,
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _sqliteFacade.ExecuteQuery(
+                query,
                 parameters
             );
+
+            return _transformer.Transform(result);
         }
 
         public Habit? GetById(int habitId, int userId)
@@ -43,12 +44,13 @@ namespace HabitTracker.Server.Repository
                 { "@id", habitId },
                 { "@userId", userId }
             };
-            
-            IReadOnlyCollection<Habit> habits = _sqliteFacade.ExecuteQuery<Habit>(
+
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _sqliteFacade.ExecuteQuery(
                 query,
-                _transformer.Transform,
                 parameters
             );
+
+            IReadOnlyCollection<Habit> habits = _transformer.Transform(result);
 
             return habits.FirstOrDefault();
         }

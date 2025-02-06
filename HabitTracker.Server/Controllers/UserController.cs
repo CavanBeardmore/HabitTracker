@@ -3,6 +3,7 @@ using HabitTracker.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Models;
+using HabitTracker.Server.Services.Responses;
 
 namespace HabitTracker.Server.Controllers
 {
