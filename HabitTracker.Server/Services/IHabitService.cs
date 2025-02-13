@@ -8,8 +8,8 @@ namespace HabitTracker.Server.Services
     {
         IServiceResponseWithData<IReadOnlyCollection<Habit>> GetAllByUserId(int user_id);
         IServiceResponseWithData<Habit?> GetById(int habitId, int userId);
-        IServiceResponse Add(PostHabit habit);
+        IServiceResponse Add(int userId, PostHabit habit);
         IServiceResponse Delete(int habitId, int userid);
-        IServiceResponse Update(PatchHabit habit);
+        IServiceResponse Update(int userId, PatchHabit habit);
     }
 }

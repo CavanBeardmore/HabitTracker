@@ -7,8 +7,9 @@ namespace HabitTracker.Server.Repository
     public interface IUserRepository
     {
         User? GetByUsername(string username);
+        User? GetById(int userId);
         bool Add(PostUser user);
-        bool Update(PatchUser user);
-        bool Delete(string username);
+        bool Update(int userId, PatchUser user);
+        bool Delete(int userId);
     }
 }

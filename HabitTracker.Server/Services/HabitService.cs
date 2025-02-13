@@ -55,11 +55,11 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public IServiceResponse Add(PostHabit habit)
+        public IServiceResponse Add(int userId, PostHabit habit)
         {
             try
             {
-                return new HabitResponse(_habitRepository.Add(habit), null);
+                return new HabitResponse(_habitRepository.Add(userId, habit), null);
             }
             catch (Exception ex)
             {
@@ -67,11 +67,11 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public IServiceResponse Update(PatchHabit habit)
+        public IServiceResponse Update(int userId, PatchHabit habit)
         {
             try
             {
-                return new HabitResponse(_habitRepository.Update(habit), null);
+                return new HabitResponse(_habitRepository.Update(userId, habit), null);
             }
             catch (Exception ex)
             {

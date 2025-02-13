@@ -9,7 +9,7 @@ namespace HabitTracker.Server.Services
     {
         IServiceResponseWithDataAndStatusCode<User?> GetByUsername(string username);
         IServiceResponseWithStatusCode Add(PostUser user);
-        IServiceResponseWithStatusCode Delete(AuthUser user);
-        IServiceResponseWithStatusCode Update(PatchUser user);
+        IServiceResponseWithStatusCode Delete(int userId, AuthUser user);
+        IServiceResponseWithStatusCode Update(int userId, PatchUser user);
     }
 }

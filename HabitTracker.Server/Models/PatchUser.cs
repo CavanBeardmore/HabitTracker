@@ -5,9 +5,6 @@ namespace HabitTracker.Server.Models
 {
     public class PatchUser
     {
-        [Required]
-        [StringLength(100)]
-        public string OldUsername { get; set; }
 
         [StringLength(100)]
         public string? NewUsername { get; set; }
@@ -22,9 +19,8 @@ namespace HabitTracker.Server.Models
         [DataType(DataType.Password)]
         public string? NewPassword { get; set; }
 
-        public PatchUser(string oldUsername, string oldPassword, string newUsername = null, string email = null, string newPassword = null) 
+        public PatchUser(string oldPassword, string newUsername = null, string email = null, string newPassword = null) 
         {
-            OldUsername = oldUsername;
             NewUsername = newUsername;
             Email = email;
             OldPassword = oldPassword;

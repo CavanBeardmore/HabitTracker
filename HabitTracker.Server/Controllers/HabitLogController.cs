@@ -23,10 +23,15 @@ namespace HabitTracker.Server.Controllers
 
         [Authorize]
         [HttpGet("{habitLogId}")]
-        public IActionResult GetHabitLog(int habitLogId, [FromQuery] int userId)
+        public IActionResult GetHabitLog(int habitLogId)
         {
             try
             {
+                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+                {
+                    return Unauthorized("Could not retrieve user id from JWT");
+                }
+
                 IServiceResponseWithData<HabitLog?> response = _habitLogService.GetById(habitLogId, userId);
                 if (response.Success == false)
                 {
@@ -43,10 +48,15 @@ namespace HabitTracker.Server.Controllers
 
         [Authorize]
         [HttpGet("habit/{habitId}")]
-        public IActionResult GetHabitLogsFromHabit(int habitId, [FromQuery] int userId, int pageNumber)
+        public IActionResult GetHabitLogsFromHabit(int habitId, [FromQuery] int pageNumber)
         {
             try
             {
+                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+                {
+                    return Unauthorized("Could not retrieve user id from JWT");
+                }
+
                 IServiceResponseWithData<IReadOnlyCollection<HabitLog?>> response = _habitLogService.GetAllByHabitId(habitId, userId, pageNumber);
                 if (response.Success == false)
                 {
@@ -116,10 +126,15 @@ namespace HabitTracker.Server.Controllers
 
         [Authorize]
         [HttpDelete("delete/{habitLogId}")]
-        public IActionResult DeleteHabitLog(int habitLogId, [FromQuery] int userId)
+        public IActionResult DeleteHabitLog(int habitLogId)
         {
             try
             {
+                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+                {
+                    return Unauthorized("Could not retrieve user id from JWT");
+                }
+
                 IServiceResponse response = _habitLogService.Delete(habitLogId, userId);
 
                 if (response.Success)

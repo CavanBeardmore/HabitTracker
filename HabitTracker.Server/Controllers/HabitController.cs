@@ -14,18 +14,25 @@ namespace HabitTracker.Server.Controllers
     {
 
         private readonly HabitService _habitService;
+        private readonly UserService _userService;
 
-        public HabitController(HabitService habitService)
+        public HabitController(HabitService habitService, UserService userService)
         {
             _habitService = habitService;
+            _userService = userService;
         }
 
         [Authorize]
         [HttpGet("{habitId}")]
-        public IActionResult GetHabit(int habitId, [FromQuery] int userId)
+        public IActionResult GetHabit(int habitId)
         {
             try
             {
+                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+                {
+                    return Unauthorized("Could not retrieve user id from JWT");
+                }
+
                 IServiceResponseWithData<Habit?> response = _habitService.GetById(habitId, userId);
                 if (response.Success == false)
                 {
@@ -41,11 +48,16 @@ namespace HabitTracker.Server.Controllers
         }
 
         [Authorize]
-        [HttpGet("user/{userId}")]
-        public IActionResult GetUserHabits(int userId)
+        [HttpGet()]
+        public IActionResult GetUserHabits()
         {
             try
             {
+                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+                {
+                    return Unauthorized("Could not retrieve user id from JWT");
+                }
+
                 IServiceResponseWithData<IReadOnlyCollection<Habit>> response = _habitService.GetAllByUserId(userId);
                 
                 Console.WriteLine($"GET HABITS BY USER ID RES - {response.Success}");
@@ -69,6 +81,11 @@ namespace HabitTracker.Server.Controllers
         [HttpPost]
         public IActionResult CreateHabit([FromBody] PostHabit habit)
         {
+            if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+            {
+                return Unauthorized("Could not retrieve user id from JWT");
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -76,7 +93,7 @@ namespace HabitTracker.Server.Controllers
 
             try
             {
-                IServiceResponse response = _habitService.Add(habit);
+                IServiceResponse response = _habitService.Add(userId, habit);
 
                 if (response.Success)
                 {
@@ -95,6 +112,11 @@ namespace HabitTracker.Server.Controllers
         [HttpPatch("update")]
         public IActionResult UpdateHabit([FromBody] PatchHabit habit)
         {
+            if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+            {
+                return Unauthorized("Could not retrieve user id from JWT");
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -102,7 +124,7 @@ namespace HabitTracker.Server.Controllers
 
             try
             {
-                IServiceResponse response = _habitService.Update(habit);
+                IServiceResponse response = _habitService.Update(userId, habit);
 
                 if (response.Success)
                 {
@@ -119,10 +141,15 @@ namespace HabitTracker.Server.Controllers
 
         [Authorize]
         [HttpDelete("delete/{habitId}")]
-        public IActionResult DeleteHabit(int habitId, [FromQuery] int userId)
+        public IActionResult DeleteHabit(int habitId)
         {
             try
             {
+                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+                {
+                    return Unauthorized("Could not retrieve user id from JWT");
+                }
+
                 IServiceResponse response = _habitService.Delete(habitId, userId);
 
                 if (response.Success)

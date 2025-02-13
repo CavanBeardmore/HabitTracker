@@ -64,7 +64,7 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public IServiceResponseWithStatusCode Delete(AuthUser user)
+        public IServiceResponseWithStatusCode Delete(int userId, AuthUser user)
         {
             try
             {
@@ -82,7 +82,7 @@ namespace HabitTracker.Server.Services
                     return new UserResponse(false, "Incorrect Password", EStatusCodes.FORBIDDEN);
                 }
 
-                return new UserResponse(_userRepository.Delete(user.Username), null);
+                return new UserResponse(_userRepository.Delete(userId), null);
             }
             catch (Exception ex)
             {
@@ -90,11 +90,11 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public IServiceResponseWithStatusCode Update(PatchUser user)
+        public IServiceResponseWithStatusCode Update(int userId, PatchUser user)
         {
             try
             {
-                var existingUser = _userRepository.GetByUsername(user.OldUsername);
+                var existingUser = _userRepository.GetById(userId);
 
                 if (existingUser == null)
                 {
@@ -113,7 +113,7 @@ namespace HabitTracker.Server.Services
                     user.NewPassword = _passwordService.HashPassword(user.NewPassword);
                 }
 
-                return new UserResponse(_userRepository.Update(user), null);
+                return new UserResponse(_userRepository.Update(userId, user), null);
             }
             catch (Exception ex)
             {

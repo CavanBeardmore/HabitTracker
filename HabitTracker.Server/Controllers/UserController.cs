@@ -51,12 +51,17 @@ namespace HabitTracker.Server.Controllers
         {
             try
             {
+                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+                {
+                    return Unauthorized("Could not retrieve user id from JWT");
+                }
+
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
 
-                IServiceResponseWithStatusCode response = _userService.Update(user);
+                IServiceResponseWithStatusCode response = _userService.Update(userId, user);
 
                 if (response.Success)
                 {
@@ -77,12 +82,17 @@ namespace HabitTracker.Server.Controllers
         {
             try
             {
+                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+                {
+                    return Unauthorized("Could not retrieve user id from JWT");
+                }
+
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
 
-                IServiceResponseWithStatusCode response = _userService.Delete(user);
+                IServiceResponseWithStatusCode response = _userService.Delete(userId, user);
 
                 if (response.Success)
                 {

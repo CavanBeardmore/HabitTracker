@@ -8,8 +8,8 @@ namespace HabitTracker.Server.Repository
     {
         IReadOnlyCollection<Habit> GetAllByUserId(int user_id);
         Habit? GetById(int habitId, int userId);
-        bool Add(PostHabit habit);
-        bool Update(PatchHabit habit);
+        bool Add(int userId, PostHabit habit);
+        bool Update(int userId, PatchHabit habit);
         bool Delete(int habitId, int userId);
     }
 }

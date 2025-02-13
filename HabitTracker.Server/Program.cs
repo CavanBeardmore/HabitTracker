@@ -10,6 +10,7 @@ using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Transformer;
 using System.Data;
 using HabitTracker.Server.Database;
+using HabitTracker.Server.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -109,6 +110,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseMiddleware<UserIdMiddleware>();
 
 app.MapControllers();
 

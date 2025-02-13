@@ -20,7 +20,7 @@ namespace HabitTracker.Server.Repository
 
         public IReadOnlyCollection<Habit> GetAllByUserId(int user_id)
         {
-            string query = "SELECT h.* FROM Habits h INNER JOIN Users u ON h.User_id = u.Id WHERE h.User_id = @User_id;";
+            string query = "SELECT h.* FROM Habits h INNER JOIN Users u ON h.User_id = u.Id WHERE h.User_id = @User_id AND u.IsDeleted = 0;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -37,7 +37,7 @@ namespace HabitTracker.Server.Repository
 
         public Habit? GetById(int habitId, int userId)
         {
-            string query = "SELECT h.* FROM Habits h INNER JOIN Users u On h.User_id WHERE h.Id = @id AND h.User_id = @userId;";
+            string query = "SELECT h.* FROM Habits h INNER JOIN Users u On h.User_id WHERE h.Id = @id AND h.User_id = @userId AND u.IsDeleted = 0;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -55,13 +55,13 @@ namespace HabitTracker.Server.Repository
             return habits.FirstOrDefault();
         }
 
-        public bool Add(PostHabit habit)
+        public bool Add(int userId, PostHabit habit)
         {
             string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name);";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                { "@User_id", habit.User_id },
+                { "@User_id", userId },
                 { "@name", habit.Name }
             };
 
@@ -85,7 +85,7 @@ namespace HabitTracker.Server.Repository
             return rowsAffected > 0;
         }
 
-        public bool Update(PatchHabit habit)
+        public bool Update(int userId, PatchHabit habit)
         {
             string query = "UPDATE Habits SET name = @name WHERE Id = @id AND User_id = @userId;";
 
@@ -93,7 +93,7 @@ namespace HabitTracker.Server.Repository
             {
                 { "@id", habit.Id },
                 { "@name", habit.Name },
-                { "@userId", habit.UserId },
+                { "@userId", userId },
             };
 
             uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
