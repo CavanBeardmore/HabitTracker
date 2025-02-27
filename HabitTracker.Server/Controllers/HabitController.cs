@@ -3,7 +3,8 @@ using HabitTracker.Server.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Services;
-using HabitTracker.Server.Services.Responses;
+using HabitTracker.Server.Exceptions;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Controllers
 {
@@ -22,147 +23,109 @@ namespace HabitTracker.Server.Controllers
             _userService = userService;
         }
 
+        private int GetUserId()
+        {
+            if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+            {
+                throw new UnauthorizedException("Could not retrieve user id from JWT");
+            }
+
+            return userId;
+        }
+
+
         [Authorize]
         [HttpGet("{habitId}")]
         public IActionResult GetHabit(int habitId)
         {
-            try
-            {
-                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
-                {
-                    return Unauthorized("Could not retrieve user id from JWT");
-                }
+            int userId = GetUserId();
 
-                IServiceResponseWithData<Habit?> response = _habitService.GetById(habitId, userId);
-                if (response.Success == false)
-                {
-                    return NotFound(response.Error);
-                }
+            Habit? habit = _habitService.GetById(habitId, userId);
 
-                return Ok(response.Data);
-            } 
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return Ok(habit);
         }
 
         [Authorize]
         [HttpGet()]
         public IActionResult GetUserHabits()
         {
-            try
-            {
-                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
-                {
-                    return Unauthorized("Could not retrieve user id from JWT");
-                }
+            int userId = GetUserId();
 
-                IServiceResponseWithData<IReadOnlyCollection<Habit>> response = _habitService.GetAllByUserId(userId);
-                
-                Console.WriteLine($"GET HABITS BY USER ID RES - {response.Success}");
+            IReadOnlyCollection<Habit?> habits = _habitService.GetAllByUserId(userId);
 
-                if (response.Success == false)
-                {
-                    Console.WriteLine($"FAILED TO GET HABITS BY USER ID - {userId}");
-                    return NotFound(response.Error);
-                }
-
-                Console.WriteLine($"SUCCESFULLY GOT HABITS BY USER ID - {userId}");
-                return Ok(response.Data);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return Ok(habits);
         }
 
         [Authorize]
         [HttpPost]
         public IActionResult CreateHabit([FromBody] PostHabit habit)
         {
-            if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
-            {
-                return Unauthorized("Could not retrieve user id from JWT");
-            }
+            int userId = GetUserId();
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                var errors = ModelState
+                    .Where(kvp => kvp.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
+
+                throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
 
-            try
-            {
-                IServiceResponse response = _habitService.Add(userId, habit);
+            Habit? createdHabit = _habitService.Add(userId, habit);
 
-                if (response.Success)
-                {
-                    return StatusCode(201);
-                }
+            if (createdHabit != null)
+            { 
+                return Created($"habits/{createdHabit.Id}", createdHabit);
+            }
 
-                return StatusCode(500, response.Error);
-            }
-            catch(Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            throw new AppException($"Could not create habit ${JsonSerializer.Serialize(habit)} - for user - {userId}");
         }
 
         [Authorize]
         [HttpPatch("update")]
         public IActionResult UpdateHabit([FromBody] PatchHabit habit)
         {
-            if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
-            {
-                return Unauthorized("Could not retrieve user id from JWT");
-            }
+            int userId = GetUserId();
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                var errors = ModelState
+                    .Where(kvp => kvp.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
+
+                throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
 
-            try
+            bool success = _habitService.Update(userId, habit);
+
+            if (success)
             {
-                IServiceResponse response = _habitService.Update(userId, habit);
-
-                if (response.Success)
-                {
-                    return Ok();
-                }
-
-                return StatusCode(500, response.Error);
+                return Ok();
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+
+            throw new AppException($"Could not update habit ${JsonSerializer.Serialize(habit)} - for user - {userId}");
         }
 
         [Authorize]
         [HttpDelete("delete/{habitId}")]
         public IActionResult DeleteHabit(int habitId)
         {
-            try
+            int userId = GetUserId();
+
+            bool success = _habitService.Delete(habitId, userId);
+
+            if (success)
             {
-                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
-                {
-                    return Unauthorized("Could not retrieve user id from JWT");
-                }
-
-                IServiceResponse response = _habitService.Delete(habitId, userId);
-
-                if (response.Success)
-                {
-                    return NoContent();
-                }
-
-                return StatusCode(500, response.Error);
+                return NoContent();
             }
-            catch
-            {
-                return StatusCode(500, "An error occurred while deleting the habit.");
-            }
+
+            throw new AppException($"Could not delete habit ${habitId} - for user - {userId}");
         }
     }
 }

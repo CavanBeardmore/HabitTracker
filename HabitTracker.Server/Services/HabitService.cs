@@ -1,9 +1,8 @@
 ﻿using HabitTracker.Server.Repository;
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
-using HabitTracker.Server.Database.Entities;
-using HabitTracker.Server.Services.Responses;
-using HabitTracker.Server.Services.Responses.HabitResponses;
+using HabitTracker.Server.Exceptions;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Services
 {
@@ -16,7 +15,7 @@ namespace HabitTracker.Server.Services
             _habitRepository = habitRepository;
         }
 
-        public IServiceResponseWithData<Habit?> GetById(int habitId, int userId)
+        public Habit? GetById(int habitId, int userId)
         {
             try
             {
@@ -24,70 +23,88 @@ namespace HabitTracker.Server.Services
 
                 if (habit == null)
                 {
-                    return new GetHabitByIdResponse(false, null, null);
+                    throw new NotFoundException($"Habit not found of id - {habitId} for - {userId}");
                 }
 
-                return new GetHabitByIdResponse(true, habit, null);
+                return habit;
             }
-            catch (Exception ex)
+            catch (NotFoundException ex)
             {
-                return new GetHabitByIdResponse(false, null, ex.Message);
+                throw new NotFoundException(ex.Message);
+            }
+            catch
+            {
+                throw new AppException($"An error occured when getting habit of - {habitId} for {userId}");
             }
         }
 
-        public IServiceResponseWithData<IReadOnlyCollection<Habit>> GetAllByUserId(int userId)
+        public IReadOnlyCollection<Habit?> GetAllByUserId(int userId)
         {
             try
             {
                 IReadOnlyCollection<Habit?> habits = _habitRepository.GetAllByUserId(userId);
-                Console.WriteLine("GOT HABITS BY USER ID", habits);
 
                 if (habits.Count == 0)
                 {
-                    return new GetAllHabitByUserIdResponse(false, [], "0 records found");
+                    throw new NotFoundException($"No habits found for - {userId}");
                 }
 
-                return new GetAllHabitByUserIdResponse(true, habits, null);
+                return habits;
             }
-            catch (Exception ex)
+            catch (NotFoundException ex)
             {
-                return new GetAllHabitByUserIdResponse(false, null, ex.Message);
+                throw new NotFoundException(ex.Message);
             }
-        }
-
-        public IServiceResponse Add(int userId, PostHabit habit)
-        {
-            try
+            catch
             {
-                return new HabitResponse(_habitRepository.Add(userId, habit), null);
-            }
-            catch (Exception ex)
-            {
-                return new HabitResponse(false, ex.Message);
+                throw new AppException($"An error occured when getting habits for {userId}");
             }
         }
 
-        public IServiceResponse Update(int userId, PatchHabit habit)
+        public Habit? Add(int userId, PostHabit habit)
         {
             try
             {
-                return new HabitResponse(_habitRepository.Update(userId, habit), null);
+                Habit? createdHabit = _habitRepository.Add(userId, habit);
+
+                if (habit == null)
+                {
+                    throw new NotFoundException($"Failed to create habit with data - {JsonSerializer.Serialize(habit)} for - {userId}");
+                }
+
+                return createdHabit;
             }
-            catch (Exception ex)
+            catch (NotFoundException ex)
             {
-                return new HabitResponse(false, ex.Message);
+                throw new NotFoundException(ex.Message);
+            }
+            catch
+            {
+                throw new AppException($"An error occured when adding habit data {JsonSerializer.Serialize(habit)} for {userId}");
             }
         }
 
-        public IServiceResponse Delete(int habitId, int userId)
+        public bool Update(int userId, PatchHabit habit)
         {
             try
             {
-                return new HabitResponse(_habitRepository.Delete(habitId, userId), null);
-            } 
-            catch (Exception ex) 
+                return _habitRepository.Update(userId, habit);
+            }
+            catch
             {
-                return new HabitResponse(false, ex.Message);
+                throw new AppException($"An error occured when updating habit {JsonSerializer.Serialize(habit)} for {userId}");
+            }
+        }
+
+        public bool Delete(int habitId, int userId)
+        {
+            try
+            {
+                return _habitRepository.Delete(habitId, userId);
+            }
+            catch 
+            {
+                throw new AppException($"An error occured when deleting habit of id {habitId} for {userId}");
             }
         }
     }

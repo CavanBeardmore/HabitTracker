@@ -9,7 +9,7 @@ namespace HabitTracker.Server.Repository
         HabitLog? GetById(int habitLogId, int userId);
 
         HabitLog? GetMostRecentHabitLog(int habitId, int userId);
-        bool Add(PostHabitLog habitLog);
+        HabitLog? Add(PostHabitLog habitLog);
         bool Update(PatchHabitLog habitLog);
         bool Delete(int habitLogId, int userId);
 

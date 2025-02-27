@@ -95,26 +95,26 @@ namespace HabitTracker.Server.Repository
                 { "@UserId", userId }
             };
 
-            if (!string.IsNullOrEmpty(user.NewUsername))
+            if (!string.IsNullOrWhiteSpace(user.NewUsername))
             {
                 setClauses.Add("Username = @newUsername");
                 parameters.Add("@newUsername", user.NewUsername);
             }
 
-            if (!string.IsNullOrEmpty(user.Email))
+            if (!string.IsNullOrWhiteSpace(user.Email))
             {
                 setClauses.Add("Email = @email");
                 parameters.Add("@email", user.Email);
             }
 
-            if (!string.IsNullOrEmpty(user.NewPassword))
+            if (!string.IsNullOrWhiteSpace(user.NewPassword))
             {
                 setClauses.Add("Password = @password");
                 parameters.Add("@password", user.NewPassword);
             }
 
             string query = $"UPDATE Users SET {string.Join(", ", setClauses)} WHERE Id = @UserId AND IsDeleted = 0;";
-
+            Console.WriteLine(query);
             uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;

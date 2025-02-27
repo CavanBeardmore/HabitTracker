@@ -2,7 +2,8 @@
 using HabitTracker.Server.Models;
 using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Services;
-using HabitTracker.Server.Services.Responses;
+using HabitTracker.Server.Exceptions;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Controllers
 {
@@ -10,10 +11,10 @@ namespace HabitTracker.Server.Controllers
     [Route("auth/[controller]")]
     public class AuthController : Controller
     {
-        private readonly Authentication _auth;
+        private readonly IAuthentication _auth;
         private readonly UserService _userService;
 
-        public AuthController(Authentication auth, UserService userService)
+        public AuthController(IAuthentication auth, UserService userService)
         {
             _auth = auth;
             _userService = userService;
@@ -22,33 +23,28 @@ namespace HabitTracker.Server.Controllers
         [HttpGet("login")]
         public IActionResult Login([FromQuery] AuthUser user)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                var errors = ModelState
+                    .Where(kvp => kvp.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
 
-                IServiceResponse response = _userService.AreUserCredentialsCorrect(user.Username, user.Password);
+                throw new BadRequestException(JsonSerializer.Serialize(errors));
+            }
 
-                if (response.Success == false && response.Error != null)
-                {
-                    return StatusCode(500, response.Error);
-                }
+            bool areCredentialsCorrect = _userService.AreUserCredentialsCorrect(user.Username, user.Password);
 
-                if (response.Success == false)
-                {
-                    return BadRequest("Invalid Credentials");
-                }
-
-                var jwt = _auth.GenerateJWTToken(user.Username);
+            if (areCredentialsCorrect)
+            {
+                string jwt = _auth.GenerateJWTToken(user.Username);
 
                 return Ok(jwt);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+
+            throw new ForbiddenException("Incorrect credentials");
         }
     }
 }

@@ -1,20 +1,19 @@
 ﻿using HabitTracker.Server.Models;
 using HabitTracker.Server.DTOs;
-using HabitTracker.Server.Services.Responses;
 
 namespace HabitTracker.Server.Services
 {
     public interface IHabitLogService
     {
-        IServiceResponseWithData<IReadOnlyCollection<HabitLog?>> GetAllByHabitId(int id, int userId, int pageNumber);
+        IReadOnlyCollection<HabitLog?> GetAllByHabitId(int id, int userId, int pageNumber);
 
-        IServiceResponseWithData<HabitLog?> GetById(int habitLogId, int userId);
+        HabitLog? GetById(int habitLogId, int userId);
 
-        IServiceResponse Add(PostHabitLog habitLog);
+        IReadOnlyCollection<HabitLog?> Add(PostHabitLog habitLog);
 
-        IServiceResponse Update(PatchHabitLog habitLog);
+        bool Update(PatchHabitLog habitLog);
 
-        IServiceResponse Delete(int habitLogId, int userId);
+        bool Delete(int habitLogId, int userId);
 
     }
 }

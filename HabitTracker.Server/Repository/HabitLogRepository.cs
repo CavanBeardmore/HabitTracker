@@ -76,7 +76,7 @@ namespace HabitTracker.Server.Repository
             return habitLogs.FirstOrDefault();
         }
 
-        public bool Add(PostHabitLog habitLog)
+        public HabitLog? Add(PostHabitLog habitLog)
         {
             string query = "INSERT INTO HabitLogs (Habit_id, Start_date, Habit_logged, Length_in_days) VALUES (@Habit_id, @Start_date, @Habit_logged, @Length_in_days);";
 
@@ -88,9 +88,11 @@ namespace HabitTracker.Server.Repository
                 { "@Length_in_days", habitLog.Length_in_days }
             };
 
-            uint rowsAffected = _storage.ExecuteNonQuery(query, parameters);
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(query, parameters);
 
-            return rowsAffected > 0;
+            IReadOnlyCollection<HabitLog?> habitLogs = _transformer.Transform(result);
+
+            return habitLogs.FirstOrDefault();
         }
 
         public bool Update(PatchHabitLog habitLog)

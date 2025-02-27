@@ -1,5 +1,4 @@
 ﻿using HabitTracker.Server.Services;
-using HabitTracker.Server.Services.Responses;
 using HabitTracker.Server.DTOs;
 
 namespace HabitTracker.Server.Middleware
@@ -19,11 +18,11 @@ namespace HabitTracker.Server.Middleware
 
             if (username != null)
             {
-                IServiceResponseWithDataAndStatusCode<User?> result = userService.GetByUsername(username);
+                User? user = userService.GetByUsername(username);
 
-                if (result.Success && result.Data != null)
+                if (user != null)
                 {
-                    int userId = result.Data.Id;
+                    int userId = user.Id;
                     Console.WriteLine($"GOT USER ID {userId}");   
                     context.Items.Add("userId", userId);
                 }

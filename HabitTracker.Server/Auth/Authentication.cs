@@ -6,7 +6,7 @@ using System.Text;
 
 namespace HabitTracker.Server.Auth
 {
-    public class Authentication
+    public class Authentication : IAuthentication
     {
         private readonly string _jwtSecret;
 

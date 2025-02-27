@@ -55,9 +55,9 @@ namespace HabitTracker.Server.Repository
             return habits.FirstOrDefault();
         }
 
-        public bool Add(int userId, PostHabit habit)
+        public Habit? Add(int userId, PostHabit habit)
         {
-            string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name);";
+            string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name) RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -65,9 +65,11 @@ namespace HabitTracker.Server.Repository
                 { "@name", habit.Name }
             };
 
-            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _sqliteFacade.ExecuteQuery(query, parameters);
 
-            return rowsAffected > 0;
+            IReadOnlyCollection<Habit> habits = _transformer.Transform(result);
+
+            return habits.FirstOrDefault();
         }
 
         public bool Delete(int habitId, int userId)

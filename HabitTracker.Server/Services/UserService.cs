@@ -2,8 +2,8 @@
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Auth;
-using HabitTracker.Server.Services.Responses;
-using HabitTracker.Server.Services.Responses.UserResponses;
+using HabitTracker.Server.Exceptions;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Services
 {
@@ -13,16 +13,18 @@ namespace HabitTracker.Server.Services
         private readonly IHabitRepository _habitRepository;
         private readonly IHabitLogRepository _habitLogRepository;
         private readonly IPasswordService _passwordService;
+        private readonly IAuthentication _auth;
 
-        public UserService(IUserRepository userRepository, IHabitLogRepository habitLogRepository, IHabitRepository HabitRepository, IPasswordService passwordService)
+        public UserService(IUserRepository userRepository, IHabitLogRepository habitLogRepository, IHabitRepository HabitRepository, IPasswordService passwordService, IAuthentication auth)
         {
             _userRepository = userRepository;
             _habitLogRepository = habitLogRepository;
             _habitRepository = HabitRepository; 
             _passwordService = passwordService;
+            _auth = auth;
         }
 
-        public IServiceResponseWithDataAndStatusCode<User?> GetByUsername(string username)
+        public User? GetByUsername(string username)
         {
             try
             {
@@ -30,18 +32,22 @@ namespace HabitTracker.Server.Services
 
                 if (user == null)
                 {
-                    return new GetUserByUsernameResponse(false, null, "User not found", EStatusCodes.NOT_FOUND);
+                    throw new NotFoundException($"User of - {username} - was not found");
                 }
 
-                return new GetUserByUsernameResponse(true, user, null, EStatusCodes.OK);
+                return user;
             }
-            catch (Exception ex)
+            catch (NotFoundException ex)
             {
-                return new GetUserByUsernameResponse(false, null, ex.Message, EStatusCodes.INTERNAL_SERVER_ERROR);
+                throw new NotFoundException(ex.Message);
+            }
+            catch
+            {
+                throw new AppException($"An error occured when fetching the user from username  - {username}");
             }
         }
 
-        public IServiceResponseWithStatusCode Add(PostUser user)
+        public bool Add(PostUser user)
         {
             try
             {
@@ -49,22 +55,24 @@ namespace HabitTracker.Server.Services
 
                 if (existingUser != null)
                 {
-                    return new UserResponse(false, "User already exists", EStatusCodes.CONFLICT);
+                    throw new ConflictException($"User already exists - {user.Username}");
                 }
 
                 user.Password = _passwordService.HashPassword(user.Password);
 
-                bool success = _userRepository.Add(user);
-
-                return new UserResponse(success, null, success ? EStatusCodes.CREATED : EStatusCodes.INTERNAL_SERVER_ERROR);
+                return _userRepository.Add(user);
             }
-            catch (Exception ex)
+            catch (ConflictException ex)
             {
-                return new UserResponse(false, ex.Message);
+                throw new ConflictException(ex.Message);
+            }
+            catch
+            {
+                throw new AppException("An error occured when creating the user.");
             }
         }
 
-        public IServiceResponseWithStatusCode Delete(int userId, AuthUser user)
+        public bool Delete(int userId, AuthUser user)
         {
             try
             {
@@ -72,71 +80,98 @@ namespace HabitTracker.Server.Services
 
                 if (existingUser == null)
                 {
-                    return new UserResponse(false, "User doesn't exist", EStatusCodes.BAD_REQUEST);
+                    throw new BadRequestException($"User of user id - {userId} - does not exist");
                 }
 
-                bool matches = _passwordService.VerifyPassword(user.Password, existingUser.Password);
+                bool isPasswordValid = _passwordService.VerifyPassword(user.Password, existingUser.Password);
 
-                if (matches == false)
+                if (isPasswordValid == false)
                 {
-                    return new UserResponse(false, "Incorrect Password", EStatusCodes.FORBIDDEN);
+                    throw new ForbiddenException("Incorrect password");
                 }
 
-                return new UserResponse(_userRepository.Delete(userId), null);
+                return _userRepository.Delete(userId);
             }
-            catch (Exception ex)
+            catch (BadRequestException ex)
             {
-                return new UserResponse(false, ex.Message);
+                throw new BadRequestException(ex.Message);
+            }
+            catch (ForbiddenException ex)
+            {
+                throw new ForbiddenException(ex.Message);
+            }
+            catch
+            {
+                throw new AppException($"An error occured when deleting the user of user id - {userId}");
             }
         }
 
-        public IServiceResponseWithStatusCode Update(int userId, PatchUser user)
+        public string? Update(int userId, PatchUser user)
         {
             try
             {
+                Console.WriteLine(JsonSerializer.Serialize(user));
                 var existingUser = _userRepository.GetById(userId);
 
                 if (existingUser == null)
                 {
-                    return new UserResponse(false, "User doesn't exist", EStatusCodes.BAD_REQUEST);
+                    throw new BadRequestException($"The user of user id {userId} does not exist");
                 }
 
-                bool matches = _passwordService.VerifyPassword(user.OldPassword, existingUser.Password);
+                bool isPasswordValid = _passwordService.VerifyPassword(user.OldPassword, existingUser.Password);
 
-                if (matches == false)
+                if (isPasswordValid == false)
                 {
-                    return new UserResponse(false, "Incorrect Password", EStatusCodes.FORBIDDEN);
+                    throw new ForbiddenException("Incorrect password.");
                 }
 
-                if (user.NewPassword != null)
+                if (!string.IsNullOrWhiteSpace(user.NewPassword))
                 {
                     user.NewPassword = _passwordService.HashPassword(user.NewPassword);
                 }
+                Console.WriteLine(JsonSerializer.Serialize(user));
+                bool success = _userRepository.Update(userId, user);
 
-                return new UserResponse(_userRepository.Update(userId, user), null);
+                if (success == false)
+                {
+                    throw new AppException($"Could not update user of user id - {userId}");
+                }
+
+                return string.IsNullOrEmpty(user.NewUsername) == false ? _auth.GenerateJWTToken(user.NewUsername) : null;
+            }
+            catch (BadRequestException ex)
+            {
+                throw new BadRequestException(ex.Message);
+            }
+            catch (ForbiddenException ex)
+            {
+                throw new ForbiddenException(ex.Message);
             }
             catch (Exception ex)
             {
-                return new UserResponse(false, ex.Message);
+                throw new AppException($"An error occured when updating the user of user id {userId} - {ex.Message}");
             }
         }
 
-        public IServiceResponseWithStatusCode AreUserCredentialsCorrect(string username, string password)
+        public bool AreUserCredentialsCorrect(string username, string password)
         {
             try
             {
                 User? foundUser = _userRepository.GetByUsername(username);
                 if (foundUser == null)
                 {
-                    return new UserResponse(false, "User not found", EStatusCodes.NOT_FOUND);
+                    throw new NotFoundException($"Could not find user from usernae - {username}");
                 }
 
-                bool matches = _passwordService.VerifyPassword(password, foundUser.Password);
-                return new UserResponse(matches, null, matches ? EStatusCodes.OK : EStatusCodes.UNAUTHORIZED);
+                return _passwordService.VerifyPassword(password, foundUser.Password);
+            }
+            catch (NotFoundException ex)
+            {
+                throw new NotFoundException(ex.Message);
             }
             catch
             {
-                return new UserResponse(false, null, EStatusCodes.INTERNAL_SERVER_ERROR);
+                throw new AppException($"An error occured when checking if credentials are correct for user of username {username}");
             }
         }
     }

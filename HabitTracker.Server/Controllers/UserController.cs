@@ -3,7 +3,8 @@ using HabitTracker.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Models;
-using HabitTracker.Server.Services.Responses;
+using HabitTracker.Server.Exceptions;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Controllers
 {
@@ -19,92 +20,91 @@ namespace HabitTracker.Server.Controllers
             _userService = userService;
         }
 
+        private int GetUserId()
+        {
+            if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+            {
+                throw new UnauthorizedException("Could not retrieve user id from JWT");
+            }
+
+            return userId;
+        }
+
         [AllowAnonymous]
         [HttpPost]
         public IActionResult AddUser([FromBody] PostUser user)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                var errors = ModelState
+                    .Where(kvp => kvp.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
 
-                IServiceResponseWithStatusCode response = _userService.Add(user);
-
-                if (response.Success)
-                {
-                    return StatusCode((int)response.StatusCode);
-                }
-
-                return StatusCode((int)response.StatusCode, response.Error);
+                throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
-            catch(Exception ex)
+
+            bool success = _userService.Add(user);
+
+            if (success)
             {
-                return StatusCode(500, ex.Message);
+                return Created();
             }
+
+            throw new AppException("Could not create user.");
         }
 
         [Authorize]
         [HttpPatch("update")]
         public IActionResult UpdateUser([FromBody] PatchUser user)
         {
-            try
+            int userId = GetUserId();
+
+            if (!ModelState.IsValid)
             {
-                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
-                {
-                    return Unauthorized("Could not retrieve user id from JWT");
-                }
+                var errors = ModelState
+                    .Where(kvp => kvp.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
 
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                IServiceResponseWithStatusCode response = _userService.Update(userId, user);
-
-                if (response.Success)
-                {
-                    return Ok();
-                }
-
-                return StatusCode((int)response.StatusCode, response.Error);
+                throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+
+            string? jwt = _userService.Update(userId, user);
+
+            return Ok(jwt);
         }
 
         [Authorize]
         [HttpDelete("delete")]
         public IActionResult DeleteUser([FromBody] AuthUser user)
         {
-            try
+            int userId = GetUserId();
+
+            if (!ModelState.IsValid)
             {
-                if (HttpContext.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
-                {
-                    return Unauthorized("Could not retrieve user id from JWT");
-                }
+                var errors = ModelState
+                    .Where(kvp => kvp.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
 
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                IServiceResponseWithStatusCode response = _userService.Delete(userId, user);
-
-                if (response.Success)
-                {
-                    return NoContent();
-                }
-
-                return StatusCode((int)response.StatusCode, response.Error);
+                throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
-            catch (Exception ex)
+
+            bool success = _userService.Delete(userId, user);
+
+            if (success)
             {
-                return StatusCode(500, ex.Message);
+                return NoContent();
             }
+
+            throw new AppException($"Unable to delete user {userId}");
         }
     }
 }

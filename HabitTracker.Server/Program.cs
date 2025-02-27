@@ -42,7 +42,7 @@ builder.Services.AddAuthentication(cfg => {
     };
 });
 
-builder.Services.AddScoped<Authentication>(provider => new Authentication(builder.Configuration["ApplicationSettings:JWT_Secret"]));
+builder.Services.AddScoped<IAuthentication>(provider => new Authentication(builder.Configuration["ApplicationSettings:JWT_Secret"]));
 
 builder.Services.AddScoped<IStorage>(provider => new SqliteFacade(connectionString));
 builder.Services.AddScoped<IHabitTrackerDbContext, HabitTrackerDbContext>();
@@ -95,22 +95,23 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline.
+//if (app.Environment.IsDevelopment())
+//{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+//}
+
 app.UseAuthentication();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseMiddleware<ExceptionMiddleware>(builder);
 app.UseMiddleware<UserIdMiddleware>();
 
 app.MapControllers();

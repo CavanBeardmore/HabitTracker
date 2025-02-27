@@ -1,15 +1,14 @@
 ﻿using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
-using HabitTracker.Server.Services.Responses;
 
 namespace HabitTracker.Server.Services
 {
     public interface IHabitService
     {
-        IServiceResponseWithData<IReadOnlyCollection<Habit>> GetAllByUserId(int user_id);
-        IServiceResponseWithData<Habit?> GetById(int habitId, int userId);
-        IServiceResponse Add(int userId, PostHabit habit);
-        IServiceResponse Delete(int habitId, int userid);
-        IServiceResponse Update(int userId, PatchHabit habit);
+        IReadOnlyCollection<Habit?> GetAllByUserId(int user_id);
+        Habit? GetById(int habitId, int userId);
+        Habit? Add(int userId, PostHabit habit);
+        bool Delete(int habitId, int userid);
+        bool Update(int userId, PatchHabit habit);
     }
 }

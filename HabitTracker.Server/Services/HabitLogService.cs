@@ -3,8 +3,9 @@ using HabitTracker.Server.DTOs;
 using HabitTracker.Server.UnitsOfWork.HabitLogUnits;
 using HabitTracker.Server.UnitsOfWork;
 using HabitTracker.Server.Models;
-using HabitTracker.Server.Services.Responses;
-using HabitTracker.Server.Services.Responses.HabitLogResponses;
+using HabitTracker.Server.Exceptions;
+using System.Text.Json;
+using HabitTracker.Server.Database.Entities;
 
 namespace HabitTracker.Server.Services
 {
@@ -18,7 +19,7 @@ namespace HabitTracker.Server.Services
             _habitLogRepository = habitLogRepository;
         }
 
-        public IServiceResponseWithData<HabitLog?> GetById(int habitLogId, int userId)
+        public HabitLog? GetById(int habitLogId, int userId)
         {
             try
             {
@@ -26,19 +27,22 @@ namespace HabitTracker.Server.Services
 
                 if (habitLog != null)
                 {
-                    return new GetHabitLogByIdResponse(true, habitLog, null);
+                    return habitLog;
                 }
 
-                return new GetHabitLogByIdResponse(false, null, null);
+                throw new NotFoundException($"Could not find habit log of id {habitLogId} for user of id {userId}");
             }
-            catch (Exception ex)
+            catch (NotFoundException ex)
             {
-
-                return new GetHabitLogByIdResponse(false, null, ex.Message);
+                throw new NotFoundException(ex.Message);
+            }
+            catch
+            {
+                throw new AppException($"An error occured when getting habit log of id - {habitLogId}");
             }
         }
 
-        public IServiceResponseWithData<IReadOnlyCollection<HabitLog?>> GetAllByHabitId(int habitId, int userId, int pageNumber)
+        public IReadOnlyCollection<HabitLog?> GetAllByHabitId(int habitId, int userId, int pageNumber)
         {
             try
             {
@@ -46,67 +50,66 @@ namespace HabitTracker.Server.Services
 
                 if (habitLogs.Count() != 0)
                 {
-                    return new GetAllHabitLogsByIdResponse(true, habitLogs, null);
+                    return habitLogs;
                 }
 
-                return new GetAllHabitLogsByIdResponse(false, null, null);
+                throw new NotFoundException($"Could not find any habit logs for habit id - {habitId} - for user - {userId}");
             }
-            catch (Exception ex)
+            catch (NotFoundException ex)
             {
-                return new GetAllHabitLogsByIdResponse(false, null, ex.Message);
+                throw new NotFoundException(ex.Message);
+            }
+            catch
+            {
+                throw new AppException($"An error occured when getting habit logs from habit id - {habitId} - for user - {userId}");
             }
         }
 
-        public IServiceResponse Add(PostHabitLog postHabitLog)
+        public IReadOnlyCollection<HabitLog?> Add(PostHabitLog postHabitLog)
         {
             try
             {
 
                 var addHabitWithMissingLogs = new AddHabitLogWithMissingLogs(postHabitLog, _habitLogRepository);
 
-                UnitOfWorkResult<bool> addResult = addHabitWithMissingLogs.execute();
+                UnitOfWorkResult<IReadOnlyCollection<HabitLog?>> addResult = addHabitWithMissingLogs.execute();
 
                 if (addResult.Success)
                 {
-                    return new HabitLogsResponse(true, null);
+                    return addResult.Data;
                 }
 
                 UnitOfWorkResult<bool?> rollbackResult = addHabitWithMissingLogs.rollback();
 
-                if (rollbackResult.Success == false)
-                {
-                    return new HabitLogsResponse(false, "Rollback unsuccessful");
-                }
-
-                return new HabitLogsResponse(false, "Rollback was successful");
+                throw new AppException($"Failed to add habit logs with data - {JsonSerializer.Serialize(postHabitLog)}. Rollback was {(rollbackResult.Success ? "successful" : "unsuccessful")}.");
             }
-            catch (Exception ex)
+            catch
             {
-                return new HabitLogsResponse(false, ex.Message);
+                throw new AppException($"An error occured when adding habit log with data {JsonSerializer.Serialize(postHabitLog)}");
             }
         }
 
-        public IServiceResponse Update(PatchHabitLog habitLog)
+        public bool Update(PatchHabitLog habitLog)
         {
             try
             {
-                return new HabitLogsResponse(_habitLogRepository.Update(habitLog), null);
+                return _habitLogRepository.Update(habitLog);
             }
-            catch (Exception ex)
+            catch
             {
-                return new HabitLogsResponse(false, ex.Message);
+                throw new AppException($"An error occured when updating habitLog with id - {habitLog.Id}");
             }
         }
 
-        public IServiceResponse Delete(int habitLogId, int userId)
+        public bool Delete(int habitLogId, int userId)
         {
             try
             {
-                return new HabitLogsResponse(_habitLogRepository.Delete(habitLogId, userId), null);
+                return _habitLogRepository.Delete(habitLogId, userId);
             }
-            catch (Exception ex)
+            catch
             {
-                return new HabitLogsResponse(false, ex.Message);
+                throw new AppException($"An error occured when deleting habitLog with id - {habitLogId}");
             }
         }
     }
