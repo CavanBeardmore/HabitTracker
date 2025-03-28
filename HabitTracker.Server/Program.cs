@@ -2,21 +2,21 @@ using HabitTracker.Server.Auth;
 using HabitTracker.Server.Repository;
 using HabitTracker.Server.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using HabitTracker.Server.Facade;
+using HabitTracker.Server.Storage;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Transformer;
-using System.Data;
 using HabitTracker.Server.Database;
 using HabitTracker.Server.Middleware;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 string connectionString = @"Data Source=C:\Users\cavan\OneDrive\Desktop\HabitTracker\Habit-DB.db;";
-
 
 
 // Add appsettings.json to the configuration
@@ -42,20 +42,34 @@ builder.Services.AddAuthentication(cfg => {
     };
 });
 
+builder.Host.UseSerilog((context, services, config) =>
+{
+    config
+        .MinimumLevel.Debug()
+        .ReadFrom.Configuration(context.Configuration)
+        .WriteTo.Console();
+});
+
 builder.Services.AddScoped<IAuthentication>(provider => new Authentication(builder.Configuration["ApplicationSettings:JWT_Secret"]));
 
 builder.Services.AddScoped<IStorage>(provider => new SqliteFacade(connectionString));
-builder.Services.AddScoped<IHabitTrackerDbContext, HabitTrackerDbContext>();
+builder.Services.AddDbContext<HabitTrackerDbContext>(options =>
+{
+    options.UseSqlite(connectionString);
+});
 builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<ITransformer<IReadOnlyCollection<Rate>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, RateTransformer>();
 builder.Services.AddScoped<ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, HabitTransformer>();
 builder.Services.AddScoped<ITransformer<IReadOnlyCollection<HabitLog>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, HabitLogTransformer>();
 builder.Services.AddScoped<ITransformer<IReadOnlyCollection<User>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, UserTransformer>();
+builder.Services.AddScoped<IRateLimitRepository, RateLimitRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IHabitRepository, HabitRepository>();
 builder.Services.AddScoped<IHabitLogRepository, HabitLogRepository>();
-builder.Services.AddScoped<HabitService>();
-builder.Services.AddScoped<HabitLogService>();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IRateLimitService, RateLimitService>();
+builder.Services.AddScoped<IHabitService, HabitService>();
+builder.Services.AddScoped<IHabitLogService, HabitLogService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddControllers();
 
@@ -95,10 +109,18 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.UseSerilogRequestLogging();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<HabitTrackerDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
 //{
-    app.UseSwagger();
+app.UseSwagger();
     app.UseSwaggerUI();
 //}
 
@@ -112,6 +134,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.UseMiddleware<ExceptionMiddleware>(builder);
+app.UseMiddleware<RateLimitingMiddleware>();
 app.UseMiddleware<UserIdMiddleware>();
 
 app.MapControllers();

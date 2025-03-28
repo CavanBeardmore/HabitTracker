@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Data.SQLite;
 
-namespace HabitTracker.Server.Facade
+namespace HabitTracker.Server.Storage
 {
     public class SqliteFacade : IStorage
     {

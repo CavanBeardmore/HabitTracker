@@ -1,5 +1,5 @@
 ﻿using HabitTracker.Server.Models;
-using HabitTracker.Server.Facade;
+using HabitTracker.Server.Storage;
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Transformer;
 using System.Data;
@@ -56,6 +56,27 @@ namespace HabitTracker.Server.Repository
             return habitLogs.FirstOrDefault();
         }
 
+        public HabitLog? GetByHabitIdAndStartDate(int habitId, int userId, DateTime date)
+        {
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @habitId AND hl.Start_date = @date AND u.Id = @userId AND u.IsDeleted = 0"; ;
+
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@habitId", habitId },
+                { "@userId", userId },
+                { "@date", date }
+            };
+
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(
+                query,
+                parameters
+            );
+
+            IReadOnlyCollection<HabitLog> habitLogs = _transformer.Transform(result);
+
+            return habitLogs.FirstOrDefault();
+        }
+
         public HabitLog? GetMostRecentHabitLog(int habitId, int userId)
         {
             string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 1";
@@ -78,7 +99,7 @@ namespace HabitTracker.Server.Repository
 
         public HabitLog? Add(PostHabitLog habitLog)
         {
-            string query = "INSERT INTO HabitLogs (Habit_id, Start_date, Habit_logged, Length_in_days) VALUES (@Habit_id, @Start_date, @Habit_logged, @Length_in_days);";
+            string query = "INSERT INTO HabitLogs (Habit_id, Start_date, Habit_logged, Length_in_days) VALUES (@Habit_id, @Start_date, @Habit_logged, @Length_in_days) RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {

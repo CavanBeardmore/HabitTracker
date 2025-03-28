@@ -9,7 +9,7 @@ namespace HabitTracker.Server.Services
 
         HabitLog? GetById(int habitLogId, int userId);
 
-        IReadOnlyCollection<HabitLog?> Add(PostHabitLog habitLog);
+        HabitLog? Add(PostHabitLog habitLog, int userId);
 
         bool Update(PatchHabitLog habitLog);
 

@@ -6,16 +6,18 @@ namespace HabitTracker.Server.Middleware
     public class UserIdMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<UserIdMiddleware> _logger;
 
-        public UserIdMiddleware(RequestDelegate next)
+        public UserIdMiddleware(ILogger<UserIdMiddleware> logger, RequestDelegate next)
         {
             _next = next;
+            _logger = logger;
         }
 
-        public async Task InvokeAsync(HttpContext context, UserService userService)
+        public async Task InvokeAsync(HttpContext context, IUserService userService)
         {
             string? username = context.User.Identity?.Name;
-
+            
             if (username != null)
             {
                 User? user = userService.GetByUsername(username);
@@ -23,11 +25,11 @@ namespace HabitTracker.Server.Middleware
                 if (user != null)
                 {
                     int userId = user.Id;
-                    Console.WriteLine($"GOT USER ID {userId}");   
                     context.Items.Add("userId", userId);
                 }
             }
 
+            _logger.LogInformation("UserIdMiddleware - InvokeAsync - No username found in JWT");
             await _next(context);
         }
     }

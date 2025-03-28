@@ -14,13 +14,13 @@ namespace HabitTracker.Server.Controllers
     public class HabitController : ControllerBase
     {
 
-        private readonly HabitService _habitService;
-        private readonly UserService _userService;
+        private readonly IHabitService _habitService;
+        private readonly ILogger<HabitController> _logger;
 
-        public HabitController(HabitService habitService, UserService userService)
+        public HabitController(ILogger<HabitController>  logger, IHabitService habitService)
         {
+            _logger = logger;
             _habitService = habitService;
-            _userService = userService;
         }
 
         private int GetUserId()
@@ -38,8 +38,10 @@ namespace HabitTracker.Server.Controllers
         [HttpGet("{habitId}")]
         public IActionResult GetHabit(int habitId)
         {
+            _logger.LogInformation("HabitController - GetHabit - invoked");
             int userId = GetUserId();
 
+            _logger.LogInformation("HabitController - GetHabit - retrieving habit for user - {@Userid}", userId);
             Habit? habit = _habitService.GetById(habitId, userId);
 
             return Ok(habit);
@@ -49,8 +51,10 @@ namespace HabitTracker.Server.Controllers
         [HttpGet()]
         public IActionResult GetUserHabits()
         {
+            _logger.LogInformation("HabitController - GetUserHabits - invoked");
             int userId = GetUserId();
 
+            _logger.LogInformation("HabitController - GetUserHabits - retrieving user habits for user - {@Userid}", userId);
             IReadOnlyCollection<Habit?> habits = _habitService.GetAllByUserId(userId);
 
             return Ok(habits);
@@ -60,6 +64,7 @@ namespace HabitTracker.Server.Controllers
         [HttpPost]
         public IActionResult CreateHabit([FromBody] PostHabit habit)
         {
+            _logger.LogInformation("HabitController - CreateHabit - invoked");
             int userId = GetUserId();
 
             if (!ModelState.IsValid)
@@ -74,10 +79,12 @@ namespace HabitTracker.Server.Controllers
                 throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
 
+            _logger.LogInformation("HabitController - CreateHabit - adding habit for - {@Userid}", userId);
             Habit? createdHabit = _habitService.Add(userId, habit);
 
             if (createdHabit != null)
-            { 
+            {
+                _logger.LogInformation("HabitController - CreateHabit - successfully created habit for user -  {@Userid}", userId);
                 return Created($"habits/{createdHabit.Id}", createdHabit);
             }
 
@@ -88,6 +95,7 @@ namespace HabitTracker.Server.Controllers
         [HttpPatch("update")]
         public IActionResult UpdateHabit([FromBody] PatchHabit habit)
         {
+            _logger.LogInformation("HabitController - UpdateHabit - invoked");
             int userId = GetUserId();
 
             if (!ModelState.IsValid)
@@ -102,10 +110,12 @@ namespace HabitTracker.Server.Controllers
                 throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
 
+            _logger.LogInformation("HabitController - UpdateHabit - updating habit for - {@Userid}", userId);
             bool success = _habitService.Update(userId, habit);
 
             if (success)
             {
+                _logger.LogInformation("HabitController - UpdateHabit - successfully updated habit for - {@Userid}", userId);
                 return Ok();
             }
 
@@ -116,12 +126,15 @@ namespace HabitTracker.Server.Controllers
         [HttpDelete("delete/{habitId}")]
         public IActionResult DeleteHabit(int habitId)
         {
+            _logger.LogInformation("HabitController - DeleteHabit - invoked");
             int userId = GetUserId();
 
+            _logger.LogInformation("HabitController - DeleteHabit - deleting habit for - {@Userid}", userId);
             bool success = _habitService.Delete(habitId, userId);
 
             if (success)
             {
+                _logger.LogInformation("HabitController - DeleteHabit - successfully deleted habit for - {@Userid}", userId);
                 return NoContent();
             }
 

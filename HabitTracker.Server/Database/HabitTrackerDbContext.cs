@@ -8,7 +8,12 @@ namespace HabitTracker.Server.Database
         public DbSet<TUser> Users { get; set; }
         public DbSet<THabit> Habits { get; set; }
         public DbSet<THabitLog> HabitLogs { get; set; }
+        public DbSet<TRate> Rates { get; set; }
 
+        public HabitTrackerDbContext(DbContextOptions<HabitTrackerDbContext> options)
+            : base(options)
+        {
+        }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite(@"Data Source=C:\Users\cavan\OneDrive\Desktop\HabitTracker\Habit-DB.db;");

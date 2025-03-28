@@ -13,10 +13,12 @@ namespace HabitTracker.Server.Controllers
     [Route("user/[controller]")]
     public class UserController : Controller
     {
-        private readonly UserService _userService;
+        private readonly IUserService _userService;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(UserService userService)
+        public UserController(ILogger<UserController> logger, IUserService userService)
         {
+            _logger = logger;
             _userService = userService;
         }
 
@@ -46,10 +48,13 @@ namespace HabitTracker.Server.Controllers
                 throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
 
+            _logger.LogInformation("UserController - AddUser - invoked");
+            _logger.LogInformation("UserController - AddUser - adding user");
             bool success = _userService.Add(user);
 
             if (success)
             {
+                _logger.LogInformation("UserController - AddUser - successfully added user");
                 return Created();
             }
 
@@ -60,6 +65,7 @@ namespace HabitTracker.Server.Controllers
         [HttpPatch("update")]
         public IActionResult UpdateUser([FromBody] PatchUser user)
         {
+            _logger.LogInformation("UserController - UpdateUser - invoked");
             int userId = GetUserId();
 
             if (!ModelState.IsValid)
@@ -74,8 +80,10 @@ namespace HabitTracker.Server.Controllers
                 throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
 
+            _logger.LogInformation("UserController - AddUser - updating user");
             string? jwt = _userService.Update(userId, user);
 
+            _logger.LogInformation("UserController - AddUser - successfully updated user record and created new JWT");
             return Ok(jwt);
         }
 
@@ -83,6 +91,7 @@ namespace HabitTracker.Server.Controllers
         [HttpDelete("delete")]
         public IActionResult DeleteUser([FromBody] AuthUser user)
         {
+            _logger.LogInformation("UserController - DeleteUser - invoked");
             int userId = GetUserId();
 
             if (!ModelState.IsValid)
@@ -97,10 +106,12 @@ namespace HabitTracker.Server.Controllers
                 throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
 
+            _logger.LogInformation("UserController - DeleteUser - deleting user");
             bool success = _userService.Delete(userId, user);
 
             if (success)
             {
+                _logger.LogInformation("UserController - DeleteUser - successfully deleted user");
                 return NoContent();
             }
 

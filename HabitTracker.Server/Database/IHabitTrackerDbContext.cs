@@ -9,6 +9,8 @@ namespace HabitTracker.Server.Database
         DbSet<TUser> Users { get; set; }
         DbSet<THabit> Habits { get; set; }
         DbSet<THabitLog> HabitLogs { get; set; }
+
+        DbSet<TRate> Rates { get; set; }
         int SaveChanges();
     }
 }

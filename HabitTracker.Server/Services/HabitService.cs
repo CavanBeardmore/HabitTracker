@@ -9,9 +9,11 @@ namespace HabitTracker.Server.Services
     public class HabitService : IHabitService
     {
         private readonly IHabitRepository _habitRepository;
+        private readonly ILogger<HabitService> _logger;
 
-        public HabitService(IHabitRepository habitRepository)
+        public HabitService(ILogger<HabitService> logger, IHabitRepository habitRepository)
         {
+            _logger = logger;
             _habitRepository = habitRepository;
         }
 
@@ -19,6 +21,7 @@ namespace HabitTracker.Server.Services
         {
             try
             {
+                _logger.LogInformation("HabitService - GetById - getting habit by id");
                 Habit? habit = _habitRepository.GetById(habitId, userId);
 
                 if (habit == null)
@@ -26,6 +29,7 @@ namespace HabitTracker.Server.Services
                     throw new NotFoundException($"Habit not found of id - {habitId} for - {userId}");
                 }
 
+                _logger.LogInformation("HabitService - GetById - got habit by id");
                 return habit;
             }
             catch (NotFoundException ex)
@@ -42,12 +46,15 @@ namespace HabitTracker.Server.Services
         {
             try
             {
+                _logger.LogInformation("HabitService - GetAllByUserId - getting all habits by user id");
                 IReadOnlyCollection<Habit?> habits = _habitRepository.GetAllByUserId(userId);
 
                 if (habits.Count == 0)
                 {
                     throw new NotFoundException($"No habits found for - {userId}");
                 }
+
+                _logger.LogInformation("HabitService - GetAllByUserId - got all habits by user id");
 
                 return habits;
             }
@@ -65,22 +72,20 @@ namespace HabitTracker.Server.Services
         {
             try
             {
+                _logger.LogInformation("HabitService - Add - adding habit");
                 Habit? createdHabit = _habitRepository.Add(userId, habit);
 
                 if (habit == null)
                 {
-                    throw new NotFoundException($"Failed to create habit with data - {JsonSerializer.Serialize(habit)} for - {userId}");
+                    throw new AppException($"Failed to create habit with data - {JsonSerializer.Serialize(habit)} for - {userId}");
                 }
 
+                _logger.LogInformation("HabitService - Add - returning created habit");
                 return createdHabit;
             }
-            catch (NotFoundException ex)
+            catch (AppException ex)
             {
-                throw new NotFoundException(ex.Message);
-            }
-            catch
-            {
-                throw new AppException($"An error occured when adding habit data {JsonSerializer.Serialize(habit)} for {userId}");
+                throw new AppException(ex.Message);
             }
         }
 
@@ -88,6 +93,7 @@ namespace HabitTracker.Server.Services
         {
             try
             {
+                _logger.LogInformation("HabitService - Update - updating habit");
                 return _habitRepository.Update(userId, habit);
             }
             catch
@@ -100,6 +106,7 @@ namespace HabitTracker.Server.Services
         {
             try
             {
+                _logger.LogInformation("HabitService - Delete - deleting habit");
                 return _habitRepository.Delete(habitId, userId);
             }
             catch 

@@ -1,9 +1,10 @@
 ﻿using HabitTracker.Server.DTOs;
-using HabitTracker.Server.Facade;
+using HabitTracker.Server.Storage;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Repository;
 using HabitTracker.Server.Transformer;
 using Moq;
+using System.Collections.Generic;
 using System.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -13,13 +14,83 @@ namespace HabitTracker.Server.Tests.Repository
     {
         private readonly HabitLogRepository _repository;
         private readonly Mock<IStorage> _mockFacade;
-        private readonly Mock<ITransformer<HabitLog, IDataReader>> _mockTransformer;
+        private readonly Mock<ITransformer<IReadOnlyCollection<HabitLog>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>> _mockTransformer;
 
         public HabitLogRepositoryTests()
         {
-            _mockTransformer = new Mock<ITransformer<HabitLog, IDataReader>>();
+            _mockTransformer = new Mock<ITransformer<IReadOnlyCollection<HabitLog>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>>();
             _mockFacade = new Mock<IStorage>();
             _repository = new HabitLogRepository(_mockFacade.Object, _mockTransformer.Object);
+        }
+
+        [Fact]
+        public void GetByHabitIdAndStartDate_ReturnsHabitLog()
+        {
+            int habitId = 1;
+            int userId = 2;
+            DateTime date = DateTime.UtcNow;
+
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @habitId AND hl.Start_date = @date AND u.Id = @userId AND u.IsDeleted = 0"; ;
+
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@habitId", habitId },
+                { "@userId", userId },
+                { "@date", date }
+            };
+
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "Habit_id", habitId },
+                { "Start_date", date},
+                { "Habit_logged", true },
+                { "Length_in_days", 7 }
+            });
+
+            List<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1234, habitId, date, true, 7) };
+
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
+
+            var result = _repository.GetByHabitIdAndStartDate(habitId, userId, date);
+
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.Habit_id == habitId);
+            Assert.True(result.Start_date == date);
+            Assert.True(result.Habit_logged == true);
+            Assert.True(result.LengthInDays == 7);
+        }
+
+        [Fact]
+        public void GetByHabitIdAndStartDate_ReturnsNull()
+        {
+            int habitId = 1;
+            int userId = 2;
+            DateTime date = DateTime.UtcNow;
+
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @habitId AND hl.Start_date = @date AND u.Id = @userId AND u.IsDeleted = 0"; ;
+
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@habitId", habitId },
+                { "@userId", userId },
+                { "@date", date }
+            };
+
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            List<HabitLog> transformerData = new List<HabitLog>();
+
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
+
+            var result = _repository.GetByHabitIdAndStartDate(habitId, userId, date);
+
+            Assert.Null(result);
         }
 
         [Fact]
@@ -29,9 +100,21 @@ namespace HabitTracker.Server.Tests.Repository
             int userId = 4321;
             int pageNumber = 1;
 
-            var expectedHabitLogs = new List<HabitLog> { new HabitLog(id, 2341, DateTime.Now, true, 1) };
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
 
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId ORDER BY Start_date DESC LIMIT 30 OFFSET @offset;";
+            DateTime date = DateTime.UtcNow;
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1 },
+                { "Habit_id", id },
+                { "Start_date", date},
+                { "Habit_logged", true },
+                { "Length_in_days", 7 }
+            });
+
+            List<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1, id, date, true, 7) };
+
+
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 30 OFFSET @offset;";
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", id },
@@ -39,17 +122,18 @@ namespace HabitTracker.Server.Tests.Repository
                 {"@offset", pageNumber }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, _mockTransformer.Object.Transform, parameters)).Returns(expectedHabitLogs);
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.GetAllByHabitId(id, userId, pageNumber);
 
             Assert.NotNull(result);
             Assert.True(result.Any());
-            Assert.Contains(result, hl => hl.Id == expectedHabitLogs[0].Id
-                                          && hl.Habit_id == expectedHabitLogs[0].Habit_id
-                                          && hl.Start_date == expectedHabitLogs[0].Start_date
-                                          && hl.Habit_logged == expectedHabitLogs[0].Habit_logged
-                                          && hl.LengthInDays == expectedHabitLogs[0].LengthInDays);
+            Assert.Contains(result, hl => hl.Id == 1
+                                          && hl.Habit_id == id
+                                          && hl.Start_date == date
+                                          && hl.Habit_logged == true
+                                          && hl.LengthInDays == 7);
         }
 
         [Fact]
@@ -58,9 +142,9 @@ namespace HabitTracker.Server.Tests.Repository
             int habitLogId = 1234;
             int userId = 4321;
 
-            DateTime date = DateTime.Now;
+            DateTime date = DateTime.UtcNow;
 
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Id = @id AND u.Id = @userId;";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Id = @id AND u.Id = @userId AND u.IsDeleted = 0;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -68,7 +152,21 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@userId", userId }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, _mockTransformer.Object.Transform, parameters)).Returns(new List<HabitLog> { new HabitLog(habitLogId, 2341, date, true, 1) });
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", habitLogId },
+                { "Habit_id", 2341 },
+                { "Start_date", date},
+                { "Habit_logged", true },
+                { "Length_in_days", 7 }
+            });
+
+            List<HabitLog> transformerData = new List<HabitLog> { new HabitLog(habitLogId, 2341, date, true, 7) };
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.GetById(habitLogId, userId);
 
@@ -77,17 +175,18 @@ namespace HabitTracker.Server.Tests.Repository
             Assert.True(result.Habit_id == 2341);
             Assert.True(result.Start_date == date);
             Assert.True(result.Habit_logged);
-            Assert.True(result.LengthInDays == 1);
+            Assert.True(result.LengthInDays == 7);
         }
+
         [Fact]
         public void GetById_ReturnsNull()
         {
             int habitLogId = 1234;
             int userId = 4321;
 
-            DateTime date = DateTime.Now;
+            DateTime date = DateTime.UtcNow;
 
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Id = @id AND u.Id = @userId;";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Id = @id AND u.Id = @userId AND u.IsDeleted = 0;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -95,7 +194,12 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@userId", userId }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, _mockTransformer.Object.Transform, parameters)).Returns(new List<HabitLog>());
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            List<HabitLog> transformerData = new List<HabitLog>();
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.GetById(habitLogId, userId);
 
@@ -108,9 +212,9 @@ namespace HabitTracker.Server.Tests.Repository
             int habitId = 1234;
             int userId = 4321;
 
-            DateTime date = DateTime.Now;
+            DateTime date = DateTime.UtcNow;
 
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id ORDER BY Start_date DESC LIMIT 1";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 1";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -118,17 +222,29 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@userId", userId }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, _mockTransformer.Object.Transform, parameters)).Returns(new List<HabitLog> { new HabitLog(1234, 2341, date, true, 1) });
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "Habit_id", 2341 },
+                { "Start_date", date},
+                { "Habit_logged", true },
+                { "Length_in_days", 7 }
+            });
+
+            List<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1234, 2341, date, true, 7) };
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.GetMostRecentHabitLog(habitId, userId);
 
-            Assert.NotNull(result);
             Assert.NotNull(result);
             Assert.True(result.Id == 1234);
             Assert.True(result.Habit_id == 2341);
             Assert.True(result.Start_date == date);
             Assert.True(result.Habit_logged);
-            Assert.True(result.LengthInDays == 1);
+            Assert.True(result.LengthInDays == 7);
         }
 
         [Fact]
@@ -137,9 +253,9 @@ namespace HabitTracker.Server.Tests.Repository
             int habitId = 1234;
             int userId = 4321;
 
-            DateTime date = DateTime.Now;
+            DateTime date = DateTime.UtcNow;
 
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id ORDER BY Start_date DESC LIMIT 1";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 1";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -147,7 +263,12 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@userId", userId }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, _mockTransformer.Object.Transform, parameters)).Returns(new List<HabitLog>());
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            List<HabitLog> transformerData = new List<HabitLog>();
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.GetMostRecentHabitLog(habitId, userId);
 
@@ -155,13 +276,13 @@ namespace HabitTracker.Server.Tests.Repository
         }
 
         [Fact]
-        public void Add_ReturnsTrue()
+        public void Add_ReturnsHabitLog()
         {
-            DateTime date = DateTime.Now;
+            DateTime date = DateTime.UtcNow;
 
-            PostHabitLog habitLog = new PostHabitLog(1234, 2341, date, true, 1);
+            PostHabitLog habitLog = new PostHabitLog(1234, date, true, 1);
 
-            string query = "INSERT INTO HabitLogs (Habit_id, Start_date, Habit_logged, Length_in_days) VALUES (@Habit_id, @Start_date, @Habit_logged, @Length_in_days);";
+            string query = "INSERT INTO HabitLogs (Habit_id, Start_date, Habit_logged, Length_in_days) VALUES (@Habit_id, @Start_date, @Habit_logged, @Length_in_days) RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -171,21 +292,39 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@Length_in_days", habitLog.Length_in_days }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "Habit_id", 2341 },
+                { "Start_date", date},
+                { "Habit_logged", true },
+                { "Length_in_days", 7 }
+            });
+
+            List<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1234, 2341, date, true, 7) };
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Add(habitLog);
 
-            Assert.True(result);
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.Habit_id == 2341);
+            Assert.True(result.Start_date == date);
+            Assert.True(result.Habit_logged);
+            Assert.True(result.LengthInDays == 7);
         }
 
         [Fact]
-        public void Add_ReturnsFalse()
+        public void Add_ReturnsNull()
         {
-            DateTime date = DateTime.Now;
+            DateTime date = DateTime.UtcNow;
 
-            PostHabitLog habitLog = new PostHabitLog(1234, 2341, date, true, 1);
+            PostHabitLog habitLog = new PostHabitLog(1234, date, true, 1);
 
-            string query = "INSERT INTO HabitLogs (Habit_id, Start_date, Habit_logged, Length_in_days) VALUES (@Habit_id, @Start_date, @Habit_logged, @Length_in_days);";
+            string query = "INSERT INTO HabitLogs (Habit_id, Start_date, Habit_logged, Length_in_days) VALUES (@Habit_id, @Start_date, @Habit_logged, @Length_in_days) RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -195,19 +334,23 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@Length_in_days", habitLog.Length_in_days }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(0);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<HabitLog> transformerData = new List<HabitLog>();
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Add(habitLog);
 
-            Assert.False(result);
+            Assert.Null(result);
         }
 
         [Fact]
         public void Update_ReturnsTrue()
         {
-            DateTime date = DateTime.Now;
+            DateTime date = DateTime.UtcNow;
 
-            PatchHabitLog habitLog = new PatchHabitLog(1234, 2341, 4321, true);
+            PatchHabitLog habitLog = new PatchHabitLog(1234, true);
 
             string query = "UPDATE HabitLogs SET Habit_logged = @Habit_logged WHERE Id = @Id;";
 
@@ -227,7 +370,7 @@ namespace HabitTracker.Server.Tests.Repository
         [Fact]
         public void Update_ReturnsFalse()
         {
-            PatchHabitLog habitLog = new PatchHabitLog(1234, 2341, 4321, true);
+            PatchHabitLog habitLog = new PatchHabitLog(1234, true);
 
             string query = "UPDATE HabitLogs SET Habit_logged = @Habit_logged WHERE Id = @Id;";
 
@@ -290,7 +433,7 @@ namespace HabitTracker.Server.Tests.Repository
         public void DeleteByHabitIdAndStartDate_ReturnsTrue()
         {
             int habitId = 1234;
-            DateTime startDate = DateTime.Now;
+            DateTime startDate = DateTime.UtcNow;
 
             string query = "DELETE FROM HabitLogs WHERE HabitLogs.Habit_id = @habitId AND HabitLogs.Start_date = @startDate;";
 
@@ -311,7 +454,7 @@ namespace HabitTracker.Server.Tests.Repository
         public void DeleteByHabitIdAndStartDate_ReturnsFalse()
         {
             int habitId = 1234;
-            DateTime startDate = DateTime.Now;
+            DateTime startDate = DateTime.UtcNow;
 
             string query = "DELETE FROM HabitLogs WHERE HabitLogs.Habit_id = @habitId AND HabitLogs.Start_date = @startDate;";
 

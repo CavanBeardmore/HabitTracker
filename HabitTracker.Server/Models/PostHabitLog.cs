@@ -6,8 +6,6 @@ namespace HabitTracker.Server.Models
     public class PostHabitLog
     {
         [Required]
-        public int User_id { get; set; }
-        [Required]
         public int Habit_id { get; set; }
         [Required]
         [DataType(DataType.Date)]
@@ -18,13 +16,12 @@ namespace HabitTracker.Server.Models
         [ValidLengthInDays]
         public int Length_in_days { get; set; }
 
-        public PostHabitLog(int userId, int habitId, DateTime startDate, bool habitLogged, int lengthInDays) 
+        public PostHabitLog(int Habit_id, DateTime Start_date, bool Habit_logged, int Length_in_days) 
         {
-            User_id = userId;
-            Habit_id = habitId;
-            Start_date = startDate;
-            Habit_logged = habitLogged;
-            Length_in_days = lengthInDays;
+            this.Habit_id = Habit_id;
+            this.Start_date = Start_date;
+            this.Habit_logged = Habit_logged;
+            this.Length_in_days = Length_in_days;
         }
     }
 }

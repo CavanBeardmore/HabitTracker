@@ -1,5 +1,5 @@
 ﻿using HabitTracker.Server.Models;
-using HabitTracker.Server.Facade;
+using HabitTracker.Server.Storage;
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Database;
 using HabitTracker.Server.Transformer;
@@ -9,13 +9,11 @@ namespace HabitTracker.Server.Repository
     public class UserRepository : IUserRepository
     {
         private readonly IStorage _sqliteFacade;
-        private readonly IHabitTrackerDbContext _dbContext;
         private readonly ITransformer<IReadOnlyCollection<User>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>> _transformer;
 
-        public UserRepository(IStorage sqliteFacade, IHabitTrackerDbContext dbContext, ITransformer<IReadOnlyCollection<User>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>> transformer)
+        public UserRepository(IStorage sqliteFacade, ITransformer<IReadOnlyCollection<User>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>> transformer)
         {
             _sqliteFacade = sqliteFacade;
-            _dbContext = dbContext;
             _transformer = transformer;
         }
 

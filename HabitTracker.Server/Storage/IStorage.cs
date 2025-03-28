@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace HabitTracker.Server.Facade
+namespace HabitTracker.Server.Storage
 {
     public interface IStorage
     {

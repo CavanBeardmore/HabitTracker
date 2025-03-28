@@ -1,6 +1,6 @@
 ﻿using Moq;
 using HabitTracker.Server.Repository;
-using HabitTracker.Server.Facade;
+using HabitTracker.Server.Storage;
 using HabitTracker.Server.Transformer;
 using HabitTracker.Server.DTOs;
 using System.Data;
@@ -16,11 +16,11 @@ namespace HabitTracker.Server.Tests.Repository
 
         private readonly HabitRepository _repository;
         private readonly Mock<IStorage> _mockFacade;
-        private readonly Mock<ITransformer<Habit, IDataReader>> _mockTransformer;
+        private readonly Mock<ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>> _mockTransformer;
 
         public HabitRepositoryTests()
         {
-            _mockTransformer = new Mock<ITransformer<Habit, IDataReader>>();
+            _mockTransformer = new Mock<ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>>();
             _mockFacade = new Mock<IStorage>();
             _repository = new HabitRepository(_mockFacade.Object, _mockTransformer.Object);
         }
@@ -29,22 +29,33 @@ namespace HabitTracker.Server.Tests.Repository
         public void GetAllByUserId_ReturnsHabitCollection()
         {
             int userId = 1234;
-            string query = "SELECT h.* FROM Habits h INNER JOIN Users u ON h.User_id = u.Id WHERE h.User_id = @User_id;";
-            var expectedHabits = new List<Habit> { new Habit(1, 1, "Test") };
+            string query = "SELECT h.* FROM Habits h INNER JOIN Users u ON h.User_id = u.Id WHERE h.User_id = @User_id AND u.IsDeleted = 0;";
+
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@User_id", userId }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, _mockTransformer.Object.Transform, parameters)).Returns(expectedHabits);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "User_id", 4321 },
+                { "Name", "test" },
+            });
+
+            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test") };
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.GetAllByUserId(userId);
 
             Assert.NotNull(result);
             Assert.True(result.Any());
-            Assert.Contains(result, h => h.Id == expectedHabits[0].Id
-                                      && h.User_id == expectedHabits[0].User_id
-                                      && h.Name == expectedHabits[0].Name);
+            Assert.Contains(result, h => h.Id == 1234
+                                      && h.User_id == 4321
+                                      && h.Name == "test");
         }
 
         [Fact]
@@ -52,23 +63,33 @@ namespace HabitTracker.Server.Tests.Repository
         {
             int habitId = 4321;
             int userId = 1234;
-            string name = "Test";
-            string query = "SELECT h.* FROM Habits h INNER JOIN Users u On h.User_id WHERE h.Id = @id AND h.User_id = @userId;";
-            var expectedHabits = new List<Habit> { new Habit(1, 1, "Test") };
+
+            string query = "SELECT h.* FROM Habits h INNER JOIN Users u On h.User_id WHERE h.Id = @id AND h.User_id = @userId AND u.IsDeleted = 0;";
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", habitId },
                 { "@userId", userId }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, _mockTransformer.Object.Transform, parameters)).Returns(expectedHabits);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "User_id", 4321 },
+                { "Name", "test" },
+            });
+
+            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test") };
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.GetById(habitId, userId);
 
             Assert.NotNull(result);
-            Assert.True(result.Id == expectedHabits[0].Id);
-            Assert.True(result.User_id == expectedHabits[0].User_id);
-            Assert.True(result.Name == expectedHabits[0].Name);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.User_id == 4321);
+            Assert.True(result.Name == "test");
         }
 
         [Fact]
@@ -76,16 +97,26 @@ namespace HabitTracker.Server.Tests.Repository
         {
             int habitId = 4321;
             int userId = 1234;
-            string name = "Test";
-            string query = "SELECT h.* FROM Habits h INNER JOIN Users u On h.User_id WHERE h.Id = @id AND h.User_id = @userId;";
-            var expectedHabits = new List<Habit>();
+
+            string query = "SELECT h.* FROM Habits h INNER JOIN Users u On h.User_id WHERE h.Id = @id AND h.User_id = @userId AND u.IsDeleted = 0;";
+
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", habitId },
                 { "@userId", userId }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, _mockTransformer.Object.Transform, parameters)).Returns(expectedHabits);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<Habit> transformerData = new List<Habit>();
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "User_id", 4321 },
+                { "Name", "test" },
+            });
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.GetById(habitId, userId);
 
@@ -93,41 +124,60 @@ namespace HabitTracker.Server.Tests.Repository
         }
 
         [Fact]
-        public void Add_ReturnsTrue()
+        public void Add_ReturnsHabit() 
         {
-            PostHabit habit = new PostHabit(1234, "test");
+            PostHabit habit = new PostHabit("test");
+            int userId = 1234;
 
-            string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name);";
+            string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name) RETURNING *;";
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                { "@User_id", habit.User_id },
+                { "@User_id", userId },
                 { "@name", habit.Name }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test") };
 
-            var result = _repository.Add(habit);
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "User_id", 4321 },
+                { "Name", "test" },
+            });
 
-            Assert.True(result);
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
+
+            var result = _repository.Add(userId, habit);
+
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.User_id == 4321);
+            Assert.True(result.Name == "test");
         }
 
         [Fact]
-        public void Add_ReturnsFalse()
+        public void Add_ReturnsNull()
         {
-            PostHabit habit = new PostHabit(1234, "test");
+            PostHabit habit = new PostHabit("test");
 
-            string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name);";
+            string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name) RETURNING *;";
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                { "@User_id", habit.User_id },
+                { "@User_id", 1234 },
                 { "@name", habit.Name }
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(0);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<Habit> transformerData = new List<Habit>();
 
-            var result = _repository.Add(habit);
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
-            Assert.False(result);
+            var result = _repository.Add(1234, habit);
+
+            Assert.Null(result);
         }
 
         [Fact]
@@ -175,7 +225,7 @@ namespace HabitTracker.Server.Tests.Repository
         [Fact]
         public void Update_ReturnsTrue()
         {
-            PatchHabit habit = new PatchHabit(1234, "test", 4321);
+            PatchHabit habit = new PatchHabit(1234, "test");
 
             string query = "UPDATE Habits SET name = @name WHERE Id = @id AND User_id = @userId;";
 
@@ -183,12 +233,12 @@ namespace HabitTracker.Server.Tests.Repository
             {
                 { "@id", habit.Id },
                 { "@name", habit.Name },
-                { "@userId", habit.UserId },
+                { "@userId", 1234 },
             };
 
             _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
 
-            var result = _repository.Update(habit);
+            var result = _repository.Update(1234, habit);
 
             Assert.True(result);
         }
@@ -196,7 +246,7 @@ namespace HabitTracker.Server.Tests.Repository
         [Fact]
         public void Update_ReturnsFalse()
         {
-            PatchHabit habit = new PatchHabit(1234, "test", 4321);
+            PatchHabit habit = new PatchHabit(1234, "test");
 
             string query = "UPDATE Habits SET name = @name WHERE Id = @id AND User_id = @userId;";
 
@@ -204,12 +254,12 @@ namespace HabitTracker.Server.Tests.Repository
             {
                 { "@id", habit.Id },
                 { "@name", habit.Name },
-                { "@userId", habit.UserId },
+                { "@userId", 1234 },
             };
 
             _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(0);
 
-            var result = _repository.Update(habit);
+            var result = _repository.Update(1234, habit);
 
             Assert.False(result);
         }

@@ -10,24 +10,23 @@ namespace HabitTracker.Server.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
-        private readonly IHabitRepository _habitRepository;
-        private readonly IHabitLogRepository _habitLogRepository;
         private readonly IPasswordService _passwordService;
         private readonly IAuthentication _auth;
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(IUserRepository userRepository, IHabitLogRepository habitLogRepository, IHabitRepository HabitRepository, IPasswordService passwordService, IAuthentication auth)
+        public UserService(ILogger<UserService> logger, IUserRepository userRepository, IPasswordService passwordService, IAuthentication auth)
         {
             _userRepository = userRepository;
-            _habitLogRepository = habitLogRepository;
-            _habitRepository = HabitRepository; 
             _passwordService = passwordService;
             _auth = auth;
+            _logger = logger;
         }
 
         public User? GetByUsername(string username)
         {
             try
             {
+                _logger.LogInformation("UserService - GetByUsername - getting user by username");
                 User? user = _userRepository.GetByUsername(username);
 
                 if (user == null)
@@ -35,6 +34,7 @@ namespace HabitTracker.Server.Services
                     throw new NotFoundException($"User of - {username} - was not found");
                 }
 
+                _logger.LogInformation("UserService - GetByUsername - found user");
                 return user;
             }
             catch (NotFoundException ex)
@@ -51,6 +51,7 @@ namespace HabitTracker.Server.Services
         {
             try
             {
+                _logger.LogInformation("UserService - Add - checking if user exists already");
                 var existingUser = _userRepository.GetByUsername(user.Username);
 
                 if (existingUser != null)
@@ -60,6 +61,7 @@ namespace HabitTracker.Server.Services
 
                 user.Password = _passwordService.HashPassword(user.Password);
 
+                _logger.LogInformation("UserService - Add - adding user");
                 return _userRepository.Add(user);
             }
             catch (ConflictException ex)
@@ -76,6 +78,7 @@ namespace HabitTracker.Server.Services
         {
             try
             {
+                _logger.LogInformation("UserService - Delete - checking if user exists");
                 var existingUser = _userRepository.GetByUsername(user.Username);
 
                 if (existingUser == null)
@@ -83,6 +86,7 @@ namespace HabitTracker.Server.Services
                     throw new BadRequestException($"User of user id - {userId} - does not exist");
                 }
 
+                _logger.LogInformation("UserService - Delete - verifying user password");
                 bool isPasswordValid = _passwordService.VerifyPassword(user.Password, existingUser.Password);
 
                 if (isPasswordValid == false)
@@ -90,6 +94,7 @@ namespace HabitTracker.Server.Services
                     throw new ForbiddenException("Incorrect password");
                 }
 
+                _logger.LogInformation("UserService - Delete - user password is valid deleting user");
                 return _userRepository.Delete(userId);
             }
             catch (BadRequestException ex)
@@ -110,7 +115,7 @@ namespace HabitTracker.Server.Services
         {
             try
             {
-                Console.WriteLine(JsonSerializer.Serialize(user));
+                _logger.LogInformation("UserService - Update - checking if user exists");
                 var existingUser = _userRepository.GetById(userId);
 
                 if (existingUser == null)
@@ -118,6 +123,7 @@ namespace HabitTracker.Server.Services
                     throw new BadRequestException($"The user of user id {userId} does not exist");
                 }
 
+                _logger.LogInformation("UserService - Update - verifying user password");
                 bool isPasswordValid = _passwordService.VerifyPassword(user.OldPassword, existingUser.Password);
 
                 if (isPasswordValid == false)
@@ -125,11 +131,15 @@ namespace HabitTracker.Server.Services
                     throw new ForbiddenException("Incorrect password.");
                 }
 
+                _logger.LogInformation("UserService - Update - password is valid");
+
                 if (!string.IsNullOrWhiteSpace(user.NewPassword))
                 {
+                    _logger.LogInformation("UserService - Update - hashing new password valid");
                     user.NewPassword = _passwordService.HashPassword(user.NewPassword);
                 }
-                Console.WriteLine(JsonSerializer.Serialize(user));
+
+                _logger.LogInformation("UserService - Update - updating user");
                 bool success = _userRepository.Update(userId, user);
 
                 if (success == false)
@@ -137,6 +147,7 @@ namespace HabitTracker.Server.Services
                     throw new AppException($"Could not update user of user id - {userId}");
                 }
 
+                _logger.LogInformation("UserService - Update - updated user");
                 return string.IsNullOrEmpty(user.NewUsername) == false ? _auth.GenerateJWTToken(user.NewUsername) : null;
             }
             catch (BadRequestException ex)
@@ -157,12 +168,15 @@ namespace HabitTracker.Server.Services
         {
             try
             {
+                _logger.LogInformation("UserService - AreUserCredentialsCorrect - getting user");
                 User? foundUser = _userRepository.GetByUsername(username);
+
                 if (foundUser == null)
                 {
-                    throw new NotFoundException($"Could not find user from usernae - {username}");
+                    throw new NotFoundException($"Could not find user from username - {username}");
                 }
 
+                _logger.LogInformation("UserService - AreUserCredentialsCorrect - verifying password");
                 return _passwordService.VerifyPassword(password, foundUser.Password);
             }
             catch (NotFoundException ex)
