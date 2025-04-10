@@ -3,7 +3,7 @@ using HabitTracker.Server.Database.Entities;
 
 namespace HabitTracker.Server.Database
 {
-    public class HabitTrackerDbContext: DbContext, IHabitTrackerDbContext
+    public class HabitTrackerDbContext: DbContext
     {   
         public DbSet<TUser> Users { get; set; }
         public DbSet<THabit> Habits { get; set; }
@@ -13,10 +13,6 @@ namespace HabitTracker.Server.Database
         public HabitTrackerDbContext(DbContextOptions<HabitTrackerDbContext> options)
             : base(options)
         {
-        }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlite(@"Data Source=C:\Users\cavan\OneDrive\Desktop\HabitTracker\Habit-DB.db;");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

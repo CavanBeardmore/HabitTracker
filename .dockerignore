@@ -1,0 +1,35 @@
+# flyctl launch added from .gitignore
+**\bin
+**\obj
+**\Properties
+**\.vs
+**\.bin
+**\migrations
+appsettings.Development.json
+
+# flyctl launch added from habittracker.client\.gitignore
+# Logs
+habittracker.client\**\logs
+habittracker.client\**\*.log
+habittracker.client\**\npm-debug.log*
+habittracker.client\**\yarn-debug.log*
+habittracker.client\**\yarn-error.log*
+habittracker.client\**\pnpm-debug.log*
+habittracker.client\**\lerna-debug.log*
+
+habittracker.client\**\node_modules
+habittracker.client\**\dist
+habittracker.client\**\dist-ssr
+habittracker.client\**\*.local
+
+# Editor directories and files
+habittracker.client\**\.vscode\*
+!habittracker.client\**\.vscode\extensions.json
+habittracker.client\**\.idea
+habittracker.client\**\.DS_Store
+habittracker.client\**\*.suo
+habittracker.client\**\*.ntvs*
+habittracker.client\**\*.njsproj
+habittracker.client\**\*.sln
+habittracker.client\**\*.sw?
+fly.toml

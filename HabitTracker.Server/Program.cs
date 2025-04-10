@@ -114,7 +114,15 @@ app.UseSerilogRequestLogging();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<HabitTrackerDbContext>();
-    dbContext.Database.Migrate();
+    try
+    {
+        dbContext.Database.Migrate();
+        Log.Information("Database migration successful.");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Database migration failed.");
+    }
 }
 
 // Configure the HTTP request pipeline.
