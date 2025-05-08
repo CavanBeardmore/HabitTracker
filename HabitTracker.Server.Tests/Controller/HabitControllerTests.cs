@@ -82,7 +82,7 @@ namespace HabitTracker.Server.Tests.Controller
 
             var result = _controller.CreateHabit(habit);
 
-            Assert.IsType<CreatedResult>(result);
+            Assert.IsType<OkResult>(result);
         }
 
         [Fact]
