@@ -27,9 +27,11 @@ namespace HabitTracker.Server.Middleware
                     int userId = user.Id;
                     context.Items.Add("userId", userId);
                 }
+            } else
+            {
+                _logger.LogInformation("UserIdMiddleware - InvokeAsync - No username found in JWT");
             }
 
-            _logger.LogInformation("UserIdMiddleware - InvokeAsync - No username found in JWT");
             await _next(context);
         }
     }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Services;
 using HabitTracker.Server.Exceptions;
 using System.Text.Json;
+using HabitTracker.Server.SSE;
 
 namespace HabitTracker.Server.Controllers
 {
@@ -15,12 +16,14 @@ namespace HabitTracker.Server.Controllers
     {
 
         private readonly IHabitService _habitService;
+        private readonly IEventService<HabitTrackerEvent> _eventService;
         private readonly ILogger<HabitController> _logger;
 
-        public HabitController(ILogger<HabitController>  logger, IHabitService habitService)
+        public HabitController(ILogger<HabitController>  logger, IEventService<HabitTrackerEvent> eventService, IHabitService habitService)
         {
             _logger = logger;
             _habitService = habitService;
+            _eventService = eventService;
         }
 
         private int GetUserId()
@@ -85,7 +88,8 @@ namespace HabitTracker.Server.Controllers
             if (createdHabit != null)
             {
                 _logger.LogInformation("HabitController - CreateHabit - successfully created habit for user -  {@Userid}", userId);
-                return Created($"habits/{createdHabit.Id}", createdHabit);
+                _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.HABIT_ADDED, createdHabit));
+                return Ok();
             }
 
             throw new AppException($"Could not create habit ${JsonSerializer.Serialize(habit)} - for user - {userId}");

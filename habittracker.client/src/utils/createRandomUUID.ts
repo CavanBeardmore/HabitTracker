@@ -1,0 +1,1 @@
+export const createRandomUUID = () => `${Date.now()}-${Math.random()}`;

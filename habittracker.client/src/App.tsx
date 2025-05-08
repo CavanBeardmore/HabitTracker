@@ -1,56 +1,102 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import './App.css';
+import { Login } from './pages/login';
+import { Home } from './pages/home';
+import { Resolve } from '@here-mobility/micro-di';
+import { AuthenticationService, Credentials } from './classes/AuthenticationService';
+import { GlobalEventObserver } from './classes/GlobalEventObserver';
+import { CredentialsWithEmail, UserService } from './classes/UserService';
+import { IServerEventHandler } from './classes/IServerEventHandler';
+import { HabitService } from './classes/HabitService';
 
-interface Forecast {
-    date: string;
-    temperatureC: number;
-    temperatureF: number;
-    summary: string;
+enum UnauthedPages {
+    LOGIN
 }
 
-function App() {
-    const [forecasts, setForecasts] = useState<Forecast[]>();
+enum AuthedPages {
+    HOME
+}
+
+export const App = () => {
+    const authService = Resolve<AuthenticationService>(AuthenticationService);
+    const userService = Resolve<UserService>(UserService);
+    const globalEvents = Resolve<GlobalEventObserver>(GlobalEventObserver);
+    const sseEventHandler = Resolve<IServerEventHandler>("IServerEventHandler");
+    const habitService = Resolve<HabitService>(HabitService);
+
+    //@ts-ignore
+    window.auth = authService;
+
+    const [currentAuthedPage, setAuthedCurrentPage] = useState<AuthedPages>(AuthedPages.HOME);
+    const [currentUnauthedPage, setUnauthedCurrentPage] = useState<UnauthedPages>(UnauthedPages.LOGIN);
+    const [isAuthed, setIsAuthed] = useState<boolean>(false);
+
+    const onLoginSubmit = async (creds: Credentials): Promise<void> => {
+        const [success, errorMessage] = await authService.Login(creds);
+
+        if (success) {
+            setIsAuthed(true);
+            setAuthedCurrentPage(AuthedPages.HOME);
+            return;
+        }
+
+        globalEvents.raise("login-failed", errorMessage);
+    }
+
+    const onRegisterSubmit = async (creds: CredentialsWithEmail): Promise<void> => {
+        const [success, errorMessage] = await userService.CreateUser(creds);
+
+        if (success) {
+            globalEvents.raise("register-user-success");
+        } else {
+            console.log("FAILURE IN APP", errorMessage)
+            globalEvents.raise("register-user-failure", errorMessage);
+        }
+    }
+
+    const authedPagesLookup = new Map<AuthedPages, ReactNode>([
+        [AuthedPages.HOME, <Home />]
+    ]);
+    
+    const unauthedPagesLookup = new Map<UnauthedPages, ReactNode>([
+        [UnauthedPages.LOGIN, <Login onLoginSubmit={onLoginSubmit} onRegisterSubmit={onRegisterSubmit}/>]
+    ]);
+
+    const createServerConnection = async (): Promise<void> => {
+        await sseEventHandler.CreateConnection();
+    }
+
+    const closeServerConnection = (): void => {
+        sseEventHandler.CloseConnection();
+    }
 
     useEffect(() => {
-        populateWeatherData();
+        const isAuthed = authService.IsUserAuthed();
+
+        if (isAuthed === false) {
+            setUnauthedCurrentPage(UnauthedPages.LOGIN);
+            setIsAuthed(false);
+            return;
+        }
+
+        createServerConnection();
+        setAuthedCurrentPage(AuthedPages.HOME);
+        setIsAuthed(true);
     }, []);
 
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tableLabel">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
+    useEffect(() => {
+        return () => {
+            closeServerConnection();
+        }
+    }, [])
 
     return (
-        <div>
-            <h1 id="tableLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
+        <div className='h-full w-full'>
+            {
+                isAuthed
+                ? authedPagesLookup.get(currentAuthedPage)
+                : unauthedPagesLookup.get(currentUnauthedPage)
+            }
         </div>
     );
-
-    async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
-        const data = await response.json();
-        setForecasts(data);
-    }
 }
-
-export default App;

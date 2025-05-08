@@ -46,7 +46,7 @@ namespace HabitTracker.Server.Controllers
                 _logger.LogInformation("AuthController - Login - Credentials are correct generating JWT token");
                 string jwt = _auth.GenerateJWTToken(user.Username);
 
-                return Ok(jwt);
+                return Ok(new { token = jwt });
             }
 
             _logger.LogInformation("AuthController - Login - credentials are incorrect");

@@ -1,6 +1,7 @@
 using HabitTracker.Server.Auth;
 using HabitTracker.Server.Repository;
 using HabitTracker.Server.Services;
+using HabitTracker.Server.SSE;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using HabitTracker.Server.Storage;
 using Microsoft.IdentityModel.Tokens;
@@ -14,6 +15,17 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("https://localhost:5173") // Frontend port
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Optional: if you're sending cookies
+    });
+});
 
 // Add appsettings.json to the configuration
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -70,6 +82,7 @@ builder.Services.AddScoped<IRateLimitService, RateLimitService>();
 builder.Services.AddScoped<IHabitService, HabitService>();
 builder.Services.AddScoped<IHabitLogService, HabitLogService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddSingleton<IEventService<HabitTrackerEvent>, HabitTrackerEventService>();
 
 builder.Services.AddControllers();
 
@@ -109,6 +122,8 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.UseCors();
+
 app.UseSerilogRequestLogging();
 
 using (var scope = app.Services.CreateScope())
@@ -132,18 +147,18 @@ app.UseSwagger();
     app.UseSwaggerUI();
 //}
 
+app.UseMiddleware<AddAuthQueryToHeaderMiddleware>();
+
 app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiddleware<RateLimitingMiddleware>();
+app.UseMiddleware<UserIdMiddleware>();
+app.UseMiddleware<ExceptionMiddleware>(builder);
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.UseMiddleware<ExceptionMiddleware>(builder);
-app.UseMiddleware<RateLimitingMiddleware>();
-app.UseMiddleware<UserIdMiddleware>();
 
 app.MapControllers();
 

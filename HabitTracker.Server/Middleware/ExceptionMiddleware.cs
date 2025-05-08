@@ -1,10 +1,12 @@
 ﻿using HabitTracker.Server.Exceptions;
+using HabitTracker.Server.SSE;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
+using HabitTracker.Server.DTOs;
 
 namespace HabitTracker.Server.Middleware
 {
@@ -14,12 +16,14 @@ namespace HabitTracker.Server.Middleware
         private readonly RequestDelegate _next;
         private readonly WebApplicationBuilder _builder;
         private readonly ILogger<ExceptionMiddleware> _logger;
+        private readonly IEventService<HabitTrackerEvent> _eventService;
 
-        public ExceptionMiddleware(RequestDelegate next, WebApplicationBuilder builder, ILogger<ExceptionMiddleware> logger)
+        public ExceptionMiddleware(RequestDelegate next, WebApplicationBuilder builder, ILogger<ExceptionMiddleware> logger, IEventService<HabitTrackerEvent> eventService)
         {
             _next = next;
             _builder = builder;
             _logger = logger;
+            _eventService = eventService;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -74,17 +78,32 @@ namespace HabitTracker.Server.Middleware
         private Task HandleExceptionAsync(HttpContext context, HttpStatusCode statusCode, string message)
         {
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            context.Response.StatusCode = (int)statusCode;
 
-            var response = new
+            int? userId = GetUserId(context);
+
+            if (userId != null && _eventService.IsActiveForUser((int)userId))
             {
-                StatusCode = statusCode,
-                Message = message
-            };
+                _logger.LogError("ExceptionMiddleware - HandleExceptionAsync - adding error event to event stream");
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                _eventService.AddEvent((int)userId, new HabitTrackerEvent(HabitTrackerEventTypes.ERROR, new Error((int)statusCode, message)));
+                return Task.CompletedTask;
+            }
 
-            string jsonResponse = JsonSerializer.Serialize(response);
+            _logger.LogError("ExceptionMiddleware - HandleExceptionAsync - returning error response");
+            string jsonResponse = JsonSerializer.Serialize(message);
 
             return context.Response.WriteAsync(jsonResponse);
+        }
+
+        private int? GetUserId(HttpContext context)
+        {
+            if (context.Items.TryGetValue("userId", out var userIdObj) == false || userIdObj is not int userId)
+            {
+                return null;
+            }
+
+            return userId;
         }
     }
 

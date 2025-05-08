@@ -3,6 +3,7 @@ using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Exceptions;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Services;
+using HabitTracker.Server.SSE;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -15,12 +16,14 @@ namespace HabitTracker.Server.Tests.Controller
         private readonly Mock<IHabitService> _mockHabitService;
         private readonly Mock<ILogger<HabitController>> _mockLogger;
         private readonly HabitController _controller;
+        private readonly Mock<IEventService<HabitTrackerEvent>> _mockEventService;
 
         public HabitControllerTests()
         {
             _mockHabitService = new Mock<IHabitService>();
             _mockLogger = new Mock<ILogger<HabitController>>();
-            _controller = new HabitController(_mockLogger.Object, _mockHabitService.Object);
+            _mockEventService = new Mock<IEventService<HabitTrackerEvent>>();
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
         }
 
         [Fact]

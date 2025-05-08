@@ -13,7 +13,7 @@ namespace HabitTracker.Server.Services
         private readonly IRateLimitRepository _rateLimitRepository;
         private readonly ILogger<RateLimitService> _logger;
 
-        public RateLimitService(IRateLimitRepository rateLimitRepository, ILogger<RateLimitService> logger, uint ttlLength = 5, uint rateLimit = 30)
+        public RateLimitService(IRateLimitRepository rateLimitRepository, ILogger<RateLimitService> logger, uint ttlLength = 5, uint rateLimit = 100)
         {
             _rateLimitRepository = rateLimitRepository;
             _logger = logger;
