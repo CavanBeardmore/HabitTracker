@@ -1,12 +1,11 @@
-﻿using HabitTracker.Server.Repository;
-using HabitTracker.Server.Models;
+﻿using HabitTracker.Server.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Services;
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Exceptions;
-using HabitTracker.Server.Database.Entities;
 using System.Text.Json;
+using HabitTracker.Server.SSE;
 
 namespace HabitTracker.Server.Controllers
 {
@@ -18,11 +17,13 @@ namespace HabitTracker.Server.Controllers
 
         private readonly IHabitLogService _habitLogService; 
         private readonly ILogger<HabitLogController> _logger;
+        private readonly IEventService<HabitTrackerEvent> _eventService;
 
-        public HabitLogController(ILogger<HabitLogController>  logger, IHabitLogService habitLogService)
+        public HabitLogController(ILogger<HabitLogController>  logger, IHabitLogService habitLogService, IEventService<HabitTrackerEvent> eventService)
         {
             _logger = logger;
             _habitLogService = habitLogService;
+            _eventService = eventService;
         }
 
         private int GetUserId()
@@ -94,7 +95,7 @@ namespace HabitTracker.Server.Controllers
             int userId = GetUserId();
 
             _logger.LogInformation("HabitLogController - CreateHabitLog - adding habit log for - {@Userid}", userId);
-            HabitLog? result = _habitLogService.Add(habitLog, userId);
+            Tuple<Habit, HabitLog>? result = _habitLogService.Add(habitLog, userId);
 
             if (result == null)
             {
@@ -102,7 +103,8 @@ namespace HabitTracker.Server.Controllers
             }
 
             _logger.LogInformation("HabitLogController - CreateHabitLog - successfully added habit log for - {@Userid}", userId);
-            return Created($"habitLogs/{result.Id}", habitLog);
+            _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.HABIT_LOG_ADDED, new { habit = result.Item1, habitLog = result.Item2}));
+            return Ok();
         }
 
         [Authorize]
@@ -120,15 +122,17 @@ namespace HabitTracker.Server.Controllers
 
                 throw new BadRequestException(JsonSerializer.Serialize(errors));
             }
+            int userId = GetUserId();
 
             _logger.LogInformation("HabitLogController - UpdateHabitLog - invoked");
             _logger.LogInformation("HabitLogController - UpdateHabitLog - updating habit log");
-            bool success = _habitLogService.Update(habitLog);
+            HabitLog? updatedLog = _habitLogService.Update(habitLog);
 
-            if (success)
+            if (updatedLog != null)
             {
                 _logger.LogInformation("HabitLogController - UpdateHabitLog - successfully updated habit log");
-                return Ok(habitLog);
+                _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.HABIT_LOG_UPDATED, updatedLog));
+                return Ok();
             }
 
             throw new AppException($"Could not update habit log from - {habitLog}");
@@ -147,6 +151,7 @@ namespace HabitTracker.Server.Controllers
             if (success)
             {
                 _logger.LogInformation("HabitLogController - DeleteHabitLog - successfully deleted habit log for {@Userid}", userId);
+                _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.HABIT_LOG_DELETED, habitLogId));
                 return NoContent();
             }
 

@@ -17,7 +17,8 @@ namespace HabitTracker.Server.Transformer
                 habits.Add(new Habit(
                         Convert.ToInt32(d["Id"]),
                         Convert.ToInt32(d["User_id"]),
-                        (string)d["Name"]
+                        (string)d["Name"],
+                        Convert.ToUInt32(d["StreakCount"])
                 ));
             }
 

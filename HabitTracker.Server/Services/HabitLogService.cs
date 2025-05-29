@@ -2,7 +2,7 @@
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Exceptions;
-using System.Text.Json;
+using HabitTracker.Server.UnitsOfWork;
 
 namespace HabitTracker.Server.Services
 {
@@ -11,11 +11,13 @@ namespace HabitTracker.Server.Services
     {
         private readonly IHabitLogRepository _habitLogRepository;
         private readonly ILogger<HabitLogService> _logger;
+        private readonly IHabitRepository _habitRepository;
 
-        public HabitLogService(IHabitLogRepository habitLogRepository, ILogger<HabitLogService> logger)
+        public HabitLogService(IHabitLogRepository habitLogRepository, ILogger<HabitLogService> logger, IHabitRepository habitRepository)
         {
             _habitLogRepository = habitLogRepository;
             _logger = logger;
+            _habitRepository = habitRepository;
         }
 
         public HabitLog? GetById(int habitLogId, int userId)
@@ -68,29 +70,21 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public HabitLog? Add(PostHabitLog postHabitLog, int userId)
+        public Tuple<Habit, HabitLog>? Add(PostHabitLog postHabitLog, int userId)
         {
             try
             {
-                var existingHabitLog = _habitLogRepository.GetByHabitIdAndStartDate(postHabitLog.Habit_id, userId, postHabitLog.Start_date);
+                LogHabit unit = new LogHabit(_logger, _habitRepository, _habitLogRepository, postHabitLog, userId);
 
-                if (existingHabitLog != null)
-                {
-                    throw new ConflictException("Habit log already exists for this date");
-                }
-
-                var result = _habitLogRepository.Add(postHabitLog);
-
-                if (result != null)
-                {
-                    return result;
-                }
-
-                throw new AppException($"Failed to add habit logs with data - {JsonSerializer.Serialize(postHabitLog)}");
+                return unit.Execute();
             }
             catch (ConflictException ex)
             {
                 throw new ConflictException(ex.Message);
+            }
+            catch (NotFoundException ex)
+            {
+                throw new NotFoundException(ex.Message);
             }
             catch (AppException ex)
             {
@@ -102,12 +96,23 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public bool Update(PatchHabitLog habitLog)
+        public HabitLog? Update(PatchHabitLog habitLog)
         {
             try
             {
                 _logger.LogInformation("HabitLogService - Update - updating habit log");
-                return _habitLogRepository.Update(habitLog);
+                HabitLog? updatedLog = _habitLogRepository.Update(habitLog);
+
+                if (updatedLog == null) 
+                {
+                    throw new AppException("An error occurred when updating habit log.");
+                }
+
+                return updatedLog;
+            }
+            catch (AppException ex)
+            {
+                throw new AppException(ex.Message);
             }
             catch
             {

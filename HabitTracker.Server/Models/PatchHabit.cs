@@ -9,11 +9,14 @@ namespace HabitTracker.Server.Models
         [Required]
         [StringLength(100)]
         public string Name { get; set; }
+        [Required]
+        public uint StreakCount { get; set; }
 
-        public PatchHabit(int id, string name)
+        public PatchHabit(int id, string name, uint streakCount)
         {
             Id = id;
             Name = name;
+            StreakCount = streakCount;
         }
     }
 }

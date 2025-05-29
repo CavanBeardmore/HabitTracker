@@ -8,6 +8,7 @@ namespace HabitTracker.Server.Database.Entities
         public int Id {  get; set; }
         public int User_id { get; set; }
         public string Name { get; set; }
+        public uint StreakCount { get; set; }
         public TUser User { get; set; }
         public List<THabitLog> HabitLogs { get; set; }
     }

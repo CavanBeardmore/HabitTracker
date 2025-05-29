@@ -20,5 +20,7 @@ RegisterSingleton("IServerEventHandler", () => new ServerEventHandler(VITE_BACKE
 RegisterResolver(HabitService, () => new HabitService(VITE_BACKEND_URL));
 
 createRoot(document.getElementById('root')!).render(
-  <App />
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
 )

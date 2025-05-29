@@ -85,7 +85,7 @@ namespace HabitTracker.Server.Repository
             return rowsAffected > 0;
         }
 
-        public bool Update(int userId, PatchUser user)
+        public User? Update(int userId, PatchUser user)
         {
 
             List<string> setClauses = new List<string>();
@@ -112,10 +112,15 @@ namespace HabitTracker.Server.Repository
             }
 
             string query = $"UPDATE Users SET {string.Join(", ", setClauses)} WHERE Id = @UserId AND IsDeleted = 0;";
-            Console.WriteLine(query);
-            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
 
-            return rowsAffected > 0;
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _sqliteFacade.ExecuteQuery(
+                query,
+                parameters
+            );
+
+            IReadOnlyCollection<User> users = _transformer.Transform(result);
+
+            return users.FirstOrDefault();
         }
     }
 }

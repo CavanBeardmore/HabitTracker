@@ -31,7 +31,7 @@ export interface HttpServiceRes<T = null> {
 
 export abstract class HttpService {
 
-    public async Request<T>(url: string, options: httpOptions): Promise<HttpServiceRes<T>> {
+    protected async Request<T>(url: string, options: httpOptions): Promise<HttpServiceRes<T>> {
 
         const {
             method,

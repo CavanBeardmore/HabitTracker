@@ -9,6 +9,6 @@ namespace HabitTracker.Server.Services
         Habit? GetById(int habitId, int userId);
         Habit? Add(int userId, PostHabit habit);
         bool Delete(int habitId, int userid);
-        bool Update(int userId, PatchHabit habit);
+        Habit? Update(int userId, PatchHabit habit);
     }
 }

@@ -9,7 +9,7 @@ namespace HabitTracker.Server.Repository
         User? GetByUsername(string username);
         User? GetById(int userId);
         bool Add(PostUser user);
-        bool Update(int userId, PatchUser user);
+        User? Update(int userId, PatchUser user);
         bool Delete(int userId);
     }
 }

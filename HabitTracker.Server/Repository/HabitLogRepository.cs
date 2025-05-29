@@ -2,7 +2,7 @@
 using HabitTracker.Server.Storage;
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Transformer;
-using System.Data;
+using System.Data.Common;
 
 namespace HabitTracker.Server.Repository
 {
@@ -77,7 +77,7 @@ namespace HabitTracker.Server.Repository
             return habitLogs.FirstOrDefault();
         }
 
-        public HabitLog? GetMostRecentHabitLog(int habitId, int userId)
+        public HabitLog? GetMostRecentHabitLog(int habitId, int userId, DbConnection connection, DbTransaction transaction)
         {
             string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 1";
 
@@ -87,9 +87,11 @@ namespace HabitTracker.Server.Repository
                 { "@userId", userId }
             };
 
-            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQueryInTransaction(
                 query,
-                parameters
+                parameters,
+                connection,
+                transaction
             );
 
             IReadOnlyCollection<HabitLog> habitLogs = _transformer.Transform(result);
@@ -97,7 +99,7 @@ namespace HabitTracker.Server.Repository
             return habitLogs.FirstOrDefault();
         }
 
-        public HabitLog? Add(PostHabitLog habitLog)
+        public HabitLog? Add(PostHabitLog habitLog, DbConnection connection, DbTransaction transaction)
         {
             string query = "INSERT INTO HabitLogs (Habit_id, Start_date, Habit_logged, Length_in_days) VALUES (@Habit_id, @Start_date, @Habit_logged, @Length_in_days) RETURNING *;";
 
@@ -109,14 +111,14 @@ namespace HabitTracker.Server.Repository
                 { "@Length_in_days", habitLog.Length_in_days }
             };
 
-            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(query, parameters);
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQueryInTransaction(query, parameters, connection, transaction);
 
             IReadOnlyCollection<HabitLog?> habitLogs = _transformer.Transform(result);
 
             return habitLogs.FirstOrDefault();
         }
 
-        public bool Update(PatchHabitLog habitLog)
+        public HabitLog? Update(PatchHabitLog habitLog)
         {
             string query = "UPDATE HabitLogs SET Habit_logged = @Habit_logged WHERE Id = @Id;";
 
@@ -126,9 +128,11 @@ namespace HabitTracker.Server.Repository
                 { "@Habit_logged", habitLog.Habit_logged },
             };
 
-            uint rowsAffected = _storage.ExecuteNonQuery(query, parameters);
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(query, parameters);
 
-            return rowsAffected > 0;
+            IReadOnlyCollection<HabitLog?> habitLogs = _transformer.Transform(result);
+
+            return habitLogs.FirstOrDefault();
         }
 
         public bool Delete(int habitLogId, int userId)

@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Data.Common;
 using System.Data.SQLite;
 
 namespace HabitTracker.Server.Storage
@@ -12,28 +13,80 @@ namespace HabitTracker.Server.Storage
             _connectionString = connectionString;
         }
 
-        private SQLiteConnection CreateConnection()
+        public ITransaction StartTransaction()
         {
-            return new SQLiteConnection(_connectionString);
+            return new StorageTransaction(_connectionString);
         }
 
-        private void OpenConnection(SQLiteConnection connection)
+        public IReadOnlyCollection<IReadOnlyDictionary<string, object>> ExecuteQueryInTransaction(
+                string query,
+                Dictionary<string, object> parameters,
+                DbConnection connection,
+                DbTransaction transaction
+            )
         {
-            try
+            List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
+
+            using (DbCommand command = connection!.CreateCommand())
             {
-                connection.Open();
+                command.CommandText = query;
+                command.Transaction = transaction;
+
+                foreach (var param in parameters)
+                {
+                    command.Parameters.Add(new SQLiteParameter(param.Key, param.Value));
+                }
+
+                using (IDataReader reader = command.ExecuteReader())
+                {
+
+                    while (reader.Read())
+                    {
+                        Dictionary<string, object> row = new Dictionary<string, object>();
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            row[reader.GetName(i)] = reader.GetValue(i);
+                        }
+
+                        result.Add(row);
+                    }
+                }
             }
-            catch (Exception ex)
+
+            return result;
+        }
+
+        public uint ExecuteNonQueryInTransaction(
+                string query,
+                Dictionary<string, object> parameters,
+                DbConnection connection,
+                DbTransaction transaction
+            )
+        {
+
+            uint rowsAffected;
+
+            using (DbCommand command = connection!.CreateCommand())
             {
-                Console.WriteLine("Error opening connection" + ex.Message);
+                command.CommandText = query;
+                command.Transaction = transaction;
+
+                foreach (var param in parameters)
+                {
+                    command.Parameters.Add(new SQLiteParameter(param.Key, param.Value));
+                }
+
+                rowsAffected = Convert.ToUInt32(command.ExecuteNonQuery());
             }
+
+            return rowsAffected;
         }
 
         public IReadOnlyCollection<IReadOnlyDictionary<string, object>> ExecuteQuery(string query, Dictionary<string, object> parameters)
         {
-            using (SQLiteConnection connection = CreateConnection())
+            using (SQLiteConnection connection = new SQLiteConnection(_connectionString))
             {
-                OpenConnection(connection);
+                connection.Open();
 
                 using (SQLiteCommand command = connection.CreateCommand())
                 {
@@ -66,9 +119,9 @@ namespace HabitTracker.Server.Storage
 
         public uint ExecuteNonQuery(string query, Dictionary<string, object> parameters)
         {
-            using (SQLiteConnection connection = CreateConnection())
+            using (SQLiteConnection connection = new SQLiteConnection(_connectionString))
             {
-                OpenConnection(connection);
+                connection.Open();
 
                 using (SQLiteCommand command = connection.CreateCommand())
                 {

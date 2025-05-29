@@ -111,7 +111,7 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public string? Update(int userId, PatchUser user)
+        public Tuple<string?, User>? Update(int userId, PatchUser user)
         {
             try
             {
@@ -140,15 +140,15 @@ namespace HabitTracker.Server.Services
                 }
 
                 _logger.LogInformation("UserService - Update - updating user");
-                bool success = _userRepository.Update(userId, user);
+                User? updatedUser = _userRepository.Update(userId, user);
 
-                if (success == false)
+                if (updatedUser == null)
                 {
                     throw new AppException($"Could not update user of user id - {userId}");
                 }
 
                 _logger.LogInformation("UserService - Update - updated user");
-                return string.IsNullOrEmpty(user.NewUsername) == false ? _auth.GenerateJWTToken(user.NewUsername) : null;
+                return string.IsNullOrEmpty(user.NewUsername) == false ? new Tuple<string?, User>(_auth.GenerateJWTToken(user.NewUsername), updatedUser) : null;
             }
             catch (BadRequestException ex)
             {

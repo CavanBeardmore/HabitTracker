@@ -7,28 +7,19 @@ import { AuthenticationService, Credentials } from './classes/AuthenticationServ
 import { GlobalEventObserver } from './classes/GlobalEventObserver';
 import { CredentialsWithEmail, UserService } from './classes/UserService';
 import { IServerEventHandler } from './classes/IServerEventHandler';
-import { HabitService } from './classes/HabitService';
-
-enum UnauthedPages {
-    LOGIN
-}
-
-enum AuthedPages {
-    HOME
-}
+import { Route, Routes, useNavigate } from 'react-router-dom';
 
 export const App = () => {
     const authService = Resolve<AuthenticationService>(AuthenticationService);
     const userService = Resolve<UserService>(UserService);
     const globalEvents = Resolve<GlobalEventObserver>(GlobalEventObserver);
     const sseEventHandler = Resolve<IServerEventHandler>("IServerEventHandler");
-    const habitService = Resolve<HabitService>(HabitService);
 
     //@ts-ignore
     window.auth = authService;
 
-    const [currentAuthedPage, setAuthedCurrentPage] = useState<AuthedPages>(AuthedPages.HOME);
-    const [currentUnauthedPage, setUnauthedCurrentPage] = useState<UnauthedPages>(UnauthedPages.LOGIN);
+    const navigate = useNavigate();
+
     const [isAuthed, setIsAuthed] = useState<boolean>(false);
 
     const onLoginSubmit = async (creds: Credentials): Promise<void> => {
@@ -36,7 +27,7 @@ export const App = () => {
 
         if (success) {
             setIsAuthed(true);
-            setAuthedCurrentPage(AuthedPages.HOME);
+            navigate("/");
             return;
         }
 
@@ -49,18 +40,9 @@ export const App = () => {
         if (success) {
             globalEvents.raise("register-user-success");
         } else {
-            console.log("FAILURE IN APP", errorMessage)
             globalEvents.raise("register-user-failure", errorMessage);
         }
     }
-
-    const authedPagesLookup = new Map<AuthedPages, ReactNode>([
-        [AuthedPages.HOME, <Home />]
-    ]);
-    
-    const unauthedPagesLookup = new Map<UnauthedPages, ReactNode>([
-        [UnauthedPages.LOGIN, <Login onLoginSubmit={onLoginSubmit} onRegisterSubmit={onRegisterSubmit}/>]
-    ]);
 
     const createServerConnection = async (): Promise<void> => {
         await sseEventHandler.CreateConnection();
@@ -74,13 +56,12 @@ export const App = () => {
         const isAuthed = authService.IsUserAuthed();
 
         if (isAuthed === false) {
-            setUnauthedCurrentPage(UnauthedPages.LOGIN);
             setIsAuthed(false);
+            navigate("/login");
             return;
         }
 
         createServerConnection();
-        setAuthedCurrentPage(AuthedPages.HOME);
         setIsAuthed(true);
     }, []);
 
@@ -91,12 +72,17 @@ export const App = () => {
     }, [])
 
     return (
-        <div className='h-full w-full'>
-            {
-                isAuthed
-                ? authedPagesLookup.get(currentAuthedPage)
-                : unauthedPagesLookup.get(currentUnauthedPage)
-            }
+        <div className='h-full w-full select-none font-sans'>
+            {isAuthed && (
+                <Routes>
+                    <Route path='/' element={<Home />} />
+                </Routes>
+            )}
+            {isAuthed === false && (
+                <Routes>
+                    <Route path='/login' element={<Login onLoginSubmit={onLoginSubmit} onRegisterSubmit={onRegisterSubmit}/>} />
+                </Routes>
+            )}
         </div>
     );
 }

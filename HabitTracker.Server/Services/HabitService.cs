@@ -22,7 +22,7 @@ namespace HabitTracker.Server.Services
             try
             {
                 _logger.LogInformation("HabitService - GetById - getting habit by id");
-                Habit? habit = _habitRepository.GetById(habitId, userId);
+                Habit? habit = _habitRepository.GetById(habitId, userId, null, null);
 
                 if (habit == null)
                 {
@@ -89,12 +89,23 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public bool Update(int userId, PatchHabit habit)
+        public Habit? Update(int userId, PatchHabit habit)
         {
             try
             {
                 _logger.LogInformation("HabitService - Update - updating habit");
-                return _habitRepository.Update(userId, habit);
+                bool success = _habitRepository.Update(userId, habit, null, null);
+
+                if (!success)
+                {
+                    throw new AppException($"Failed to update habit with data for - {userId}");
+                }
+
+                return _habitRepository.GetById(habit.Id, userId, null, null);
+            }
+            catch (AppException ex)
+            {
+                throw new AppException(ex.Message);
             }
             catch
             {

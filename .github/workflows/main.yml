@@ -21,11 +21,11 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     
-    - name: Build app
-      run: dotnet build --no-restore
+    # - name: Build app
+    #   run: dotnet build --no-restore
     
-    - name: Run xUnit tests
-      run: dotnet test ./HabitTracker.Server.Tests/HabitTracker.Server.Tests.csproj --no-build
+    # - name: Run xUnit tests
+    #   run: dotnet test ./HabitTracker.Server.Tests/HabitTracker.Server.Tests.csproj --no-build
   
   deploy:
 

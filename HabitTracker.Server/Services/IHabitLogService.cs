@@ -9,9 +9,9 @@ namespace HabitTracker.Server.Services
 
         HabitLog? GetById(int habitLogId, int userId);
 
-        HabitLog? Add(PostHabitLog habitLog, int userId);
+        Tuple<Habit, HabitLog>? Add(PostHabitLog habitLog, int userId);
 
-        bool Update(PatchHabitLog habitLog);
+        HabitLog? Update(PatchHabitLog habitLog);
 
         bool Delete(int habitLogId, int userId);
 

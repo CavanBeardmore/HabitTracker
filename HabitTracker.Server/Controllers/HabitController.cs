@@ -115,11 +115,12 @@ namespace HabitTracker.Server.Controllers
             }
 
             _logger.LogInformation("HabitController - UpdateHabit - updating habit for - {@Userid}", userId);
-            bool success = _habitService.Update(userId, habit);
+            Habit? updatedHabit = _habitService.Update(userId, habit);
 
-            if (success)
+            if (updatedHabit != null)
             {
                 _logger.LogInformation("HabitController - UpdateHabit - successfully updated habit for - {@Userid}", userId);
+                _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.HABIT_UPDATED, updatedHabit));
                 return Ok();
             }
 
@@ -139,6 +140,7 @@ namespace HabitTracker.Server.Controllers
             if (success)
             {
                 _logger.LogInformation("HabitController - DeleteHabit - successfully deleted habit for - {@Userid}", userId);
+                _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.HABIT_DELETED, habitId));
                 return NoContent();
             }
 

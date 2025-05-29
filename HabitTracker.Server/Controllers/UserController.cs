@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Exceptions;
 using System.Text.Json;
+using HabitTracker.Server.SSE;
+using HabitTracker.Server.DTOs;
 
 namespace HabitTracker.Server.Controllers
 {
@@ -15,11 +17,13 @@ namespace HabitTracker.Server.Controllers
     {
         private readonly IUserService _userService;
         private readonly ILogger<UserController> _logger;
+        private readonly IEventService<HabitTrackerEvent> _eventService;
 
-        public UserController(ILogger<UserController> logger, IUserService userService)
+        public UserController(ILogger<UserController> logger, IUserService userService, IEventService<HabitTrackerEvent> eventService)
         {
             _logger = logger;
             _userService = userService;
+            _eventService = eventService;
         }
 
         private int GetUserId()
@@ -81,10 +85,16 @@ namespace HabitTracker.Server.Controllers
             }
 
             _logger.LogInformation("UserController - AddUser - updating user");
-            string? jwt = _userService.Update(userId, user);
+            Tuple<string?, User>? response = _userService.Update(userId, user);
 
-            _logger.LogInformation("UserController - AddUser - successfully updated user record and created new JWT");
-            return Ok(jwt);
+            if (response != null)
+            {
+                _logger.LogInformation("UserController - AddUser - successfully updated user record and created new JWT");
+                _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.USER_UPDATED, new { jwt = response.Item1, user = response.Item2 }));
+                return Ok();
+            }
+
+            throw new AppException("Could not update user.");
         }
 
         [Authorize]
@@ -112,6 +122,7 @@ namespace HabitTracker.Server.Controllers
             if (success)
             {
                 _logger.LogInformation("UserController - DeleteUser - successfully deleted user");
+                _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.USER_DELETED, userId));
                 return NoContent();
             }
 

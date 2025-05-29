@@ -8,7 +8,7 @@ namespace HabitTracker.Server.Services
         User? GetByUsername(string username);
         bool Add(PostUser user);
         bool Delete(int userId, AuthUser user);
-        string? Update(int userId, PatchUser user);
+        Tuple<string?, User>? Update(int userId, PatchUser user);
         bool AreUserCredentialsCorrect(string username, string password);
     }
 }

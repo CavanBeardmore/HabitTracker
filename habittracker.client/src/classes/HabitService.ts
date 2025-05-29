@@ -1,21 +1,18 @@
-import { HttpService, RequestMethod } from "./HttpService";
+import { Habit } from "../data/Habit";
+import { AuthedHttpService } from "./AuthedHttpService";
+import { HttpServiceRes, RequestMethod } from "./HttpService";
 
-export class HabitService extends HttpService {
+export class HabitService extends AuthedHttpService {
     constructor(private readonly _backendUrl: string) {
         super();
     }
 
     public async CreateHabit(name: string): Promise<void> {
-        const jwt = this.RetrieveJwtFromStorage()
-        this.Request(
+        await this.AuthedRequest(
             `${this._backendUrl}habits/Habit`,
             {
                 method: RequestMethod.POST,
                 headers: [
-                    {
-                        key: "Authorization",
-                        value: `Bearer ${jwt}`
-                    },
                     {
                         key: "Content-Type", 
                         value: "application/json"
@@ -26,13 +23,73 @@ export class HabitService extends HttpService {
         )
     }
 
-    private RetrieveJwtFromStorage(): string {
-        const token = localStorage.getItem("AUTH_TOKEN");
+    public async GetHabits(): Promise<HttpServiceRes<Habit[]>> {
+        return await this.AuthedRequest<Habit[]>(
+            `${this._backendUrl}habits/Habit`,
+            {
+                method: RequestMethod.GET,
+                headers: [
+                    {
+                        key: "Content-Type", 
+                        value: "application/json"
+                    }
+                ],
+            }
+        );
+    }
 
-        if (token === null) {
-            throw new Error("No token found");
-        }
+    public async GetHabitById(habitId: string): Promise<HttpServiceRes<Habit>> {
+        return await this.AuthedRequest<Habit>(
+            `${this._backendUrl}habits/Habit`,
+            {
+                method: RequestMethod.GET,
+                headers: [
+                    {
+                        key: "Content-Type",
+                        value: "application/json"
+                    }
+                ],
+                params: [
+                    {
+                        key: "habitId",
+                        value: habitId
+                    }
+                ]
+            }
+        )
+    }
 
-        return token;
+    public async UpdateHabit(id: string, name: string): Promise<void> {
+        await this.AuthedRequest(
+            `${this._backendUrl}`,
+            {
+                method: RequestMethod.PATCH,
+                headers: [
+                    {
+                        key: "Content-Type",
+                        value: "application/json"
+                    }
+                ],
+                body: JSON.stringify({
+                    id,
+                    name
+                })
+            }
+        )
+    }
+
+    public async DeleteHabit(id: string): Promise<void> {
+        await this.AuthedRequest(
+            `${this._backendUrl}`,
+            {
+                method: RequestMethod.DELETE,
+                params: [
+                    {
+                        key: "habitId",
+                        value: id
+                    }
+                ]
+            }
+        )
     }
 }

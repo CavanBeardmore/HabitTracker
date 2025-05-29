@@ -2,19 +2,19 @@
 using HabitTracker.Server.Storage;
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Transformer;
-using System.Data;
-
+using System.Data.Common;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Repository
 {
     public class HabitRepository : IHabitRepository
     {
-        private readonly IStorage _sqliteFacade;
+        public IStorage SqliteFacade { get; }
         private readonly ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>> _transformer;
 
         public HabitRepository(IStorage sqliteFacade, ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>> transformer)
         {
-            _sqliteFacade = sqliteFacade;
+            SqliteFacade = sqliteFacade;
             _transformer = transformer;
         }
 
@@ -27,7 +27,7 @@ namespace HabitTracker.Server.Repository
                 { "@User_id", user_id }
             };
 
-            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _sqliteFacade.ExecuteQuery(
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = SqliteFacade.ExecuteQuery(
                 query,
                 parameters
             );
@@ -35,7 +35,7 @@ namespace HabitTracker.Server.Repository
             return _transformer.Transform(result);
         }
 
-        public Habit? GetById(int habitId, int userId)
+        public Habit? GetById(int habitId, int userId, DbConnection? connection, DbTransaction? transaction)
         {
             string query = "SELECT h.* FROM Habits h INNER JOIN Users u On h.User_id WHERE h.Id = @id AND h.User_id = @userId AND u.IsDeleted = 0;";
 
@@ -45,10 +45,24 @@ namespace HabitTracker.Server.Repository
                 { "@userId", userId }
             };
 
-            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _sqliteFacade.ExecuteQuery(
-                query,
-                parameters
-            );
+            bool isTransaction = connection != null && transaction != null;
+
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result;
+            
+            if (isTransaction)
+            {
+                result = SqliteFacade.ExecuteQueryInTransaction(
+                    query,
+                    parameters,
+                    connection!,
+                    transaction!
+                );
+            } else {
+                result = SqliteFacade.ExecuteQuery(
+                    query,
+                    parameters
+                );
+            }
 
             IReadOnlyCollection<Habit> habits = _transformer.Transform(result);
 
@@ -65,7 +79,10 @@ namespace HabitTracker.Server.Repository
                 { "@name", habit.Name }
             };
 
-            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _sqliteFacade.ExecuteQuery(query, parameters);
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = SqliteFacade.ExecuteQuery(
+                    query, 
+                    parameters
+                );
 
             IReadOnlyCollection<Habit> habits = _transformer.Transform(result);
 
@@ -82,25 +99,41 @@ namespace HabitTracker.Server.Repository
                 { "@userId", userId }
             };
 
-            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            uint rowsAffected = SqliteFacade.ExecuteNonQuery(query, parameters);
 
             return rowsAffected > 0;
         }
 
-        public bool Update(int userId, PatchHabit habit)
+        public bool Update(int userId, PatchHabit habit, DbConnection? connection, DbTransaction? transaction)
         {
-            string query = "UPDATE Habits SET name = @name WHERE Id = @id AND User_id = @userId;";
+            Console.WriteLine("user id", JsonSerializer.Serialize(userId));
+            Console.WriteLine("habit", JsonSerializer.Serialize(habit));
+            Console.WriteLine("connection", JsonSerializer.Serialize(connection));
+            Console.WriteLine("transaction", JsonSerializer.Serialize(transaction));
+            string query = "UPDATE Habits SET name = @name, StreakCount = @streakCount WHERE Id = @id AND User_id = @userId;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", habit.Id },
                 { "@name", habit.Name },
                 { "@userId", userId },
+                { "@streakCount", habit.StreakCount },
             };
 
-            uint rowsAffected = _sqliteFacade.ExecuteNonQuery(query, parameters);
+            bool isTransaction = connection != null && transaction != null;
 
-            return rowsAffected > 0;
+            uint result;
+
+            if (isTransaction)
+            {
+                Console.WriteLine("updating as transaction");
+                result = SqliteFacade.ExecuteNonQueryInTransaction(query, parameters, connection!, transaction!);
+            } else
+            {
+                result = SqliteFacade.ExecuteNonQuery(query, parameters);
+            }
+
+            return result > 0;
         }
     }
 }
