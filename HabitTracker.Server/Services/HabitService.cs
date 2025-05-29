@@ -94,14 +94,14 @@ namespace HabitTracker.Server.Services
             try
             {
                 _logger.LogInformation("HabitService - Update - updating habit");
-                bool success = _habitRepository.Update(userId, habit, null, null);
+                Habit? updatedHabit = _habitRepository.Update(userId, habit, null, null);
 
-                if (!success)
+                if (updatedHabit == null)
                 {
                     throw new AppException($"Failed to update habit with data for - {userId}");
                 }
 
-                return _habitRepository.GetById(habit.Id, userId, null, null);
+                return updatedHabit;
             }
             catch (AppException ex)
             {

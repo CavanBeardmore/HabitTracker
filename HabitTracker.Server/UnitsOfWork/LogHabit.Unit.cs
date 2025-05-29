@@ -67,20 +67,12 @@ namespace HabitTracker.Server.UnitsOfWork
             }
 
             _logger.LogInformation("LogHabit - Work - updating habit");
-            bool success = _habitRepository.Update(_userId, new PatchHabit(habit.Id, habit.Name, updatedStreakCount), Transaction.Connection, Transaction.Transaction);
-
-            if (!success)
-            {
-                _logger.LogInformation("LogHabit - Work - failed to update habit");
-                throw new AppException("Failed to updated habit");
-            }
-
-            Habit? updatedHabit = _habitRepository.GetById(habit.Id, _userId, Transaction.Connection, Transaction.Transaction);
+            Habit? updatedHabit = _habitRepository.Update(_userId, new PatchHabit(habit.Id, habit.Name, updatedStreakCount), Transaction.Connection, Transaction.Transaction);
 
             if (updatedHabit == null)
             {
-                _logger.LogInformation("LogHabit - Work - failed to get updated habit");
-                throw new AppException("Failed to get updated habit");
+                _logger.LogInformation("LogHabit - Work - failed to update habit");
+                throw new AppException("Failed to updated habit");
             }
 
             _logger.LogInformation("LogHabit - Work - successfully completed LogHabit unit");

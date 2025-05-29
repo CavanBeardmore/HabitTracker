@@ -3,7 +3,6 @@ using HabitTracker.Server.Storage;
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Transformer;
 using System.Data.Common;
-using System.Text.Json;
 
 namespace HabitTracker.Server.Repository
 {
@@ -71,12 +70,13 @@ namespace HabitTracker.Server.Repository
 
         public Habit? Add(int userId, PostHabit habit)
         {
-            string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name) RETURNING *;";
+            string query = "INSERT INTO Habits (User_id, name, StreakCount) VALUES (@User_id, @name, @StreakCount) RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@User_id", userId },
-                { "@name", habit.Name }
+                { "@name", habit.Name },
+                { "StreakCount", 0 }
             };
 
             IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = SqliteFacade.ExecuteQuery(
@@ -104,13 +104,9 @@ namespace HabitTracker.Server.Repository
             return rowsAffected > 0;
         }
 
-        public bool Update(int userId, PatchHabit habit, DbConnection? connection, DbTransaction? transaction)
+        public Habit? Update(int userId, PatchHabit habit, DbConnection? connection, DbTransaction? transaction)
         {
-            Console.WriteLine("user id", JsonSerializer.Serialize(userId));
-            Console.WriteLine("habit", JsonSerializer.Serialize(habit));
-            Console.WriteLine("connection", JsonSerializer.Serialize(connection));
-            Console.WriteLine("transaction", JsonSerializer.Serialize(transaction));
-            string query = "UPDATE Habits SET name = @name, StreakCount = @streakCount WHERE Id = @id AND User_id = @userId;";
+            string query = "UPDATE Habits SET name = @name, StreakCount = @streakCount WHERE Id = @id AND User_id = @userId RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -122,18 +118,20 @@ namespace HabitTracker.Server.Repository
 
             bool isTransaction = connection != null && transaction != null;
 
-            uint result;
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result;
 
             if (isTransaction)
             {
                 Console.WriteLine("updating as transaction");
-                result = SqliteFacade.ExecuteNonQueryInTransaction(query, parameters, connection!, transaction!);
+                result = SqliteFacade.ExecuteQueryInTransaction(query, parameters, connection!, transaction!);
             } else
             {
-                result = SqliteFacade.ExecuteNonQuery(query, parameters);
+                result = SqliteFacade.ExecuteQuery(query, parameters);
             }
 
-            return result > 0;
+            IReadOnlyCollection<Habit> habits = _transformer.Transform(result);
+
+            return habits.FirstOrDefault();
         }
     }
 }

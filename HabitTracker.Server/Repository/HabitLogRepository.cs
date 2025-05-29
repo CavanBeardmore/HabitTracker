@@ -120,7 +120,7 @@ namespace HabitTracker.Server.Repository
 
         public HabitLog? Update(PatchHabitLog habitLog)
         {
-            string query = "UPDATE HabitLogs SET Habit_logged = @Habit_logged WHERE Id = @Id;";
+            string query = "UPDATE HabitLogs SET Habit_logged = @Habit_logged WHERE Id = @Id RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
