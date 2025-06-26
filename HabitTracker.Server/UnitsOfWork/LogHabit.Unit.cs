@@ -2,6 +2,7 @@
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Repository;
 using HabitTracker.Server.Exceptions;
+using HabitTracker.Server.Database.Entities;
 
 namespace HabitTracker.Server.UnitsOfWork
 {
@@ -32,6 +33,9 @@ namespace HabitTracker.Server.UnitsOfWork
                 throw new ConflictException("Habit log already exists for this date");
             }
 
+            _logger.LogInformation("LogHabit - Work - getting most recent habit log");
+            HabitLog? mostRecentHabitLog = _habitLogRepository.GetMostRecentHabitLog(_habitLog.Habit_id, _userId, Transaction.Connection, Transaction.Transaction);
+
             _logger.LogInformation("LogHabit - Work - getting habit");
             Habit? habit = _habitRepository.GetById(_habitLog.Habit_id, _userId, Transaction.Connection, Transaction.Transaction);
 
@@ -43,17 +47,7 @@ namespace HabitTracker.Server.UnitsOfWork
 
             _logger.LogInformation("LogHabit - Work - current habit streak {@StreakCount}", habit.StreakCount);
 
-            uint updatedStreakCount;
-
-            if (habit.StreakCount == 0)
-            {
-                updatedStreakCount = 1;
-            } 
-            else
-            {
-                uint current = habit.StreakCount;
-                updatedStreakCount = current + 1;
-            }
+            uint updatedStreakCount = GetStreakCount(habit.StreakCount, mostRecentHabitLog?.Start_date);
 
             _logger.LogInformation("LogHabit - Work - updated habit streak {@UpdatedStreakCount}", updatedStreakCount);
 
@@ -77,6 +71,29 @@ namespace HabitTracker.Server.UnitsOfWork
 
             _logger.LogInformation("LogHabit - Work - successfully completed LogHabit unit");
             return Tuple.Create(updatedHabit, habitLog);
+        }
+
+        private uint GetStreakCount(uint currentStreakCount, DateTime? mostRecentLoggedDate)
+        {
+            if (currentStreakCount == 0 && mostRecentLoggedDate == null)
+            {
+                return 1;
+            }
+
+            if (mostRecentLoggedDate == null)
+            {
+                _logger.LogInformation("LogHabit - Work - most recent logged date is null");
+                throw new NotFoundException("Most recent logged date is null");
+            }
+
+            TimeSpan daysInBetween = _habitLog.Start_date.Date.Subtract(mostRecentLoggedDate.Value.Date);
+
+            if (daysInBetween.Days == 1)
+            {
+                return currentStreakCount + 1;
+            }
+
+            return 1;
         }
     }
 }

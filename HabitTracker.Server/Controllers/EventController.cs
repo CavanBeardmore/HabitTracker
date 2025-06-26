@@ -53,6 +53,7 @@ namespace HabitTracker.Server.Controllers
                     return;
                 }
 
+                await Response.Body.FlushAsync();
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     _logger.LogInformation("EventController - waiting to read from event service channel");

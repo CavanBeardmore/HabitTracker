@@ -208,13 +208,18 @@ namespace HabitTracker.Server.Tests.Services
 
             user.NewPassword = "hashed-test";
 
-            _mockUserRepository.Setup(repository => repository.Update(userId, user)).Returns(true);
+            _mockUserRepository.Setup(repository => repository.Update(userId, user)).Returns(new User(1234, "test1", "test2", "test3"));
 
             _mockAuthentication.Setup(auth => auth.GenerateJWTToken("test2")).Returns("test1234");
 
             var result = _service.Update(userId, user);
 
-            Assert.True(result == "test1234");
+            Assert.NotNull(result);
+            Assert.True(result.Item1 == "test1234");
+            Assert.True(result.Item2.Id == 1234);
+            Assert.True(result.Item2.Username == "test1");
+            Assert.True(result.Item2.Email == "test2");
+            Assert.True(result.Item2.Password == "test3");
         }
 
         [Fact]
@@ -226,29 +231,18 @@ namespace HabitTracker.Server.Tests.Services
             _mockUserRepository.Setup(repository => repository.GetById(userId)).Returns(new User(1234, "test1", "test2", "test3"));
             _mockPasswordService.Setup(service => service.VerifyPassword("test1", "test3")).Returns(true);
 
-            _mockUserRepository.Setup(repository => repository.Update(userId, user)).Returns(true);
+            _mockUserRepository.Setup(repository => repository.Update(userId, user)).Returns(new User(1234, "test1", "test2", "test3"));
 
             _mockAuthentication.Setup(auth => auth.GenerateJWTToken("test2")).Returns("test1234");
 
             var result = _service.Update(userId, user);
 
-            Assert.True(result == "test1234");
-        }
-
-        [Fact]
-        public void Update_ReturnsNull()
-        {
-            int userId = 1234;
-            PatchUser user = new PatchUser("test1", email: "test3", newPassword: "test4");
-
-            _mockUserRepository.Setup(repository => repository.GetById(userId)).Returns(new User(1234, "test1", "test2", "test3"));
-            _mockPasswordService.Setup(service => service.VerifyPassword("test1", "test3")).Returns(true);
-            _mockPasswordService.Setup(service => service.HashPassword("test4")).Returns("test4");
-            _mockUserRepository.Setup(repository => repository.Update(userId, user)).Returns(true);
-
-            var result = _service.Update(userId, user);
-
-            Assert.True(result == null);
+            Assert.NotNull(result);
+            Assert.True(result.Item1 == "test1234");
+            Assert.True(result.Item2.Id == 1234);
+            Assert.True(result.Item2.Username == "test1");
+            Assert.True(result.Item2.Email == "test2");
+            Assert.True(result.Item2.Password == "test3");
         }
 
         [Fact]
@@ -286,7 +280,7 @@ namespace HabitTracker.Server.Tests.Services
 
             user.NewPassword = "hashed-test";
 
-            _mockUserRepository.Setup(repository => repository.Update(userId, user)).Returns(false);
+            _mockUserRepository.Setup(repository => repository.Update(userId, user)).Returns((User)null);
 
             Assert.Throws<AppException>(() => _service.Update(userId, user));
         }

@@ -9,6 +9,8 @@ namespace HabitTracker.Server.Services
 
         HabitLog? GetById(int habitLogId, int userId);
 
+        HabitLog? GetMostRecentByHabitId(int habitId, int userId);
+
         Tuple<Habit, HabitLog>? Add(PostHabitLog habitLog, int userId);
 
         HabitLog? Update(PatchHabitLog habitLog);

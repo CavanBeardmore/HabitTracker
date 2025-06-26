@@ -26,6 +26,8 @@ namespace HabitTracker.Server.Services
             DateTime currentDate = DateTime.UtcNow;
             Rate? existingRate = _rateLimitRepository.GetRate(ipAddress);
 
+            _logger.LogInformation("RateLimitService - HasIpAddressBeenLimited - rate for ipAddress {@Rate} - currentDate - {@currentDate}", existingRate, currentDate);
+
             if (existingRate == null)
             {
                 return false;
@@ -82,7 +84,7 @@ namespace HabitTracker.Server.Services
 
         private bool HasRateExpired(Rate existingRate, DateTime currentDate)
         {
-            return existingRate.Ttl.CompareTo(currentDate) < 0;
+            return existingRate.Ttl < currentDate;
         }
 
         private void HandleExpiredRate(Rate existingRate, DateTime currentDate)

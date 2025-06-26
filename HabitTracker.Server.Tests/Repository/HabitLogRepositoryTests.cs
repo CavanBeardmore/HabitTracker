@@ -4,9 +4,8 @@ using HabitTracker.Server.Models;
 using HabitTracker.Server.Repository;
 using HabitTracker.Server.Transformer;
 using Moq;
-using System.Collections.Generic;
-using System.Data;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Data.Common;
+using System.Data.SQLite;
 
 namespace HabitTracker.Server.Tests.Repository
 {
@@ -234,10 +233,15 @@ namespace HabitTracker.Server.Tests.Repository
 
             List<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1234, 2341, date, true, 7) };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            using var connection = new SQLiteConnection("Data Source=:memory:");
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+
+            _mockFacade.Setup(facade => facade.ExecuteQueryInTransaction(query, parameters, connection, transaction)).Returns(facadeData);
             _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
-            var result = _repository.GetMostRecentHabitLog(habitId, userId);
+            var result = _repository.GetMostRecentHabitLog(habitId, userId, connection, transaction);
 
             Assert.NotNull(result);
             Assert.True(result.Id == 1234);
@@ -267,10 +271,15 @@ namespace HabitTracker.Server.Tests.Repository
 
             List<HabitLog> transformerData = new List<HabitLog>();
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            using var connection = new SQLiteConnection("Data Source=:memory:");
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+
+            _mockFacade.Setup(facade => facade.ExecuteQueryInTransaction(query, parameters, connection, transaction)).Returns(facadeData);
             _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
-            var result = _repository.GetMostRecentHabitLog(habitId, userId);
+            var result = _repository.GetMostRecentHabitLog(habitId, userId, connection, transaction);
 
             Assert.Null(result);
         }
@@ -302,12 +311,18 @@ namespace HabitTracker.Server.Tests.Repository
                 { "Length_in_days", 7 }
             });
 
+            using var connection = new SQLiteConnection("Data Source=:memory:");
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+
             List<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1234, 2341, date, true, 7) };
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockFacade.Setup(facade => facade.ExecuteQueryInTransaction(query, parameters, connection, transaction)).Returns(facadeData);
             _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
-            var result = _repository.Add(habitLog);
+
+            var result = _repository.Add(habitLog, connection, transaction);
 
             Assert.NotNull(result);
             Assert.True(result.Id == 1234);
@@ -337,22 +352,27 @@ namespace HabitTracker.Server.Tests.Repository
             List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
             List<HabitLog> transformerData = new List<HabitLog>();
 
-            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            using var connection = new SQLiteConnection("Data Source=:memory:");
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+
+            _mockFacade.Setup(facade => facade.ExecuteQueryInTransaction(query, parameters, connection, transaction)).Returns(facadeData);
             _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
-            var result = _repository.Add(habitLog);
+            var result = _repository.Add(habitLog, connection, transaction);
 
             Assert.Null(result);
         }
 
         [Fact]
-        public void Update_ReturnsTrue()
+        public void Update_ReturnsHabitLog()
         {
             DateTime date = DateTime.UtcNow;
 
             PatchHabitLog habitLog = new PatchHabitLog(1234, true);
 
-            string query = "UPDATE HabitLogs SET Habit_logged = @Habit_logged WHERE Id = @Id;";
+            string query = "UPDATE HabitLogs SET Habit_logged = @Habit_logged WHERE Id = @Id RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -360,19 +380,37 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@Habit_logged", habitLog.Habit_logged },
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "Habit_id", 2341 },
+                { "Start_date", date},
+                { "Habit_logged", true },
+                { "Length_in_days", 7 }
+            });
+
+            List<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1234, 2341, date, true, 7) };
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(habitLog);
 
-            Assert.True(result);
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.Habit_id == 2341);
+            Assert.True(result.Habit_logged == true);
+            Assert.True(result.Start_date == date);
+            Assert.True(result.LengthInDays == 7);
         }
 
         [Fact]
-        public void Update_ReturnsFalse()
+        public void Update_ReturnsNull()
         {
             PatchHabitLog habitLog = new PatchHabitLog(1234, true);
 
-            string query = "UPDATE HabitLogs SET Habit_logged = @Habit_logged WHERE Id = @Id;";
+            string query = "UPDATE HabitLogs SET Habit_logged = @Habit_logged WHERE Id = @Id RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -380,11 +418,16 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@Habit_logged", habitLog.Habit_logged },
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(0);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+
+            List<HabitLog> transformerData = new List<HabitLog>();
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(habitLog);
 
-            Assert.False(result);
+            Assert.Null(result);
         }
 
         [Fact]

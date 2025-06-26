@@ -99,6 +99,26 @@ namespace HabitTracker.Server.Repository
             return habitLogs.FirstOrDefault();
         }
 
+        public HabitLog? GetMostRecentHabitLog(int habitId, int userId)
+        {
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 1";
+
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@id", habitId },
+                { "@userId", userId }
+            };
+
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(
+                query,
+                parameters
+            );
+
+            IReadOnlyCollection<HabitLog> habitLogs = _transformer.Transform(result);
+
+            return habitLogs.FirstOrDefault();
+        }
+
         public HabitLog? Add(PostHabitLog habitLog, DbConnection connection, DbTransaction transaction)
         {
             string query = "INSERT INTO HabitLogs (Habit_id, Start_date, Habit_logged, Length_in_days) VALUES (@Habit_id, @Start_date, @Habit_logged, @Length_in_days) RETURNING *;";

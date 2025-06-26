@@ -84,7 +84,11 @@ builder.Services.AddScoped<IHabitLogService, HabitLogService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IEventService<HabitTrackerEvent>, HabitTrackerEventService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 
 builder.Services.AddSwaggerGen(c =>
 {

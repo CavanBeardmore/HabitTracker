@@ -55,6 +55,26 @@ namespace HabitTracker.Server.Controllers
             return Ok(habitLog);
         }
 
+
+        [Authorize]
+        [HttpGet("habit/recent/{habitId}")]
+        public IActionResult GetMostRecentLogFromHabit(int habitId)
+        {
+            _logger.LogInformation("HabitLogController - GetMostRecentLogFromHabit - invoked");
+            int userId = GetUserId();
+
+            _logger.LogInformation("HabitLogController - GetMostRecentLogFromHabit - getting most recent habit log for user - {@Userid} that belongs to habit {@Habitid}", userId, habitId);
+            HabitLog? habitLog = _habitLogService.GetMostRecentByHabitId(habitId, userId);
+
+            if (habitLog == null)
+            {
+                throw new NotFoundException($"Could not find habit log from habit - {habitId} - for user - {userId}");
+            }
+
+            _logger.LogInformation("HabitLogController - GetMostRecentLogFromHabit - successfully retrieved habit log for - {@Userid}", userId);
+            return Ok(habitLog);
+        }
+
         [Authorize]
         [HttpGet("habit/{habitId}")]
         public IActionResult GetHabitLogsFromHabit(int habitId, [FromQuery] int pageNumber)

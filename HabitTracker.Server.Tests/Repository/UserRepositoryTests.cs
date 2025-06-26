@@ -219,7 +219,7 @@ namespace HabitTracker.Server.Tests.Repository
         }
 
         [Fact]
-        public void Update_WithAllParamsReturnTrue()
+        public void Update_WithAllParamsReturnsUser()
         {
             PatchUser user = new PatchUser("test1", "test2", "test3", "test4");
 
@@ -230,17 +230,32 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@password", user.NewPassword }
             };
 
-            string query = "UPDATE Users SET Username = @newUsername, Email = @email, Password = @password WHERE Id = @UserId AND IsDeleted = 0;";
+            string query = "UPDATE Users SET Username = @newUsername, Email = @email, Password = @password WHERE Id = @UserId AND IsDeleted = 0 RETURNING *;";
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<User> transformerData = new List<User> { new User(1234, "test", "test2", "test3") };
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "Username", "test" },
+                { "Email", "test2" },
+                { "Password", "test3" }
+            });
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(1234, user);
 
-            Assert.True(result);
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.Username == "test");
+            Assert.True(result.Email == "test2");
+            Assert.True(result.Password == "test3");
         }
 
         [Fact]
-        public void Update_WithAllParamsReturnFalse()
+        public void Update_WithAllParamsReturnsNull()
         {
             PatchUser user = new PatchUser("test1", "test2", "test3", "test4");
 
@@ -251,13 +266,17 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@password", user.NewPassword }
             };
 
-            string query = "UPDATE Users SET Username = @newUsername, Email = @email, Password = @password WHERE Id = @UserId AND IsDeleted = 0;";
+            string query = "UPDATE Users SET Username = @newUsername, Email = @email, Password = @password WHERE Id = @UserId AND IsDeleted = 0 RETURNING *;";
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(0);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<User> transformerData = new List<User>();
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(1234, user);
 
-            Assert.False(result);
+            Assert.Null(result);
         }
 
         [Fact]
@@ -271,13 +290,28 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@password", user.NewPassword }
             };
 
-            string query = "UPDATE Users SET Email = @email, Password = @password WHERE Id = @UserId AND IsDeleted = 0;";
+            string query = "UPDATE Users SET Email = @email, Password = @password WHERE Id = @UserId AND IsDeleted = 0 RETURNING *;";
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<User> transformerData = new List<User> { new User(1234, "test", "test2", "test3") };
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "Username", "test" },
+                { "Email", "test2" },
+                { "Password", "test3" }
+            });
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(1234, user);
 
-            Assert.True(result);
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.Username == "test");
+            Assert.True(result.Email == "test2");
+            Assert.True(result.Password == "test3");
         }
 
         [Fact]
@@ -291,13 +325,17 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@password", user.NewPassword }
             };
 
-            string query = "UPDATE Users SET Email = @email, Password = @password WHERE Id = @UserId AND IsDeleted = 0;";
+            string query = "UPDATE Users SET Email = @email, Password = @password WHERE Id = @UserId AND IsDeleted = 0 RETURNING *;";
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(0);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<User> transformerData = new List<User>();
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(1234, user);
 
-            Assert.False(result);
+            Assert.Null(result);
         }
 
         [Fact]
@@ -311,13 +349,28 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@password", user.NewPassword }
             };
 
-            string query = "UPDATE Users SET Username = @newUsername, Password = @password WHERE Id = @UserId AND IsDeleted = 0;";
+            string query = "UPDATE Users SET Username = @newUsername, Password = @password WHERE Id = @UserId AND IsDeleted = 0 RETURNING *;";
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<User> transformerData = new List<User> { new User(1234, "test", "test2", "test3") };
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "Username", "test" },
+                { "Email", "test2" },
+                { "Password", "test3" }
+            });
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(1234, user);
 
-            Assert.True(result);
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.Username == "test");
+            Assert.True(result.Email == "test2");
+            Assert.True(result.Password == "test3");
         }
 
         [Fact]
@@ -331,13 +384,17 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@password", user.NewPassword }
             };
 
-            string query = "UPDATE Users SET Username = @newUsername, Password = @password WHERE Id = @UserId AND IsDeleted = 0;";
+            string query = "UPDATE Users SET Username = @newUsername, Password = @password WHERE Id = @UserId AND IsDeleted = 0 RETURNING *;";
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(0);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<User> transformerData = new List<User>();
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(1234, user);
 
-            Assert.False(result);
+            Assert.Null(result);
         }
 
         [Fact]
@@ -351,13 +408,28 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@email", user.Email },
             };
 
-            string query = "UPDATE Users SET Username = @newUsername, Email = @email WHERE Id = @UserId AND IsDeleted = 0;";
+            string query = "UPDATE Users SET Username = @newUsername, Email = @email WHERE Id = @UserId AND IsDeleted = 0 RETURNING *;";
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<User> transformerData = new List<User> { new User(1234, "test", "test2", "test3") };
+
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "Username", "test" },
+                { "Email", "test2" },
+                { "Password", "test3" }
+            });
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(1234, user);
 
-            Assert.True(result);
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.Username == "test");
+            Assert.True(result.Email == "test2");
+            Assert.True(result.Password == "test3");
         }
 
         [Fact]
@@ -371,13 +443,17 @@ namespace HabitTracker.Server.Tests.Repository
                 { "@email", user.Email },
             };
 
-            string query = "UPDATE Users SET Username = @newUsername, Email = @email WHERE Id = @UserId AND IsDeleted = 0;";
+            string query = "UPDATE Users SET Username = @newUsername, Email = @email WHERE Id = @UserId AND IsDeleted = 0 RETURNING *;";
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(0);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<User> transformerData = new List<User>();
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
             var result = _repository.Update(1234, user);
 
-            Assert.False(result);
+            Assert.Null(result);
         }
     }
 }

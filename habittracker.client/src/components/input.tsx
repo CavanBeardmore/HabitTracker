@@ -28,7 +28,7 @@ export const Input = ({
     const [isVisible, setIsVisible] = useState<boolean>(false);
 
     return (
-        <div className="relative flex flex-row bg-gray-500 p-2 rounded-md text-stone-300 placeholder:text-stone-300 border-stone-300 border-1" >
+        <div className="relative flex flex-row bg-gray-500 p-2 rounded-md text-stone-300 placeholder:text-stone-300 border-stone-300 border-1 w-full">
             <input 
                 required={required}
                 className="flex-grow placeholder:text-stone-300 focus:outline-none"

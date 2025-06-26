@@ -45,6 +45,31 @@ namespace HabitTracker.Server.Services
             }
         }
 
+        public HabitLog? GetMostRecentByHabitId(int habitId, int userId)
+        {
+            try
+            {
+                _logger.LogInformation("HabitLogService - GetMostRecentByHabitId - getting most recent habit log by habit id and user id");
+                HabitLog? habitLog = _habitLogRepository.GetMostRecentHabitLog(habitId, userId);
+
+                if (habitLog != null)
+                {
+                    _logger.LogInformation("HabitLogService - GetMostRecentByHabitId - found habit log");
+                    return habitLog;
+                }
+
+                throw new NotFoundException($"No habit log found when getting most recent log using {habitId} and {userId}");
+            }
+            catch (NotFoundException ex)
+            {
+                throw new NotFoundException(ex.Message);
+            }
+            catch
+            {
+                throw new AppException($"An error occured when getting most recent habit log using {habitId} and {userId}");
+            }
+        }
+
         public IReadOnlyCollection<HabitLog?> GetAllByHabitId(int habitId, int userId, int pageNumber)
         {
             try

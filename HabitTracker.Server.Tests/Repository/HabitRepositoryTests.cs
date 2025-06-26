@@ -44,7 +44,7 @@ namespace HabitTracker.Server.Tests.Repository
                 { "Name", "test" },
             });
 
-            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test") };
+            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test", 7) };
 
             _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
             _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
@@ -79,12 +79,12 @@ namespace HabitTracker.Server.Tests.Repository
                 { "Name", "test" },
             });
 
-            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test") };
+            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test", 7) };
 
             _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
             _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
-            var result = _repository.GetById(habitId, userId);
+            var result = _repository.GetById(habitId, userId, null, null);
 
             Assert.NotNull(result);
             Assert.True(result.Id == 1234);
@@ -118,7 +118,7 @@ namespace HabitTracker.Server.Tests.Repository
             _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
             _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
-            var result = _repository.GetById(habitId, userId);
+            var result = _repository.GetById(habitId, userId, null, null);
 
             Assert.Null(result);
         }
@@ -129,22 +129,22 @@ namespace HabitTracker.Server.Tests.Repository
             PostHabit habit = new PostHabit("test");
             int userId = 1234;
 
-            string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name) RETURNING *;";
+            string query = "INSERT INTO Habits (User_id, name, StreakCount) VALUES (@User_id, @name, @StreakCount) RETURNING *;";
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@User_id", userId },
-                { "@name", habit.Name }
+                { "@name", habit.Name },
+                { "@StreakCount", 0 }
             };
 
             List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
-            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test") };
+            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test", 7) };
 
             facadeData.Add(new Dictionary<string, object>{
                 { "Id", 1234 },
                 { "User_id", 4321 },
                 { "Name", "test" },
             });
-
 
             _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
             _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
@@ -162,11 +162,12 @@ namespace HabitTracker.Server.Tests.Repository
         {
             PostHabit habit = new PostHabit("test");
 
-            string query = "INSERT INTO Habits (User_id, name) VALUES (@User_id, @name) RETURNING *;";
+            string query = "INSERT INTO Habits (User_id, name, StreakCount) VALUES (@User_id, @name, @StreakCount) RETURNING *;";
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@User_id", 1234 },
-                { "@name", habit.Name }
+                { "@name", habit.Name },
+                { "@StreakCount", 0 }
             };
 
             List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
@@ -223,45 +224,66 @@ namespace HabitTracker.Server.Tests.Repository
         }
 
         [Fact]
-        public void Update_ReturnsTrue()
+        public void Update_ReturnsHabit()
         {
-            PatchHabit habit = new PatchHabit(1234, "test");
+            PatchHabit habit = new PatchHabit(1234, "test", 7);
 
-            string query = "UPDATE Habits SET name = @name WHERE Id = @id AND User_id = @userId;";
+            string query = "UPDATE Habits SET name = @name, StreakCount = @streakCount WHERE Id = @id AND User_id = @userId RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", habit.Id },
                 { "@name", habit.Name },
                 { "@userId", 1234 },
+                { "@streakCount", habit.StreakCount },
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<Habit> transformerData = new List<Habit> { new Habit(1234, 4321, "test", 7) };
 
-            var result = _repository.Update(1234, habit);
+            facadeData.Add(new Dictionary<string, object>{
+                { "Id", 1234 },
+                { "User_id", 4321 },
+                { "Name", "test" },
+                { "StreakCount", 7 },
+            });
 
-            Assert.True(result);
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
+
+            var result = _repository.Update(1234, habit, null, null);
+
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.User_id == 4321);
+            Assert.True(result.Name == "test");
+            Assert.True(result.StreakCount == 7);
         }
 
         [Fact]
-        public void Update_ReturnsFalse()
+        public void Update_ReturnsNull()
         {
-            PatchHabit habit = new PatchHabit(1234, "test");
+            PatchHabit habit = new PatchHabit(1234, "test", 7);
 
-            string query = "UPDATE Habits SET name = @name WHERE Id = @id AND User_id = @userId;";
+            string query = "UPDATE Habits SET name = @name, StreakCount = @streakCount WHERE Id = @id AND User_id = @userId RETURNING *;";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", habit.Id },
                 { "@name", habit.Name },
                 { "@userId", 1234 },
+                { "@streakCount", habit.StreakCount },
             };
 
-            _mockFacade.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(0);
+            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
+            List<Habit> transformerData = new List<Habit>();
 
-            var result = _repository.Update(1234, habit);
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
 
-            Assert.False(result);
+            var result = _repository.Update(1234, habit, null, null);
+
+            Assert.Null(result);
         }
     }
 }

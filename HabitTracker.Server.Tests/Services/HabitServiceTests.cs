@@ -27,7 +27,7 @@ namespace HabitTracker.Server.Tests.Services
         public void GetAllByUserId_ReturnsTrueAndHabitCollection()
         {
             int userId = 1234;
-            var expectedHabits = new List<Habit> { new Habit(1, 1, "Test") };
+            var expectedHabits = new List<Habit> { new Habit(1, 1, "Test", 7) };
 
             _mockRepository.Setup(repo => repo.GetAllByUserId(userId)).Returns(expectedHabits);
 
@@ -66,9 +66,9 @@ namespace HabitTracker.Server.Tests.Services
             int habitId = 12345;
             int userId = 54321;
 
-            var expectedHabit = new Habit(1, 2, "Test");
+            var expectedHabit = new Habit(1, 2, "Test", 7);
 
-            _mockRepository.Setup(repo => repo.GetById(habitId, userId)).Returns(expectedHabit);
+            _mockRepository.Setup(repo => repo.GetById(habitId, userId, null, null)).Returns(expectedHabit);
 
             var result = _service.GetById(habitId, userId);
 
@@ -84,7 +84,7 @@ namespace HabitTracker.Server.Tests.Services
             int habitId = 12345;
             int userId = 54321;
 
-            _mockRepository.Setup(repo => repo.GetById(habitId, userId)).Returns((Habit)null);
+            _mockRepository.Setup(repo => repo.GetById(habitId, userId, null, null)).Returns((Habit)null);
 
             Assert.Throws<NotFoundException>(() => _service.GetById(habitId, userId));
         }
@@ -95,7 +95,7 @@ namespace HabitTracker.Server.Tests.Services
             int habitId = 12345;
             int userId = 54321;
 
-            _mockRepository.Setup(repo => repo.GetById(habitId, userId)).Throws<AppException>(() => throw new AppException("test"));
+            _mockRepository.Setup(repo => repo.GetById(habitId, userId, null, null)).Throws<AppException>(() => throw new AppException("test"));
 
             Assert.Throws<AppException>(() => _service.GetById(habitId, userId));
         }
@@ -105,7 +105,7 @@ namespace HabitTracker.Server.Tests.Services
         {
             PostHabit habit = new PostHabit("Test");
 
-            _mockRepository.Setup(repo => repo.Add(1234, habit)).Returns(new Habit(1234, 4321, "Test"));
+            _mockRepository.Setup(repo => repo.Add(1234, habit)).Returns(new Habit(1234, 4321, "Test", 7));
 
             var result = _service.Add(1234, habit);
 
@@ -113,6 +113,7 @@ namespace HabitTracker.Server.Tests.Services
             Assert.True(result.Id == 1234);
             Assert.True(result.User_id == 4321);
             Assert.True(result.Name == "Test");
+            Assert.True(result.StreakCount == 7);
         }
 
         [Fact]
@@ -163,35 +164,47 @@ namespace HabitTracker.Server.Tests.Services
         }
 
         [Fact]
-        public void Update_CallsRepositoryUpdateMethod()
+        public void Update_ReturnsHabit()
         {
-            PatchHabit habit = new PatchHabit(1, "test");
+            PatchHabit habit = new PatchHabit(1, "test", 7);
 
-            _mockRepository.Setup(repo => repo.Update(1234, habit)).Returns(true);
+            _mockRepository.Setup(repo => repo.Update(1234, habit, null , null)).Returns(new Habit(1234, 4321, "test", 7));
 
             var result = _service.Update(1234, habit);
 
-            Assert.True(result);
+            Assert.NotNull(result);
+            Assert.True(result.Id == 1234);
+            Assert.True(result.User_id == 4321);
+            Assert.True(result.Name == "test");
+            Assert.True(result.StreakCount == 7);
         }
 
         [Fact]
-        public void Update_ReturnsFalse()
+        public void Update_ThrowsAppExceptionWhenRepoReturnsNull()
         {
-            PatchHabit habit = new PatchHabit(1, "test");
+            PatchHabit habit = new PatchHabit(1, "test", 7);
 
-            _mockRepository.Setup(repo => repo.Update(1234, habit)).Returns(false);
+            _mockRepository.Setup(repo => repo.Update(1234, habit, null, null)).Returns((Habit)null);
 
-            var result = _service.Update(1234, habit);
-
-            Assert.False(result);
+            Assert.Throws<AppException>(() => _service.Update(1234, habit));
         }
 
         [Fact]
         public void Update_ThrowsAppException()
         {
-            PatchHabit habit = new PatchHabit(1, "test");
+            PatchHabit habit = new PatchHabit(1, "test", 7);
 
-            _mockRepository.Setup(repo => repo.Update(1234, habit)).Throws<AppException>(() => throw new AppException("test"));
+            _mockRepository.Setup(repo => repo.Update(1234, habit, null, null)).Throws<AppException>(() => throw new AppException("test"));
+
+            Assert.Throws<AppException>(() => _service.Update(1234, habit));
+        }
+
+        [Fact]
+        public void Update_ThrowsException()
+        {
+            PatchHabit habit = new PatchHabit(1, "test", 7);
+
+            _mockRepository.Setup(repo => repo.Update(1234, habit, null, null)).Throws<Exception>(() => throw new Exception("test"));
 
             Assert.Throws<AppException>(() => _service.Update(1234, habit));
         }

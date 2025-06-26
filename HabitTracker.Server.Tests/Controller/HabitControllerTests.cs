@@ -33,7 +33,7 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitService.Setup(service => service.GetById(habitId, 1234)).Returns(new Habit(1234, 4321, "test"));
+            _mockHabitService.Setup(service => service.GetById(habitId, 1234)).Returns(new Habit(1234, 4321, "test", 7));
 
             var result = _controller.GetHabit(habitId);
 
@@ -52,11 +52,10 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void GetUserHabits_ReturnsOkObjectResult()
         {
-            int habitId = 1;
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitService.Setup(service => service.GetAllByUserId(1234)).Returns(new List<Habit> { new Habit(1234, 4321, "test") });
+            _mockHabitService.Setup(service => service.GetAllByUserId(1234)).Returns(new List<Habit> { new Habit(1234, 4321, "test", 7) });
 
             var result = _controller.GetUserHabits();
 
@@ -78,7 +77,7 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitService.Setup(service => service.Add(1234, habit)).Returns(new Habit(1234, 4321, "test"));
+            _mockHabitService.Setup(service => service.Add(1234, habit)).Returns(new Habit(1234, 4321, "test", 7));
 
             var result = _controller.CreateHabit(habit);
 
@@ -122,11 +121,11 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void UpdateHabit_ReturnsOkResult()
         {
-            PatchHabit habit = new PatchHabit(1234, "test");
+            PatchHabit habit = new PatchHabit(1234, "test", 7);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitService.Setup(service => service.Update(1234, habit)).Returns(true);
+            _mockHabitService.Setup(service => service.Update(1234, habit)).Returns(new Habit(1234, 4321, "test", 7));
 
             var result = _controller.UpdateHabit(habit);
 
@@ -136,7 +135,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void UpdateHabit_ThrowsUnauthorizedException()
         {
-            PatchHabit habit = new PatchHabit(1234, "test");
+            PatchHabit habit = new PatchHabit(1234, "test", 7);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
 
             Assert.Throws<UnauthorizedException>(() => _controller.UpdateHabit(habit));
@@ -145,7 +144,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void UpdateHabit_ThrowsBadRequestException()
         {
-            PatchHabit habit = new PatchHabit(1234, "test");
+            PatchHabit habit = new PatchHabit(1234, "test", 7);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
@@ -156,11 +155,11 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void UpdateHabit_ThrowsAppException()
         {
-            PatchHabit habit = new PatchHabit(1234, "test");
+            PatchHabit habit = new PatchHabit(1234, "test", 7);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitService.Setup(service => service.Update(1234, habit)).Returns(false);
+            _mockHabitService.Setup(service => service.Update(1234, habit)).Returns((Habit)null);
 
             Assert.Throws<AppException>(() => _controller.UpdateHabit(habit));
         }

@@ -52,8 +52,8 @@ namespace HabitTracker.Server.Repository
             string query = "UPDATE Rates SET Count = @count WHERE IpAddress = @ipAddress";
 
             Dictionary<string, object> parameters = new Dictionary<string, object> {
-                { "count", count },
-                { "ipAddress", ipAddress }
+                { "@count", count },
+                { "@ipAddress", ipAddress }
             };
 
             uint recordsUpdated = _database.ExecuteNonQuery(query, parameters);
@@ -66,9 +66,9 @@ namespace HabitTracker.Server.Repository
             string query = "UPDATE Rates SET Count = @count, Ttl = @ttl WHERE IpAddress = @ipAddress";
 
             Dictionary<string, object> parameters = new Dictionary<string, object> {
-                { "count", count },
-                { "ipAddress", ipAddress },
-                { "ttl", date }
+                { "@count", count },
+                { "@ipAddress", ipAddress },
+                { "@ttl", date }
             };
 
             uint recordsUpdated = _database.ExecuteNonQuery(query, parameters);

@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { AuthedWrapper } from "../components/authed-wrapper";
 import { HabitSection } from "../components/habit-section";
 import { useHabitService } from "../hooks/useHabitService";
+import { useHabitLogService } from "../hooks/useHabitLogService";
+import { useNavigate } from "react-router-dom";
+import { Paths } from "../App";
 
 enum Hours {
     EARLY_MORNING = 0,
@@ -13,7 +16,10 @@ enum Hours {
 
 export const Home = () => {
 
-    const {habits, getHabits} = useHabitService();
+    const {habitsCollection, getHabits, registerHabitEvents, removeHabitEvents, addHabit} = useHabitService();
+    const {habitLog, getMostRecentHabitLog, logLoading, addHabitLog, registerHabitLogEvents, removeHabitLogEvents} = useHabitLogService();
+    const navigate = useNavigate();
+
     const [welcomeMessage, setWelcomeMessage] = useState<string>();
 
     const determineWelcomeMessage = (): void => {
@@ -36,18 +42,51 @@ export const Home = () => {
         }
     }
 
+    const getHabitLogForEachHabit = async () => {
+        for (const habit of habitsCollection) {
+            await getMostRecentHabitLog(habit.Id);
+        }
+    }
+
+    const getThreeHabitsFromCollection = () => {
+        return habitsCollection.length > 0 
+            ? habitsCollection.filter((_, i) => i < 3)
+            : []
+    }
+
     useEffect(() => {
+        if (habitsCollection.length > 0) {
+            getHabitLogForEachHabit();
+        }
+    }, [habitsCollection])
+
+    useEffect(() => {
+        registerHabitEvents();
+        registerHabitLogEvents();
         determineWelcomeMessage();
-        if(!habits) {
+
+        if (habitsCollection.length === 0) {
             getHabits();
         }
+
+        return () => {
+            removeHabitLogEvents();
+            removeHabitEvents();
+        }
     }, [])
+    
     
     return (
         <AuthedWrapper>
             <div className="flex flex-col space-y-8 text-stone-300 w-[80%]">
                 <p className="font-semibold text-4xl">{welcomeMessage}</p>
-                <HabitSection habits={habits.size > 0 ? Array.from(habits.values()).filter((_,i) => i <= 2) : []} onAddHabitClicked={() => console.log("clicked")} />
+                <HabitSection 
+                    habitCollection={getThreeHabitsFromCollection()} 
+                    habitLog={habitLog} 
+                    onAddHabitClicked={() => navigate(Paths.HABITS_ADD)} 
+                    logLoading={logLoading}
+                    onLogHabit={addHabitLog}
+                />
             </div>
         </AuthedWrapper>
     )

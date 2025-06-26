@@ -12,11 +12,13 @@ namespace HabitTracker.Server.Transformer
 
             foreach (IReadOnlyDictionary<string, object> d in data)
             {
+
+                Console.WriteLine($"TTL {Convert.ToDateTime(d["Ttl"]).ToUniversalTime()}");
                 rates.Add(
                         new Rate(
                             (string)d["IpAddress"],
                             Convert.ToUInt16(d["Count"]),
-                            Convert.ToDateTime(d["Ttl"])
+                            Convert.ToDateTime(d["Ttl"]).ToUniversalTime()
                         )
                 );
             }

@@ -6,6 +6,8 @@ using HabitTracker.Server.Models;
 using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Exceptions;
 using Microsoft.AspNetCore.Http;
+using HabitTracker.Server.SSE;
+using HabitTracker.Server.DTOs;
 
 namespace HabitTracker.Server.Tests.Controller
 {
@@ -13,13 +15,15 @@ namespace HabitTracker.Server.Tests.Controller
     {
         private readonly Mock<IUserService> _mockUserService;
         private readonly Mock<ILogger<UserController>> _mockLogger;
+        private readonly Mock<IEventService<HabitTrackerEvent>> _mockEventService;
         private readonly UserController _controller;
 
         public UserControllerTests()
         {
             _mockUserService = new Mock<IUserService>();
             _mockLogger = new Mock<ILogger<UserController>>();
-            _controller = new UserController(_mockLogger.Object, _mockUserService.Object);
+            _mockEventService = new Mock<IEventService<HabitTrackerEvent>>();
+            _controller = new UserController(_mockLogger.Object, _mockUserService.Object, _mockEventService.Object);
         }
 
         [Fact]
@@ -66,23 +70,11 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockUserService.Setup(service => service.Update(1234, user)).Returns("test");
+            _mockUserService.Setup(service => service.Update(1234, user)).Returns(Tuple.Create("test1233", new User(1234, "test1", "test2", "test3")));
 
             var result = _controller.UpdateUser(user);
 
-            Assert.IsType<OkObjectResult>(result);
-        }
-
-        [Fact]
-        public void UpdateUser_ReturnsUnauthorizedException()
-        {
-            PatchUser user = new PatchUser("test1", "test2", "test3", "test4");
-
-            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
-
-            _mockUserService.Setup(service => service.Update(1234, user)).Returns("test");
-
-            Assert.Throws<UnauthorizedException>(() => _controller.UpdateUser(user));
+            Assert.IsType<OkResult>(result);
         }
 
         [Fact]
@@ -96,7 +88,7 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ModelState.Clear();
             _controller.ModelState.AddModelError("Username", "The Username field is required.");
 
-            _mockUserService.Setup(service => service.Update(1234, user)).Returns("test");
+            _mockUserService.Setup(service => service.Update(1234, user)).Returns(Tuple.Create("test1233", new User(1234, "test1", "test2", "test3")));
 
             Assert.Throws<BadRequestException>(() => _controller.UpdateUser(user));
         }

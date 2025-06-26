@@ -90,7 +90,7 @@ export class AuthenticationService extends HttpService {
         }
     }
 
-    private RemoveAuthToken(): void {
+    public RemoveAuthToken(): void {
         localStorage.removeItem(AUTH_TOKEN);
         this._authToken = null;
     }

@@ -76,7 +76,7 @@ namespace HabitTracker.Server.Repository
             {
                 { "@User_id", userId },
                 { "@name", habit.Name },
-                { "StreakCount", 0 }
+                { "@StreakCount", 0 }
             };
 
             IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = SqliteFacade.ExecuteQuery(

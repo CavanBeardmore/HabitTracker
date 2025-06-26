@@ -2,6 +2,7 @@ import { Resolve } from "@here-mobility/micro-di";
 import { EventObserver } from "./EventObserver";
 import { GlobalEventObserver } from "./GlobalEventObserver";
 import { IServerEventHandler } from "./IServerEventHandler";
+import { errorCodeMapper } from "../utils/error-code-mapper";
 
 export enum EventType {
     USER_CREATED = "USER_CREATED",
@@ -18,9 +19,14 @@ export enum EventType {
 }
 
 interface ServerEvent {
-    EventType: EventType;
+     EventType: EventType;
     Data?: unknown
-} 
+}
+
+interface ServerError {
+    StatusCode: number;
+    Message: string;
+}
 
 export class ServerEventHandler implements IServerEventHandler {
     private readonly _eventObserver: EventObserver = Resolve<GlobalEventObserver>(GlobalEventObserver);
@@ -45,15 +51,30 @@ export class ServerEventHandler implements IServerEventHandler {
 
     private OnMessage(e: MessageEvent): void {
         console.log("ServerEventHandler - OnMessage - received event", e);
-        const event: ServerEvent = JSON.parse(e.data);
-        const {EventType, Data} = event;
-        console.log(`ServerEventHandler - OnMessage - raising event of type ${EventType} with data ${JSON.stringify(Data)}`);
-        this._eventObserver.raise(EventType, Data);
+        const event: ServerEvent= JSON.parse(e.data);
+        const {EventType: eventType, Data} = event;
+
+        if (eventType === EventType.ERROR) {
+            this.OnError(e);
+            return;
+        }
+
+        this.raiseEvent(eventType, Data);
     }
 
     private OnError(e: any): void {
-        console.error("ServerEventHandler - OnError - received error", e)
-        this._eventObserver.raise(EventType.ERROR);
+        const event: ServerError = JSON.parse(e.data);
+        const {StatusCode} = event;
+        this.raiseErrorEvent(StatusCode);
+    }
+
+    private raiseErrorEvent(statusCode: number) {
+        const errorMessage = errorCodeMapper(statusCode);
+        this._eventObserver.raise(EventType.ERROR, {statusCode, errorMessage});
+    }
+
+    private raiseEvent(eventType: EventType, data: unknown) {
+        this._eventObserver.raise(eventType, data);
     }
 
     private RetrieveJwtFromStorage(): string {

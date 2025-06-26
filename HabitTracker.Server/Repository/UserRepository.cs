@@ -111,7 +111,7 @@ namespace HabitTracker.Server.Repository
                 parameters.Add("@password", user.NewPassword);
             }
 
-            string query = $"UPDATE Users SET {string.Join(", ", setClauses)} WHERE Id = @UserId AND IsDeleted = 0;";
+            string query = $"UPDATE Users SET {string.Join(", ", setClauses)} WHERE Id = @UserId AND IsDeleted = 0 RETURNING *;";
 
             IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _sqliteFacade.ExecuteQuery(
                 query,
