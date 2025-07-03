@@ -40,8 +40,8 @@ export class AuthenticationService extends HttpService {
             if (data.token) {
                 this._authToken = data.token;
                 localStorage.setItem(AUTH_TOKEN, this._authToken);
+                return [true, ""];
             }
-            return [true, ""];
         }
 
         console.log("AuthenticationService - Login - error", data?.Message);

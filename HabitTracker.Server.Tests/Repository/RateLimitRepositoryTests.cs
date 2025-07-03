@@ -152,8 +152,8 @@ namespace HabitTracker.Server.Tests.Repository
             string query = "UPDATE Rates SET Count = @count WHERE IpAddress = @ipAddress";
 
             Dictionary<string, object> parameters = new Dictionary<string, object> {
-                { "count", count },
-                { "ipAddress", ipAddress }
+                { "@count", count },
+                { "@ipAddress", ipAddress }
             };
 
             _mockStorage.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);
@@ -193,9 +193,9 @@ namespace HabitTracker.Server.Tests.Repository
             string query = "UPDATE Rates SET Count = @count, Ttl = @ttl WHERE IpAddress = @ipAddress";
 
             Dictionary<string, object> parameters = new Dictionary<string, object> {
-                { "count", count },
-                { "ipAddress", ipAddress },
-                { "ttl", date }
+                { "@count", count },
+                { "@ipAddress", ipAddress },
+                { "@ttl", date }
             };
 
             _mockStorage.Setup(facade => facade.ExecuteNonQuery(query, parameters)).Returns(1);

@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig } from 'vite';
@@ -45,6 +46,7 @@ export default defineConfig({
             '@': fileURLToPath(new URL('./src', import.meta.url))
         }
     },
+    
     server: {
         proxy: {
             '^/weatherforecast': {
@@ -57,5 +59,11 @@ export default defineConfig({
             key: fs.readFileSync(keyFilePath),
             cert: fs.readFileSync(certFilePath),
         }
+    },
+    
+    test: {
+        globals: true,
+        silent: true,
+        environment: 'jsdom'
     }
 })

@@ -52,8 +52,6 @@ export abstract class HttpService {
             }
         );
 
-        console.log(res)
-
         const contentType = res.headers.get("Content-Type");
         const data = contentType?.includes("application/json")
             ? await res.json() 
@@ -70,7 +68,6 @@ export abstract class HttpService {
     }
 
     private BuildUrl(url: string, params: Param[]): URL {
-        console.log(url)
         const requestUrl = new URL(url);
 
         if (params.length > 0) {

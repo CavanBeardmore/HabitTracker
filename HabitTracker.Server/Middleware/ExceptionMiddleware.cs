@@ -1,11 +1,9 @@
 ﻿using HabitTracker.Server.Exceptions;
 using HabitTracker.Server.SSE;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
 using HabitTracker.Server.DTOs;
 
 namespace HabitTracker.Server.Middleware
@@ -14,14 +12,12 @@ namespace HabitTracker.Server.Middleware
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly WebApplicationBuilder _builder;
         private readonly ILogger<ExceptionMiddleware> _logger;
         private readonly IEventService<HabitTrackerEvent> _eventService;
 
-        public ExceptionMiddleware(RequestDelegate next, WebApplicationBuilder builder, ILogger<ExceptionMiddleware> logger, IEventService<HabitTrackerEvent> eventService)
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger, IEventService<HabitTrackerEvent> eventService)
         {
             _next = next;
-            _builder = builder;
             _logger = logger;
             _eventService = eventService;
         }

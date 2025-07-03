@@ -38,7 +38,7 @@ export class HabitService extends AuthedHttpService {
         );
     }
 
-    public async GetHabitById(habitId: string): Promise<HttpServiceRes<Habit>> {
+    public async GetHabitById(habitId: number): Promise<HttpServiceRes<Habit>> {
         return await this.AuthedRequest<Habit>(
             `${this._backendUrl}habits/Habit`,
             {
@@ -59,9 +59,9 @@ export class HabitService extends AuthedHttpService {
         )
     }
 
-    public async UpdateHabit(id: string, name: string): Promise<void> {
+    public async UpdateHabit(id: number, name: string): Promise<void> {
         await this.AuthedRequest(
-            `${this._backendUrl}`,
+            `${this._backendUrl}habits/Habit`,
             {
                 method: RequestMethod.PATCH,
                 headers: [
@@ -78,9 +78,9 @@ export class HabitService extends AuthedHttpService {
         )
     }
 
-    public async DeleteHabit(id: string): Promise<void> {
+    public async DeleteHabit(id: number): Promise<void> {
         await this.AuthedRequest(
-            `${this._backendUrl}`,
+            `${this._backendUrl}habits/Habit`,
             {
                 method: RequestMethod.DELETE,
                 params: [
