@@ -157,7 +157,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<RateLimitingMiddleware>();
 app.UseMiddleware<UserIdMiddleware>();
-app.UseMiddleware<ExceptionMiddleware>(builder);
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
