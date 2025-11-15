@@ -55,16 +55,15 @@ export class ServerEventHandler implements IServerEventHandler {
         const {EventType: eventType, Data} = event;
 
         if (eventType === EventType.ERROR) {
-            this.OnError(e);
+            this.OnError(Data);
             return;
         }
 
         this.raiseEvent(eventType, Data);
     }
 
-    private OnError(e: any): void {
-        const event: ServerError = JSON.parse(e.data);
-        const {StatusCode} = event;
+    private OnError(event: unknown): void {
+        const {StatusCode} = event as ServerError;
         this.raiseErrorEvent(StatusCode);
     }
 

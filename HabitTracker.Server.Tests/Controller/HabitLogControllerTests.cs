@@ -68,7 +68,7 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitLogService.Setup(service => service.GetAllByHabitId(habitId, 1234, 1)).Returns(new List<HabitLog> { new HabitLog(1, 2, DateTime.UtcNow, true, 7)});
+            _mockHabitLogService.Setup(service => service.GetAllByHabitId(habitId, 1234, 1)).Returns(Tuple.Create<IReadOnlyCollection<HabitLog>, bool>(new List<HabitLog> { new HabitLog(1, 2, DateTime.UtcNow, true, 7)}, true));
 
             var result = _controller.GetHabitLogsFromHabit(habitId, 1);
 
@@ -91,7 +91,7 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitLogService.Setup(service => service.GetAllByHabitId(habitId, 1234, 1)).Returns(new List<HabitLog>());
+            _mockHabitLogService.Setup(service => service.GetAllByHabitId(habitId, 1234, 1)).Returns((Tuple<IReadOnlyCollection<HabitLog>, bool>)null);
 
             Assert.Throws<NotFoundException>(() => _controller.GetHabitLogsFromHabit(habitId, 1));
         }

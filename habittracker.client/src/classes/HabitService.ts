@@ -40,7 +40,7 @@ export class HabitService extends AuthedHttpService {
 
     public async GetHabitById(habitId: number): Promise<HttpServiceRes<Habit>> {
         return await this.AuthedRequest<Habit>(
-            `${this._backendUrl}habits/Habit`,
+            `${this._backendUrl}habits/Habit/${habitId}`,
             {
                 method: RequestMethod.GET,
                 headers: [
@@ -48,20 +48,14 @@ export class HabitService extends AuthedHttpService {
                         key: "Content-Type",
                         value: "application/json"
                     }
-                ],
-                params: [
-                    {
-                        key: "habitId",
-                        value: habitId
-                    }
                 ]
             }
         )
     }
 
-    public async UpdateHabit(id: number, name: string): Promise<void> {
+    public async UpdateHabit(id: number, name: string, streakCount: number): Promise<void> {
         await this.AuthedRequest(
-            `${this._backendUrl}habits/Habit`,
+            `${this._backendUrl}habits/Habit/update`,
             {
                 method: RequestMethod.PATCH,
                 headers: [
@@ -72,7 +66,8 @@ export class HabitService extends AuthedHttpService {
                 ],
                 body: JSON.stringify({
                     id,
-                    name
+                    name,
+                    streakCount
                 })
             }
         )
@@ -80,15 +75,9 @@ export class HabitService extends AuthedHttpService {
 
     public async DeleteHabit(id: number): Promise<void> {
         await this.AuthedRequest(
-            `${this._backendUrl}habits/Habit`,
+            `${this._backendUrl}habits/Habit/delete/${id}`,
             {
                 method: RequestMethod.DELETE,
-                params: [
-                    {
-                        key: "habitId",
-                        value: id
-                    }
-                ]
             }
         )
     }

@@ -4,6 +4,14 @@ import { HttpService, RequestMethod } from "./HttpService";
 export interface CredentialsWithEmail extends Credentials {
     email: string;
 }
+
+export interface UpdateUserArgs {
+    NewUsername?: string;
+    Email: string;
+    OldPassword?: string;
+    NewPassword?: string; 
+} 
+
 export class UserService extends HttpService {
 
     constructor(private readonly _backendUrl: string) {super()}
@@ -24,5 +32,29 @@ export class UserService extends HttpService {
         }
 
         return [success, data?.Message || "An error has occurred."];
+    }
+
+    public async UpdateUser(args: UpdateUserArgs): Promise<void> {
+        console.log("UserService - UpdateUser - attempting to update user");
+
+        await this.Request(
+            `${this._backendUrl}user/User/update`,
+            {
+                method: RequestMethod.PATCH,
+                body: JSON.stringify(args)
+            }
+        );
+    }
+
+    public async DeleteUser(creds: Credentials): Promise<void> {
+        console.log("UserService - DeleteUser - attempting to delete user");
+
+        await this.Request(
+            `${this._backendUrl}user/User/delete`,
+            {
+                method: RequestMethod.DELETE,
+                body: JSON.stringify(creds)
+            }
+        );
     }
 }

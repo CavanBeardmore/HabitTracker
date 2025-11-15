@@ -1,29 +1,20 @@
-import { AddCircle, Autorenew, Cancel, Check, Whatshot } from "@mui/icons-material";
-import { getToday, getYesterday } from "../utils/getToday";
+import { AddCircle, Autorenew, Cancel, Check } from "@mui/icons-material";
 import { Habit } from "../data/Habit";
 import { HabitLog } from "../data/HabitLog";
+import { StreakCounter } from "./streak-counter";
+import { habitLoggedToday } from "../utils/habit-logged-today";
+import { isStreakBroken } from "../utils/is-streak-broken";
 
 interface HabitSectionProps {
     habitCollection: Habit[]
     habitLog:(habitId: number) => HabitLog | null;
     onAddHabitClicked: () => void;
+    onHabitClicked: (habitId: number) => void
     onLogHabit: (habitId: number) => Promise<void>;
     logLoading: (habitId: number) => boolean;
 }
 
-export const HabitSection = ({habitCollection, habitLog, onAddHabitClicked, onLogHabit, logLoading}: HabitSectionProps) => {
-
-    const habitLoggedToday = (date: string): boolean => date.split("T")[0] === getToday();
-    const isStreakBroken = (date: string): boolean => {
-        const loggedToday = habitLoggedToday(date);
-        const loggedYesterday = date.split("T")[0] === getYesterday();
-
-        return !(loggedToday || loggedYesterday);
-    }
-
-    const handleLog = (habitId: number) => {
-        onLogHabit(habitId);
-    }
+export const HabitSection = ({habitCollection, habitLog, onAddHabitClicked, onHabitClicked, onLogHabit, logLoading}: HabitSectionProps) => {
 
     return (
         <div className="flex flex-col items-center justify-items-center space-y-4">
@@ -34,10 +25,14 @@ export const HabitSection = ({habitCollection, habitLog, onAddHabitClicked, onLo
                 {habitCollection.length > 0 && habitCollection.map(habit => {
 
                     const log = habitLog(habit.Id);
-                    console.log("LOG", log)
                     return (
                         <div key={habit.Id} className="flex flex-col items-center justify-items-center bg-blue-900 text-stone-300 border-1 border-stone-300 rounded-2xl p-4 sm:p-6 md:p-8 lg:p-10 mr-4 w-full space-y-6">
-                            <p className="text-lg font-semibold text-white">{habit.Name.toUpperCase()}</p>
+                            <button 
+                                className="text-lg font-semibold text-white hover:underline hover:text-xl"
+                                onClick={() => onHabitClicked(habit.Id)}
+                            >
+                                {habit.Name.toUpperCase()}
+                            </button>
                             {
                                 logLoading(habit.Id) 
                                 ?
@@ -53,14 +48,13 @@ export const HabitSection = ({habitCollection, habitLog, onAddHabitClicked, onLo
                                         }
                                         </span>
                                     </p>
-                                    {
-                                        (habit.StreakCount > 0  && log && isStreakBroken(log.Start_date) === false)  
-                                        ?   <div className="flex flex-col items-center">
-                                                <p className="text-sm text-slate-300 mt-2">You're on a <span className="font-medium text-white">{habit.StreakCount} </span>day streak!</p>
-                                                <div className="mt-3 text-red-500 text-2xl"><Whatshot className="text-red-500" /></div>
-                                            </div>
-                                        : ((log === null || habitLoggedToday(log.Start_date) === false) && <button onClick={() => handleLog(habit.Id)} className="underline">Log your habit today to start a streak!</button>)
-                                    }
+                                    <StreakCounter
+                                        habit={habit} 
+                                        log={log} 
+                                        isStreakBroken={log ? isStreakBroken(log.Start_date) : false} 
+                                        habitLoggedToday={log ? habitLoggedToday(log.Start_date) : false} 
+                                        handleLog={() => onLogHabit(habit.Id)}
+                                    />
                                 </>
                             }
 

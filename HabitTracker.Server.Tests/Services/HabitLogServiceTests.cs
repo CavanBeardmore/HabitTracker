@@ -71,16 +71,16 @@ namespace HabitTracker.Server.Tests.Services
         {
             int habitId = 1;
             int userId = 2;
-            int pageNumber = 3;
+            uint pageNumber = 3;
             DateTime date = DateTime.UtcNow;
 
-            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber)).Returns(new List<HabitLog> { new HabitLog(1, 2, date, true, 7) });
+            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 2)).Returns(Tuple.Create<IReadOnlyCollection<HabitLog>, bool>(new List<HabitLog> { new HabitLog(1, 2, date, true, 7) }, true));
 
             var result = _service.GetAllByHabitId(habitId, userId, pageNumber);
 
             Assert.NotNull(result);
-            Assert.True(result.Any());
-            Assert.Contains(result, hl => hl.Id == 1 
+            Assert.True(result.Item1.Any());
+            Assert.Contains(result.Item1, hl => hl.Id == 1 
                 && hl.Habit_id == 2
                 && hl.Start_date == date
                 && hl.Habit_logged == true
@@ -93,10 +93,10 @@ namespace HabitTracker.Server.Tests.Services
         {
             int habitId = 1;
             int userId = 2;
-            int pageNumber = 3;
+            uint pageNumber = 3;
             DateTime date = DateTime.UtcNow;
 
-            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber)).Returns(new List<HabitLog>());
+            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 2)).Returns(Tuple.Create<IReadOnlyCollection<HabitLog>, bool>(Array.Empty<HabitLog>(), false));
 
             Assert.Throws<NotFoundException>(() => _service.GetAllByHabitId(habitId, userId, pageNumber));
         }
@@ -106,10 +106,10 @@ namespace HabitTracker.Server.Tests.Services
         {
             int habitId = 1;
             int userId = 2;
-            int pageNumber = 3;
+            uint pageNumber = 3;
             DateTime date = DateTime.UtcNow;
 
-            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber)).Throws<AppException>(() => throw new AppException("test"));
+            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 2)).Throws<AppException>(() => throw new AppException("test"));
 
             Assert.Throws<AppException>(() => _service.GetAllByHabitId(habitId, userId, pageNumber));
         }

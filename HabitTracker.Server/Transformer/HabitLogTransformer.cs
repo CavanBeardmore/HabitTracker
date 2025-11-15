@@ -1,5 +1,5 @@
 ﻿using HabitTracker.Server.DTOs;
-using System.Data;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Transformer
 {
@@ -13,6 +13,7 @@ namespace HabitTracker.Server.Transformer
 
             foreach (IReadOnlyDictionary<string, object> d in data)
             {
+                Console.WriteLine($"HABIT LOG {JsonSerializer.Serialize(d)}");
                 habitLogs.Add(new HabitLog
                 (
                     Convert.ToInt32(d["Id"]),

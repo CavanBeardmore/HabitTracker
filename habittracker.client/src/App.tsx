@@ -13,7 +13,8 @@ import { Habits } from './pages/habits';
 import { ToastContainer } from './components/toast/toast-container';
 import { AddHabit } from './pages/add-habit';
 import { useToast } from './hooks/useToast';
-import { useHabitService } from './hooks/useHabitService';
+import { SelectedHabit } from './pages/habit';
+import { Account } from './pages/account';
 
 const UNAUTHORISED_CODE = 401;
 
@@ -21,6 +22,7 @@ export enum Paths {
     LOGIN = "/login",
     HOME = "/",
     HABITS = "/habits",
+    HABIT = "/habit",
     HABITS_ADD = "/habits/add",
     LOGS = "/logs",
     CHARTS = "/charts",
@@ -72,7 +74,7 @@ export const App = () => {
     }
 
     const handleError = (statusCode: number, message: string) => {
-        showToast(message);
+        showToast(message, []);
         if (statusCode === UNAUTHORISED_CODE) {
             closeServerConnection();
             authService.RemoveAuthToken();
@@ -98,8 +100,8 @@ export const App = () => {
         setIsAuthed(true);
         globalEvents.add(
             EventType.ERROR, 
-            `${EventType.ERROR}_ID`, 
-            ({statusCode, message}: {statusCode: number, message: string}) => handleError(statusCode, message)
+            `APP_${EventType.ERROR}_ID`, 
+            ({statusCode, errorMessage}: {statusCode: number, errorMessage: string}) => handleError(statusCode, errorMessage)
         );
 
         return () => {
@@ -117,7 +119,9 @@ export const App = () => {
                 <Routes>
                     <Route path={Paths.HOME} element={<Home />} />
                     <Route path={Paths.HABITS} element={<Habits />} />
-                    <Route path={Paths.HABITS_ADD} element={<AddHabit />} />
+                    {/* <Route path={Paths.HABITS_ADD} element={<AddHabit />} />
+                    <Route path={Paths.HABIT} element={<SelectedHabit />} /> */}
+                    <Route path={Paths.ACCOUNT} element={<Account />} />
                 </Routes>
             )}
             {isAuthed === false && (

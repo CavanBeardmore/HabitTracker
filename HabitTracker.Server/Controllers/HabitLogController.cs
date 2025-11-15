@@ -77,22 +77,21 @@ namespace HabitTracker.Server.Controllers
 
         [Authorize]
         [HttpGet("habit/{habitId}")]
-        public IActionResult GetHabitLogsFromHabit(int habitId, [FromQuery] int pageNumber)
+        public IActionResult GetHabitLogsFromHabit(int habitId, [FromQuery] uint pageNumber)
         {
             _logger.LogInformation("HabitLogController - GetHabitLogsFromHabit - invoked");
             int userId = GetUserId();
 
             _logger.LogInformation("HabitLogController - GetHabitLogsFromHabit - getting habit logs from habit id for - {@Userid}", userId);
-            IReadOnlyCollection<HabitLog?> habitLogs = _habitLogService.GetAllByHabitId(habitId, userId, pageNumber);
+            Tuple<IReadOnlyCollection<HabitLog>, bool>? result = _habitLogService.GetAllByHabitId(habitId, userId, pageNumber);
 
-            if (habitLogs.Count() == 0)
+            if (result == null)
             {
                 throw new NotFoundException($"Could not find habit logs from habit id - {habitId} - for user - {userId} - from page - {pageNumber}");
-
             }
 
-            _logger.LogInformation("HabitLogController - GetHabitLogsFromHabit - successfully retrieved habit logs from habit id for - {@Userid}", userId);
-            return Ok(habitLogs);
+            _logger.LogInformation("HabitLogController - GetHabitLogsFromHabit - successfully retrieved habit logs - {@Result} from habit id for - {@Userid}", result, userId);
+            return Ok(new { habitLogs = result.Item1, hasMore = result.Item2});
         }
 
         [Authorize]

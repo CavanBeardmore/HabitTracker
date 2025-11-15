@@ -3,5 +3,4 @@ obj/
 Properties/
 .vs/
 .bin
-migrations/
 /appsettings.Development.json

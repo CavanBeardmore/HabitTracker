@@ -5,7 +5,7 @@ namespace HabitTracker.Server.Services
 {
     public interface IHabitLogService
     {
-        IReadOnlyCollection<HabitLog?> GetAllByHabitId(int id, int userId, int pageNumber);
+        Tuple<IReadOnlyCollection<HabitLog>, bool>? GetAllByHabitId(int id, int userId, uint pageNumber);
 
         HabitLog? GetById(int habitLogId, int userId);
 

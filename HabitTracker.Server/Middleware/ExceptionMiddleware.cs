@@ -13,14 +13,12 @@ namespace HabitTracker.Server.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionMiddleware> _logger;
-        private readonly WebApplicationBuilder _builder;
         private readonly IEventService<HabitTrackerEvent> _eventService;
 
-        public ExceptionMiddleware(RequestDelegate next, WebApplicationBuilder builder, ILogger<ExceptionMiddleware> logger, IEventService<HabitTrackerEvent> eventService)
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger, IEventService<HabitTrackerEvent> eventService)
         {
             _next = next;
             _logger = logger;
-            _builder = builder;
             _eventService = eventService;
         }
 

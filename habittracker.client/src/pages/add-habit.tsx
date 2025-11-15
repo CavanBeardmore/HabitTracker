@@ -34,7 +34,7 @@ export const AddHabit = () => {
         const isNameValid = checkIfNameIsValid(trimmedName)
         if(!isNameValid) {
             setLoading(false);
-            showToast("Habit name should contain only letters and spaces.");
+            showToast("Habit name should contain only letters and spaces.", []);
             return;
         }
         await addHabit(trimmedName);
@@ -43,7 +43,7 @@ export const AddHabit = () => {
 
     useEffect(() => {
         globalEventObserver.add(EventType.HABIT_ADDED, `${EventType.HABIT_ADDED}_ID`, (habit: Habit) => {
-            showToast("Successfully added your new habit")
+            showToast("Successfully added your new habit", [])
         })
 
         return () => {
@@ -55,7 +55,7 @@ export const AddHabit = () => {
         <AuthedWrapper>
             <div className="flex flex-col items-center w-full space-y-8">
                 <p className="font-semibold text-2xl text-stone-300">Add your new habit below.</p>
-                <div className="flex flex-col items-center space-y-8 text-stone-300 w-[40%] sm:h-20 md:h-36 lg:h-40 bg-blue-900 p-4 rounded-xl">
+                <div className="flex flex-col items-center space-y-8 text-stone-300 w-[40%] sm:h-20 md:h-36 lg:h-40 bg-blue-900 p-4 rounded-xl border-1 border-stone-300">
                     <Input
                         onChange={onLoginCredsChange}
                         value={habitName}

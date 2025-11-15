@@ -17,15 +17,17 @@ namespace HabitTracker.Server.Repository
             _transformer = transformer;
         }
 
-        public IReadOnlyCollection<HabitLog> GetAllByHabitId(int id, int userId, int pageNumber)
+        public Tuple<IReadOnlyCollection<HabitLog>, bool> GetAllByHabitId(int id, int userId, uint pageNumber, uint limit = 30)
         {
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 30 OFFSET @offset;";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT @limit OFFSET @offset;";
 
+            uint offset = limit * pageNumber;
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", id },
                 { "@userId", userId },
-                {"@offset", pageNumber }
+                { "@offset", offset },
+                { "@limit", limit + 1 }
             };
 
             IReadOnlyCollection<IReadOnlyDictionary<string, object>> result = _storage.ExecuteQuery(
@@ -33,7 +35,10 @@ namespace HabitTracker.Server.Repository
                 parameters
             );
 
-            return _transformer.Transform(result);
+            IReadOnlyCollection<HabitLog> limitedList = _transformer.Transform(result.Take((int)limit).ToList());
+            bool hasMore = result.Count > limit;
+
+            return Tuple.Create(limitedList, hasMore);
         }
 
         public HabitLog? GetById(int habitLogId, int userId)
@@ -79,7 +84,7 @@ namespace HabitTracker.Server.Repository
 
         public HabitLog? GetMostRecentHabitLog(int habitId, int userId, DbConnection connection, DbTransaction transaction)
         {
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 1";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 AND h.Id = @id AND u.Id = @userId ORDER BY Start_date DESC LIMIT 1";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -101,7 +106,7 @@ namespace HabitTracker.Server.Repository
 
         public HabitLog? GetMostRecentHabitLog(int habitId, int userId)
         {
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 1";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 AND h.Id = @id AND u.Id = @userId ORDER BY Start_date DESC LIMIT 1";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {

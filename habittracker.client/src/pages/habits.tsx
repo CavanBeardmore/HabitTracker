@@ -9,13 +9,15 @@ import { Paths } from "../App";
 
 export const Habits = () => {
 
-    const {habitsCollection, getHabits, registerHabitEvents, removeHabitEvents, addHabit} = useHabitService();
-    const {habitLog, getMostRecentHabitLog, addHabitLog, logLoading, registerHabitLogEvents, removeHabitLogEvents} = useHabitLogService();
+    const {habitsCollection, getHabits, registerHabitEvents, removeHabitEvents} = useHabitService();
+    const {mostRecentHabitLogForHabit, getMostRecentHabitLog, addHabitLog, logLoading, registerHabitLogEvents, removeHabitLogEvents} = useHabitLogService();
     const navigate = useNavigate();
 
     const getHabitLogForEachHabit = async () => {
         for (const habit of habitsCollection) {
-            await getMostRecentHabitLog(habit.Id);
+            if (habit.StreakCount > 0) {
+                await getMostRecentHabitLog(habit.Id);
+            }
         }
     }
 
@@ -41,8 +43,9 @@ export const Habits = () => {
             <div className="flex flex-col space-y-8 text-stone-300 w-[80%]">
                 <HabitSection 
                     habitCollection={habitsCollection} 
-                    habitLog={habitLog} 
+                    habitLog={mostRecentHabitLogForHabit} 
                     onAddHabitClicked={() => navigate(Paths.HABITS_ADD)}
+                    onHabitClicked={(habitId: number) => navigate(Paths.HABIT, {state: {habitId}})}
                     onLogHabit={addHabitLog}
                     logLoading={logLoading}
                 />

@@ -36,6 +36,8 @@ namespace HabitTracker.Server.UnitsOfWork
             _logger.LogInformation("LogHabit - Work - getting most recent habit log");
             HabitLog? mostRecentHabitLog = _habitLogRepository.GetMostRecentHabitLog(_habitLog.Habit_id, _userId, Transaction.Connection, Transaction.Transaction);
 
+            _logger.LogInformation("LogHabit - Work - got most recent habit log {@Log}", mostRecentHabitLog);
+
             _logger.LogInformation("LogHabit - Work - getting habit");
             Habit? habit = _habitRepository.GetById(_habitLog.Habit_id, _userId, Transaction.Connection, Transaction.Transaction);
 
@@ -77,6 +79,7 @@ namespace HabitTracker.Server.UnitsOfWork
         {
             if (currentStreakCount == 0 && mostRecentLoggedDate == null)
             {
+                _logger.LogInformation("LogHabit - GetStreakCount - Starting off a new streak");
                 return 1;
             }
 
@@ -86,13 +89,17 @@ namespace HabitTracker.Server.UnitsOfWork
                 throw new NotFoundException("Most recent logged date is null");
             }
 
-            TimeSpan daysInBetween = _habitLog.Start_date.Date.Subtract(mostRecentLoggedDate.Value.Date);
+            _logger.LogInformation("LogHabit - GetStreakCount - previous log date: {Previous}, new log date: {New}", mostRecentLoggedDate.Value.Date, _habitLog.Start_date.Date);
 
-            if (daysInBetween.Days == 1)
+            TimeSpan daysInBetween = _habitLog.Start_date.Date.Subtract(mostRecentLoggedDate.Value.Date);
+            _logger.LogInformation("LogHabit - GetStreakCount - days in between - {daysInBetween}", daysInBetween.Days);
+            if (daysInBetween.Days == 0)
             {
+                _logger.LogInformation("LogHabit - GetStreakCount - incrementing streak count");
                 return currentStreakCount + 1;
             }
 
+            _logger.LogInformation("LogHabit - GetStreakCount - defaulting new streak count to 1");
             return 1;
         }
     }

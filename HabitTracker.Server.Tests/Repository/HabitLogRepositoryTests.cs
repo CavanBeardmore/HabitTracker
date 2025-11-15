@@ -1,11 +1,13 @@
 ﻿using HabitTracker.Server.DTOs;
-using HabitTracker.Server.Storage;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Repository;
+using HabitTracker.Server.Storage;
 using HabitTracker.Server.Transformer;
 using Moq;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SQLite;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HabitTracker.Server.Tests.Repository
 {
@@ -97,42 +99,100 @@ namespace HabitTracker.Server.Tests.Repository
         {
             int id = 1234;
             int userId = 4321;
-            int pageNumber = 1;
-
-            List<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>();
-
+            uint pageNumber = 1;
+            uint limit = 2;
+            uint offset = limit * pageNumber;
             DateTime date = DateTime.UtcNow;
-            facadeData.Add(new Dictionary<string, object>{
-                { "Id", 1 },
-                { "Habit_id", id },
-                { "Start_date", date},
-                { "Habit_logged", true },
-                { "Length_in_days", 7 }
-            });
 
-            List<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1, id, date, true, 7) };
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>
+            {
+                new Dictionary<string, object>{
+                    { "Id", 1 },
+                    { "Habit_id", id },
+                    { "Start_date", date},
+                    { "Habit_logged", true },
+                    { "Length_in_days", 7 }
+                }
+            };
 
+            IReadOnlyCollection<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1, id, date, true, 7) };
 
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 30 OFFSET @offset;";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT @limit OFFSET @offset;";
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", id },
                 { "@userId", userId },
-                {"@offset", pageNumber }
+                { "@offset", offset },
+                { "@limit", limit + 1 }
             };
 
             _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
-            _mockTransformer.Setup(transformer => transformer.Transform(facadeData)).Returns(transformerData);
+            _mockTransformer.Setup(transformer => transformer.Transform(It.IsAny<IReadOnlyCollection<IReadOnlyDictionary<string, object>>>())).Returns(transformerData);
 
-            var result = _repository.GetAllByHabitId(id, userId, pageNumber);
+            var result = _repository.GetAllByHabitId(id, userId, pageNumber, 2);
 
             Assert.NotNull(result);
-            Assert.True(result.Any());
-            Assert.Contains(result, hl => hl.Id == 1
+            Assert.True(result.Item1.Any());
+            Assert.Contains(result.Item1, hl => hl.Id == 1
                                           && hl.Habit_id == id
                                           && hl.Start_date == date
                                           && hl.Habit_logged == true
                                           && hl.LengthInDays == 7);
+        }
+
+        [Fact]
+        public void GetAllByHabitId_ReturnsMoreAsTrue()
+        {
+            int id = 1234;
+            int userId = 4321;
+            uint pageNumber = 1;
+            uint limit = 2;
+            uint offset = limit * pageNumber;
+            DateTime date = DateTime.UtcNow;
+
+            IReadOnlyCollection<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>
+            {
+                new Dictionary<string, object>{
+                    { "Id", 1 },
+                    { "Habit_id", id },
+                    { "Start_date", date},
+                    { "Habit_logged", true },
+                    { "Length_in_days", 7 }
+                },
+                new Dictionary<string, object>{
+                    { "Id", 2 },
+                    { "Habit_id", id },
+                    { "Start_date", date},
+                    { "Habit_logged", true },
+                    { "Length_in_days", 7 }
+                },
+                new Dictionary<string, object>{
+                    { "Id", 3 },
+                    { "Habit_id", id },
+                    { "Start_date", date},
+                    { "Habit_logged", true },
+                    { "Length_in_days", 7 }
+                }
+            };
+
+            IReadOnlyCollection<HabitLog> transformerData = new List<HabitLog> { new HabitLog(1, id, date, true, 7), new HabitLog(2, id, date, true, 7), new HabitLog(3, id, date, true, 7) };
+
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT @limit OFFSET @offset;";
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@id", id },
+                { "@userId", userId },
+                { "@offset", offset },
+                { "@limit", limit + 1 }
+            };
+
+            _mockFacade.Setup(facade => facade.ExecuteQuery(query, parameters)).Returns(facadeData);
+            _mockTransformer.Setup(transformer => transformer.Transform(It.IsAny<IReadOnlyCollection<IReadOnlyDictionary<string, object>>>())).Returns(transformerData);
+
+            var result = _repository.GetAllByHabitId(id, userId, pageNumber, 2);
+
+            Assert.NotNull(result);
+            Assert.True(result.Item2);
         }
 
         [Fact]
@@ -213,7 +273,7 @@ namespace HabitTracker.Server.Tests.Repository
 
             DateTime date = DateTime.UtcNow;
 
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 1";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 AND h.Id = @id AND u.Id = @userId ORDER BY Start_date DESC LIMIT 1";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
@@ -259,7 +319,7 @@ namespace HabitTracker.Server.Tests.Repository
 
             DateTime date = DateTime.UtcNow;
 
-            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT 1";
+            string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE u.IsDeleted = 0 AND h.Id = @id AND u.Id = @userId ORDER BY Start_date DESC LIMIT 1";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {

@@ -6,7 +6,7 @@ namespace HabitTracker.Server.Repository
 {
     public interface IHabitLogRepository
     {
-        IReadOnlyCollection<HabitLog> GetAllByHabitId(int id, int userId, int pageNumber);
+        Tuple<IReadOnlyCollection<HabitLog>, bool> GetAllByHabitId(int id, int userId, uint pageNumber, uint limit = 30);
         HabitLog? GetById(int habitLogId, int userId);
         HabitLog? GetByHabitIdAndStartDate(int habitId, int userId, DateTime date);
         HabitLog? GetMostRecentHabitLog(int habitId, int userId);

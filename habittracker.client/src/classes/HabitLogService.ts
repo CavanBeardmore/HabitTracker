@@ -33,8 +33,8 @@ export class HabitLogService extends AuthedHttpService {
         )
     }
 
-    public async GetHabitLogs(habitId: number, pageNumber: number): Promise<HttpServiceRes<HabitLog[]>> {
-        return await this.AuthedRequest<HabitLog[]>(
+    public async GetHabitLogs(habitId: number, pageNumber: number): Promise<HttpServiceRes<{habitLogs: HabitLog[], hasMore: boolean}>> {
+        return await this.AuthedRequest<{habitLogs: HabitLog[], hasMore: boolean}>(
             `${this._backendUrl}habitLogs/HabitLog/habit/${habitId}`,
             {
                 method: RequestMethod.GET,

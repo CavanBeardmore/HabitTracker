@@ -42,7 +42,7 @@ export abstract class HttpService {
 
         const requestUrl = this.BuildUrl(url, params || []);
         const requestHeaders = this.BuildHeaders(headers || []);
-
+        
         const res = await fetch(
             requestUrl,
             {
@@ -53,9 +53,13 @@ export abstract class HttpService {
         );
 
         const contentType = res.headers.get("Content-Type");
-        const data = contentType?.includes("application/json")
-            ? await res.json() 
-            : null;
+        const hasJson = contentType?.includes("application/json");
+        const text = await res.text();
+        
+        let data = null;
+        if (hasJson && text.length > 0) {
+            data = JSON.parse(text);
+        }
 
         const errorMessage = res.ok ? undefined : await res.statusText; 
 
@@ -67,14 +71,14 @@ export abstract class HttpService {
         }
     }
 
-    private BuildUrl(url: string, params: Param[]): URL {
+    private BuildUrl(url: string, params: Param[]): string {
         const requestUrl = new URL(url);
 
         if (params.length > 0) {
             params.forEach(v => requestUrl.searchParams.append(v.key, v.value));
         }
 
-        return requestUrl;
+        return requestUrl.toString();
     }
 
     private BuildHeaders(headers: Header[]): Headers {

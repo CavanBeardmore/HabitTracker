@@ -72,10 +72,9 @@ namespace HabitTracker.Server.Tests.Services
 
             DateTime date = DateTime.UtcNow;
 
-            _mockRateLimitRepository.Setup(repository => repository.GetRate(ipAddress)).Returns(new Rate(ipAddress, 150, date.AddDays(1)));
+            _mockRateLimitRepository.Setup(repository => repository.GetRate(ipAddress)).Returns(new Rate(ipAddress, 550, date.AddDays(1)));
 
             var result = _rateLimitService.HasIpAddressBeenLimited(ipAddress);
-            _output.WriteLine($"{result}");
             Assert.True(result);
         }
 
@@ -142,14 +141,14 @@ namespace HabitTracker.Server.Tests.Services
         {
             string ipAddress = "127.0.0.1";
 
-            _mockRateLimitRepository.Setup(repository => repository.GetRate(ipAddress)).Returns(new Rate(ipAddress, 110, DateTime.UtcNow.AddDays(1)));
-            _mockRateLimitRepository.Setup(repository => repository.UpdateRateCountAndTtl(110, ipAddress, It.IsAny<DateTime>())).Returns(true);
+            _mockRateLimitRepository.Setup(repository => repository.GetRate(ipAddress)).Returns(new Rate(ipAddress, 510, DateTime.UtcNow.AddDays(1)));
+            _mockRateLimitRepository.Setup(repository => repository.UpdateRateCountAndTtl(510, ipAddress, It.IsAny<DateTime>())).Returns(true);
 
             Assert.Throws<TooManyRequestsException>(() => _rateLimitService.CheckRateLimitForIpAddress(ipAddress));
 
             _mockRateLimitRepository.Verify(repository => repository.GetRate(It.IsAny<string>()), Times.Once);
             _mockRateLimitRepository.Verify(repository => repository.AddRate(1, ipAddress, It.IsAny<DateTime>()), Times.Never);
-            _mockRateLimitRepository.Verify(repository => repository.UpdateRateCountAndTtl(110, ipAddress, It.IsAny<DateTime>()), Times.Once);
+            _mockRateLimitRepository.Verify(repository => repository.UpdateRateCountAndTtl(510, ipAddress, It.IsAny<DateTime>()), Times.Once);
         }
 
         [Fact]
@@ -157,14 +156,14 @@ namespace HabitTracker.Server.Tests.Services
         {
             string ipAddress = "127.0.0.1";
 
-            _mockRateLimitRepository.Setup(repository => repository.GetRate(ipAddress)).Returns(new Rate(ipAddress, 110, DateTime.UtcNow.AddDays(1)));
-            _mockRateLimitRepository.Setup(repository => repository.UpdateRateCountAndTtl(110, ipAddress, It.IsAny<DateTime>())).Returns(false);
+            _mockRateLimitRepository.Setup(repository => repository.GetRate(ipAddress)).Returns(new Rate(ipAddress, 510, DateTime.UtcNow.AddDays(1)));
+            _mockRateLimitRepository.Setup(repository => repository.UpdateRateCountAndTtl(510, ipAddress, It.IsAny<DateTime>())).Returns(false);
 
             Assert.Throws<AppException>(() => _rateLimitService.CheckRateLimitForIpAddress(ipAddress));
 
             _mockRateLimitRepository.Verify(repository => repository.GetRate(It.IsAny<string>()), Times.Once);
             _mockRateLimitRepository.Verify(repository => repository.AddRate(1, ipAddress, It.IsAny<DateTime>()), Times.Never);
-            _mockRateLimitRepository.Verify(repository => repository.UpdateRateCountAndTtl(110, ipAddress, It.IsAny<DateTime>()), Times.Once);
+            _mockRateLimitRepository.Verify(repository => repository.UpdateRateCountAndTtl(510, ipAddress, It.IsAny<DateTime>()), Times.Once);
         }
 
         [Fact]

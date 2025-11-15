@@ -4,15 +4,17 @@ import { HabitService } from "../classes/HabitService";
 import { GlobalEventObserver } from "../classes/GlobalEventObserver";
 import { Habit } from "../data/Habit";
 import { EventType } from "../classes/ServerEventHandler";
+import { HabitLog } from "../data/HabitLog";
+import { createRandomUUID } from "../utils/createRandomUUID";
 
 interface UseHabitServiceReturn {
     habit(id: number): Habit | null;
     habitsCollection: Habit[];
     getHabits(): Promise<Map<number, Habit> | null>;
-    getHabitById(id: string): Promise<void>;
+    getHabitById(id: number): Promise<void>;
     addHabit(name: string): Promise<void>;
-    updateHabit(id: string, name: string): Promise<void>;
-    deleteHabit(id: string): Promise<void>;
+    updateHabit(id: number, name: string, streakCount: number): Promise<void>;
+    deleteHabit(id: number): Promise<void>;
     removeHabitEvents(): void;
     registerHabitEvents(): void;
 }
@@ -20,6 +22,8 @@ export const useHabitService = (): UseHabitServiceReturn => {
 
     const habitService = Resolve<HabitService>(HabitService);
     const globalEventObserver = Resolve<GlobalEventObserver>(GlobalEventObserver);
+
+    const uuid: string = createRandomUUID();
 
     const [habits, setHabits] = useState<Map<number, Habit>>(new Map<number, Habit>());
     //@ts-ignore
@@ -29,7 +33,19 @@ export const useHabitService = (): UseHabitServiceReturn => {
 
     const habitsCollection = useMemo(() => Array.from(habits.values()), [habits]);
 
+    useEffect(() => {
+        console.log("habits updated", habits);
+    }, [habits])
+
     const registerHabitEvents = () => {
+        globalEventObserver.add(
+            EventType.HABIT_LOG_ADDED,
+            `${EventType.HABIT_LOG_ADDED}_ID_${uuid}`,
+            async (data: {habit: Habit, habitLog: HabitLog}) => {
+                await getHabitById(data.habitLog.Habit_id);
+            }
+        )
+
         globalEventObserver.add(
             EventType.ERROR, 
             `HABIT_ERROR_ID`,
@@ -56,6 +72,11 @@ export const useHabitService = (): UseHabitServiceReturn => {
     }
 
     const removeHabitEvents = () => {
+        globalEventObserver.remove(
+            EventType.HABIT_LOG_ADDED,
+            `${EventType.HABIT_LOG_ADDED}_ID`,
+        )
+
         globalEventObserver.remove(
             EventType.ERROR, 
             `HABIT_ERROR_ID`
@@ -114,7 +135,8 @@ export const useHabitService = (): UseHabitServiceReturn => {
         return null;
     };
 
-    const getHabitById = async (id: string): Promise<void> => {
+    const getHabitById = async (id: number): Promise<void> => {
+        console.log("GETTING");
         const {success, status, data, errorMessage} = await habitService.GetHabitById(id);
 
         if (success && data) {
@@ -132,9 +154,9 @@ export const useHabitService = (): UseHabitServiceReturn => {
 
     const addHabit = async (name: string): Promise<void> => await habitService.CreateHabit(name);
 
-    const updateHabit = async (id: string, name: string): Promise<void> => await habitService.UpdateHabit(id, name);
+    const updateHabit = async (id: number, name: string, streakCount: number): Promise<void> => await habitService.UpdateHabit(id, name, streakCount);
 
-    const deleteHabit = async (id: string): Promise<void> => await habitService.DeleteHabit(id);
+    const deleteHabit = async (id: number): Promise<void> => await habitService.DeleteHabit(id);
 
     return {
         habit,

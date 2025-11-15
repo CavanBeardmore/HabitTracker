@@ -70,17 +70,18 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public IReadOnlyCollection<HabitLog?> GetAllByHabitId(int habitId, int userId, int pageNumber)
+        public Tuple<IReadOnlyCollection<HabitLog>, bool>? GetAllByHabitId(int habitId, int userId, uint pageNumber)
         {
             try
             {
                 _logger.LogInformation("HabitLogService - GetAllByHabitId - getting all habit logs by habit id");
-                IReadOnlyCollection<HabitLog> habitLogs = _habitLogRepository.GetAllByHabitId(habitId, userId, pageNumber);
 
-                if (habitLogs.Count() != 0)
+                Tuple<IReadOnlyCollection<HabitLog>, bool> result = _habitLogRepository.GetAllByHabitId(habitId, userId, pageNumber);
+
+                if (result.Item1.Count() != 0)
                 {
                     _logger.LogInformation("HabitLogService - GetAllByHabitId - found habit logs");
-                    return habitLogs;
+                    return result;
                 }
 
                 throw new NotFoundException($"Could not find any habit logs for habit id - {habitId} - for user - {userId}");

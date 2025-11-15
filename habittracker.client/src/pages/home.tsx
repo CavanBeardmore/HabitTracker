@@ -16,8 +16,8 @@ enum Hours {
 
 export const Home = () => {
 
-    const {habitsCollection, getHabits, registerHabitEvents, removeHabitEvents, addHabit} = useHabitService();
-    const {habitLog, getMostRecentHabitLog, logLoading, addHabitLog, registerHabitLogEvents, removeHabitLogEvents} = useHabitLogService();
+    const {habitsCollection, getHabits, registerHabitEvents, removeHabitEvents} = useHabitService();
+    const {mostRecentHabitLogForHabit, getMostRecentHabitLog, logLoading, addHabitLog, registerHabitLogEvents, removeHabitLogEvents} = useHabitLogService();
     const navigate = useNavigate();
 
     const [welcomeMessage, setWelcomeMessage] = useState<string>();
@@ -44,7 +44,9 @@ export const Home = () => {
 
     const getHabitLogForEachHabit = async () => {
         for (const habit of habitsCollection) {
-            await getMostRecentHabitLog(habit.Id);
+            if (habit.StreakCount > 0) {
+                await getMostRecentHabitLog(habit.Id);
+            }
         }
     }
 
@@ -81,8 +83,9 @@ export const Home = () => {
             <div className="flex flex-col space-y-8 text-stone-300 w-[80%]">
                 <p className="font-semibold text-4xl">{welcomeMessage}</p>
                 <HabitSection 
+                    onHabitClicked={(habitId: number) => navigate(Paths.HABIT, {state: {habitId}})}
                     habitCollection={getThreeHabitsFromCollection()} 
-                    habitLog={habitLog} 
+                    habitLog={mostRecentHabitLogForHabit} 
                     onAddHabitClicked={() => navigate(Paths.HABITS_ADD)} 
                     logLoading={logLoading}
                     onLogHabit={addHabitLog}
