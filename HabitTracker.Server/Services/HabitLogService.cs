@@ -90,9 +90,9 @@ namespace HabitTracker.Server.Services
             {
                 throw new NotFoundException(ex.Message);
             }
-            catch
+            catch (Exception ex)
             {
-                throw new AppException($"An error occured when getting habit logs from habit id - {habitId} - for user - {userId}");
+                throw new AppException($"An error occured when getting habit logs from habit id - {habitId} - for user - {userId} - {ex.Message}");
             }
         }
 

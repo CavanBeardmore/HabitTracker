@@ -74,7 +74,7 @@ namespace HabitTracker.Server.Tests.Services
             uint pageNumber = 3;
             DateTime date = DateTime.UtcNow;
 
-            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 2)).Returns(Tuple.Create<IReadOnlyCollection<HabitLog>, bool>(new List<HabitLog> { new HabitLog(1, 2, date, true, 7) }, true));
+            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 30)).Returns(Tuple.Create<IReadOnlyCollection<HabitLog>, bool>(new List<HabitLog> { new HabitLog(1, 2, date, true, 7) }, true));
 
             var result = _service.GetAllByHabitId(habitId, userId, pageNumber);
 
@@ -96,7 +96,7 @@ namespace HabitTracker.Server.Tests.Services
             uint pageNumber = 3;
             DateTime date = DateTime.UtcNow;
 
-            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 2)).Returns(Tuple.Create<IReadOnlyCollection<HabitLog>, bool>(Array.Empty<HabitLog>(), false));
+            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 30)).Returns(Tuple.Create<IReadOnlyCollection<HabitLog>, bool>(Array.Empty<HabitLog>(), false));
 
             Assert.Throws<NotFoundException>(() => _service.GetAllByHabitId(habitId, userId, pageNumber));
         }
