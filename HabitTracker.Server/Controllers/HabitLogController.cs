@@ -114,7 +114,7 @@ namespace HabitTracker.Server.Controllers
             int userId = GetUserId();
 
             _logger.LogInformation("HabitLogController - CreateHabitLog - adding habit log for - {@Userid}", userId);
-            Tuple<Habit, HabitLog>? result = _habitLogService.Add(habitLog, userId);
+            AddedHabitLogResult? result = _habitLogService.Add(habitLog, userId);
 
             if (result == null)
             {
@@ -122,7 +122,7 @@ namespace HabitTracker.Server.Controllers
             }
 
             _logger.LogInformation("HabitLogController - CreateHabitLog - successfully added habit log for - {@Userid}", userId);
-            _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.HABIT_LOG_ADDED, new { habit = result.Item1, habitLog = result.Item2}));
+            _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.HABIT_LOG_ADDED, new { habit = result.Habit, habitLog = result.HabitLog }));
             return Ok();
         }
 

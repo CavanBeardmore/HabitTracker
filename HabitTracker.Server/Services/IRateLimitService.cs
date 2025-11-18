@@ -2,7 +2,6 @@
 {
     public interface IRateLimitService
     {
-        bool HasIpAddressBeenLimited(string ipAddress);
         void CheckRateLimitForIpAddress(string ipAddress);
     }
 }

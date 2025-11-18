@@ -31,10 +31,6 @@ namespace HabitTracker.Server.Middleware
                 throw new BadRequestException("IP Address is missing from the request");
             }
 
-            bool isLimited = rateLimitService.HasIpAddressBeenLimited(clientIp);
-
-            if (isLimited) throw new TooManyRequestsException("Ip address is rate limited");
-
             rateLimitService.CheckRateLimitForIpAddress(clientIp);                
             await _next(context);
         }

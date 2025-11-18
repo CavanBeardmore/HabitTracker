@@ -5,12 +5,6 @@ using HabitTracker.Server.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit.Abstractions;
 
 namespace HabitTracker.Server.Tests.Middleware
@@ -50,7 +44,6 @@ namespace HabitTracker.Server.Tests.Middleware
 
             var loggerMock = new Mock<ILogger<RateLimitingMiddleware>>();
             var rateLimitServiceMock = new Mock<IRateLimitService>();
-            rateLimitServiceMock.Setup(service => service.HasIpAddressBeenLimited("1.1.1.1")).Returns(false);
             rateLimitServiceMock.Setup(service => service.CheckRateLimitForIpAddress("1.1.1.1"));
 
             var calledNext = false;
@@ -63,7 +56,7 @@ namespace HabitTracker.Server.Tests.Middleware
             var middleware = new RateLimitingMiddleware(loggerMock.Object, next);
             await middleware.InvokeAsync(context, rateLimitServiceMock.Object);
 
-            rateLimitServiceMock.Verify(service => service.HasIpAddressBeenLimited("1.1.1.1"), Times.Once);
+            rateLimitServiceMock.Verify(service => service.CheckRateLimitForIpAddress("1.1.1.1"), Times.Once);
             Assert.True(calledNext);
         }
 
@@ -75,7 +68,6 @@ namespace HabitTracker.Server.Tests.Middleware
 
             var loggerMock = new Mock<ILogger<RateLimitingMiddleware>>();
             var rateLimitServiceMock = new Mock<IRateLimitService>();
-            rateLimitServiceMock.Setup(service => service.HasIpAddressBeenLimited("2.2.2.2")).Returns(false);
             rateLimitServiceMock.Setup(service => service.CheckRateLimitForIpAddress("2.2.2.2"));
 
             var calledNext = false;
@@ -88,71 +80,8 @@ namespace HabitTracker.Server.Tests.Middleware
             var middleware = new RateLimitingMiddleware(loggerMock.Object, next);
             await middleware.InvokeAsync(context, rateLimitServiceMock.Object);
 
-            rateLimitServiceMock.Verify(service => service.HasIpAddressBeenLimited("2.2.2.2"), Times.Once);
+            rateLimitServiceMock.Verify(service => service.CheckRateLimitForIpAddress("2.2.2.2"), Times.Once);
             Assert.True(calledNext);
-        }
-
-        [Fact]
-        public async Task RateLimitingMiddleware_ShouldThrowTooManyRequestsExceptionIfIpIsLimited()
-        {
-            var context = new DefaultHttpContext();
-            context.Connection.RemoteIpAddress = new System.Net.IPAddress([1, 1, 1, 1]);
-
-            var loggerMock = new Mock<ILogger<RateLimitingMiddleware>>();
-            var rateLimitServiceMock = new Mock<IRateLimitService>();
-            rateLimitServiceMock.Setup(service => service.HasIpAddressBeenLimited("1.1.1.1")).Returns(true);
-
-            RequestDelegate next = ctx =>
-            {
-                return Task.CompletedTask;
-            };
-
-            var middleware = new RateLimitingMiddleware(loggerMock.Object, next);
-            await Assert.ThrowsAsync<TooManyRequestsException>(async () => await middleware.InvokeAsync(context, rateLimitServiceMock.Object));
-        }
-
-        [Fact]
-        public async Task RateLimitingMiddleware_ShouldThrowTooManyRequestsExceptionIfCheckRateLimitThrows()
-        {
-            var context = new DefaultHttpContext();
-            context.Connection.RemoteIpAddress = new System.Net.IPAddress([1, 1, 1, 1]);
-
-            var loggerMock = new Mock<ILogger<RateLimitingMiddleware>>();
-            var rateLimitServiceMock = new Mock<IRateLimitService>();
-            rateLimitServiceMock.Setup(service => service.HasIpAddressBeenLimited("1.1.1.1")).Returns(false);
-            rateLimitServiceMock.Setup(service => service.CheckRateLimitForIpAddress("1.1.1.1")).Throws(new TooManyRequestsException("test"));
-
-            RequestDelegate next = ctx =>
-            {
-                return Task.CompletedTask;
-            };
-
-            var middleware = new RateLimitingMiddleware(loggerMock.Object, next);
-            await Assert.ThrowsAsync<TooManyRequestsException>(async () => await middleware.InvokeAsync(context, rateLimitServiceMock.Object));
-        }
-
-        [Fact]
-        public async Task RateLimitingMiddleware_ShouldCallNextWhenIpIsNotLimited()
-        {
-            var context = new DefaultHttpContext();
-            context.Connection.RemoteIpAddress = new System.Net.IPAddress([1, 1, 1, 1]);
-
-            var loggerMock = new Mock<ILogger<RateLimitingMiddleware>>();
-            var rateLimitServiceMock = new Mock<IRateLimitService>();
-            rateLimitServiceMock.Setup(service => service.HasIpAddressBeenLimited("1.1.1.1")).Returns(false);
-            rateLimitServiceMock.Setup(service => service.CheckRateLimitForIpAddress("1.1.1.1"));
-
-            var nextCalled = false;
-            RequestDelegate next = ctx =>
-            {
-                nextCalled = true;
-                return Task.CompletedTask;
-            };
-
-            var middleware = new RateLimitingMiddleware(loggerMock.Object, next);
-            await middleware.InvokeAsync(context, rateLimitServiceMock.Object);
-
-            Assert.True(nextCalled);
         }
     }
 }

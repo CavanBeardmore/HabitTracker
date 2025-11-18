@@ -1,13 +1,16 @@
-﻿using HabitTracker.Server.Services;
-using Microsoft.Extensions.Logging;
-using Moq;
-using HabitTracker.Server.Controllers;
-using Microsoft.AspNetCore.Http;
+﻿using HabitTracker.Server.Controllers;
+using HabitTracker.Server.Database.Entities;
 using HabitTracker.Server.DTOs;
-using Microsoft.AspNetCore.Mvc;
 using HabitTracker.Server.Exceptions;
 using HabitTracker.Server.Models;
+using HabitTracker.Server.Services;
 using HabitTracker.Server.SSE;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Serilog;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HabitTracker.Server.Tests.Controller
 {
@@ -102,8 +105,13 @@ namespace HabitTracker.Server.Tests.Controller
             PostHabitLog habitlog = new PostHabitLog(1, DateTime.UtcNow, true, 7);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
+            var log = new HabitLog(1, 2, DateTime.Now, true, 7);
+            var habit = new Habit(2, 5, "This is a test habit", 1);
 
-            _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns(Tuple.Create(new Habit(1234, 4321, "test", 7), new HabitLog(1, 2, DateTime.UtcNow, true, 7)));
+            _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns(new AddedHabitLogResult(
+                log,
+                habit
+            ));
 
             var result = _controller.CreateHabitLog(habitlog);
 
@@ -120,7 +128,7 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns(Tuple.Create(new Habit(1234, 4321, "test", 7), new HabitLog(1, 2, DateTime.UtcNow, true, 7)));
+            _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns(It.IsAny<AddedHabitLogResult>());
 
             Assert.Throws<BadRequestException>(() => _controller.CreateHabitLog(habitlog));
         }
@@ -132,7 +140,7 @@ namespace HabitTracker.Server.Tests.Controller
 
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
 
-            _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns(Tuple.Create(new Habit(1234, 4321, "test", 7), new HabitLog(1, 2, DateTime.UtcNow, true, 7)));
+            _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns(It.IsAny<AddedHabitLogResult>());
 
             Assert.Throws<UnauthorizedException>(() => _controller.CreateHabitLog(habitlog));
         }
@@ -145,7 +153,7 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns((Tuple<Habit, HabitLog>)null);
+            _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns(It.IsAny<AddedHabitLogResult>());
 
             Assert.Throws<AppException>(() => _controller.CreateHabitLog(habitlog));
         }

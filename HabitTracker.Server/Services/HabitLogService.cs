@@ -11,13 +11,17 @@ namespace HabitTracker.Server.Services
     {
         private readonly IHabitLogRepository _habitLogRepository;
         private readonly ILogger<HabitLogService> _logger;
-        private readonly IHabitRepository _habitRepository;
+        private readonly ITransactionalUnit<AddedHabitLogResult?, AddHabitLogData> _addHabitUnit;
 
-        public HabitLogService(IHabitLogRepository habitLogRepository, ILogger<HabitLogService> logger, IHabitRepository habitRepository)
+        public HabitLogService(
+            IHabitLogRepository habitLogRepository, 
+            ILogger<HabitLogService> logger,
+            ITransactionalUnit<AddedHabitLogResult?, AddHabitLogData> addHabitUnit
+        )
         {
             _habitLogRepository = habitLogRepository;
             _logger = logger;
-            _habitRepository = habitRepository;
+            _addHabitUnit = addHabitUnit;
         }
 
         public HabitLog? GetById(int habitLogId, int userId)
@@ -96,13 +100,11 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public Tuple<Habit, HabitLog>? Add(PostHabitLog postHabitLog, int userId)
+        public AddedHabitLogResult? Add(PostHabitLog postHabitLog, int userId)
         {
             try
             {
-                LogHabit unit = new LogHabit(_logger, _habitRepository, _habitLogRepository, postHabitLog, userId);
-
-                return unit.Execute();
+                return _addHabitUnit.Execute(new AddHabitLogData(postHabitLog, userId));
             }
             catch (ConflictException ex)
             {

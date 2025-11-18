@@ -1,26 +1,27 @@
-﻿using HabitTracker.Server.Repository;
-using HabitTracker.Server.Services;
-using HabitTracker.Server.DTOs;
-using Microsoft.Extensions.Logging;
-using Moq;
+﻿using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Exceptions;
 using HabitTracker.Server.Models;
+using HabitTracker.Server.Repository;
+using HabitTracker.Server.Services;
+using HabitTracker.Server.UnitsOfWork;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace HabitTracker.Server.Tests.Services
 {
     public class HabitLogServiceTests
     {
         private readonly Mock<IHabitLogRepository> _mockHabitLogRepository;
-        private readonly Mock<IHabitRepository> _mockHabitRepository;
+        private readonly Mock<ITransactionalUnit<AddedHabitLogResult?, AddHabitLogData>> _mockAddHabitLogUnit;
         private readonly Mock<ILogger<HabitLogService>> _mockLogger;
         private readonly HabitLogService _service;
 
         public HabitLogServiceTests()
         {
             _mockHabitLogRepository = new Mock<IHabitLogRepository>();
-            _mockHabitRepository = new Mock<IHabitRepository>();
+            _mockAddHabitLogUnit = new Mock<ITransactionalUnit<AddedHabitLogResult?, AddHabitLogData>>();
             _mockLogger = new Mock<ILogger<HabitLogService>>();
-            _service = new HabitLogService(_mockHabitLogRepository.Object, _mockLogger.Object, _mockHabitRepository.Object);
+            _service = new HabitLogService(_mockHabitLogRepository.Object, _mockLogger.Object, _mockAddHabitLogUnit.Object);
         }
 
         [Fact]
@@ -114,50 +115,82 @@ namespace HabitTracker.Server.Tests.Services
             Assert.Throws<AppException>(() => _service.GetAllByHabitId(habitId, userId, pageNumber));
         }
 
-        //[Fact]
-        //public void Add_ReturnsCollectionOfHabitLogs()
-        //{
-        //    DateTime date = DateTime.UtcNow;
-        //    PostHabitLog habitLog = new PostHabitLog(1, date, true, 7);
-        //    int userId = 1;
+        [Fact]
+        public void Add_ReturnsCollectionOfHabitLogs()
+        {
+            DateTime date = DateTime.UtcNow;
+            PostHabitLog habitLog = new PostHabitLog(1, date, true, 7);
+            int userId = 1;
+            var log = new HabitLog(1, 2, date, true, 7);
+            var habit = new Habit(2, 5, "This is a test habit", 1);
 
-        //    _mockHabitLogRepository.Setup(repository => repository.GetByHabitIdAndStartDate(1, 1, date)).Returns((HabitLog)null);
-        //    _mockHabitLogRepository.Setup(repository => repository.Add(habitLog)).Returns(new HabitLog(1, 2, date, true, 7));
+            _mockAddHabitLogUnit.Setup(repository => repository.Execute(It.IsAny<AddHabitLogData>())).Returns(new AddedHabitLogResult(
+                log,
+                habit
+            ));
 
-        //    var result = _service.Add(habitLog, userId);
+            var result = _service.Add(habitLog, userId);
 
-        //    Assert.NotNull(result);
-        //    Assert.True(result.Id == 1);
-        //    Assert.True(result.Habit_id == 2);
-        //    Assert.True(result.Start_date == date);
-        //    Assert.True(result.Habit_logged == true);
-        //    Assert.True(result.LengthInDays == 7);
-        //}
+            Assert.NotNull(result);
+            Assert.True(result.Habit == habit);
+            Assert.True(result.HabitLog == log);
+        }
 
-        //[Fact]
-        //public void Add_ThrowsConflictException()
-        //{
-        //    DateTime date = DateTime.UtcNow;
-        //    PostHabitLog habitLog = new PostHabitLog(1, date, true, 7);
-        //    int userId = 1;
+        [Fact]
+        public void Add_ThrowsConflictException()
+        {
+            DateTime date = DateTime.UtcNow;
+            PostHabitLog habitLog = new PostHabitLog(1, date, true, 7);
+            int userId = 1;
+            var log = new HabitLog(1, 2, date, true, 7);
+            var habit = new Habit(2, 5, "This is a test habit", 1);
 
-        //    _mockHabitLogRepository.Setup(repository => repository.GetByHabitIdAndStartDate(1, 1, date)).Returns(new HabitLog(1, 2, date, true, 7));
+            _mockAddHabitLogUnit.Setup(repository => repository.Execute(It.IsAny<AddHabitLogData>())).Throws<ConflictException>(() => throw new ConflictException("test"));
 
-        //    Assert.Throws<ConflictException>(() => _service.Add(habitLog, userId));
-        //}
+            Assert.Throws<ConflictException>(() => _service.Add(habitLog, userId));
+        }
 
-        //[Fact]
-        //public void Add_ThrowsAppException()
-        //{
-        //    DateTime date = DateTime.UtcNow;
-        //    PostHabitLog habitLog = new PostHabitLog(1, date, true, 7);
-        //    int userId = 1;
+        [Fact]
+        public void Add_ThrowsNotFoundException()
+        {
+            DateTime date = DateTime.UtcNow;
+            PostHabitLog habitLog = new PostHabitLog(1, date, true, 7);
+            int userId = 1;
+            var log = new HabitLog(1, 2, date, true, 7);
+            var habit = new Habit(2, 5, "This is a test habit", 1);
 
-        //    _mockHabitLogRepository.Setup(repository => repository.GetByHabitIdAndStartDate(1, 1, date)).Returns((HabitLog)null);
-        //    _mockHabitLogRepository.Setup(repository => repository.Add(habitLog)).Returns((HabitLog)null);
+            _mockAddHabitLogUnit.Setup(repository => repository.Execute(It.IsAny<AddHabitLogData>())).Throws<NotFoundException>(() => throw new NotFoundException("test"));
 
-        //    Assert.Throws<AppException>(() => _service.Add(habitLog, userId));
-        //}
+            Assert.Throws<NotFoundException>(() => _service.Add(habitLog, userId));
+        }
+
+        [Fact]
+        public void Add_ThrowsAppExceptionWhenAppExceptionIsThrown()
+        {
+            DateTime date = DateTime.UtcNow;
+            PostHabitLog habitLog = new PostHabitLog(1, date, true, 7);
+            int userId = 1;
+            var log = new HabitLog(1, 2, date, true, 7);
+            var habit = new Habit(2, 5, "This is a test habit", 1);
+
+            _mockAddHabitLogUnit.Setup(repository => repository.Execute(It.IsAny<AddHabitLogData>())).Throws<AppException>(() => throw new AppException("test"));
+
+            Assert.Throws<AppException>(() => _service.Add(habitLog, userId));
+        }
+
+        [Fact]
+        public void Add_ThrowsException()
+        {
+            DateTime date = DateTime.UtcNow;
+            PostHabitLog habitLog = new PostHabitLog(1, date, true, 7);
+            int userId = 1;
+            var log = new HabitLog(1, 2, date, true, 7);
+            var habit = new Habit(2, 5, "This is a test habit", 1);
+
+            _mockAddHabitLogUnit.Setup(repository => repository.Execute(It.IsAny<AddHabitLogData>())).Throws<Exception>(() => throw new Exception("test"));
+
+            Assert.Throws<AppException>(() => _service.Add(habitLog, userId));
+        }
 
         [Fact]
         public void Update_ReturnsHabitLog()

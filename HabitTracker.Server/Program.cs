@@ -1,18 +1,20 @@
 using HabitTracker.Server.Auth;
+using HabitTracker.Server.Database;
+using HabitTracker.Server.DTOs;
+using HabitTracker.Server.Middleware;
 using HabitTracker.Server.Repository;
 using HabitTracker.Server.Services;
 using HabitTracker.Server.SSE;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using HabitTracker.Server.Storage;
+using HabitTracker.Server.Transformer;
+using HabitTracker.Server.UnitsOfWork;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
-using HabitTracker.Server.DTOs;
-using HabitTracker.Server.Transformer;
-using HabitTracker.Server.Database;
-using HabitTracker.Server.Middleware;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,17 +72,32 @@ builder.Services.AddDbContext<HabitTrackerDbContext>(options =>
     options.UseSqlite(connectionString);
 });
 builder.Services.AddScoped<IPasswordService, PasswordService>();
-builder.Services.AddScoped<ITransformer<IReadOnlyCollection<Rate>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, RateTransformer>();
 builder.Services.AddScoped<ITransformer<IReadOnlyCollection<Habit>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, HabitTransformer>();
 builder.Services.AddScoped<ITransformer<IReadOnlyCollection<HabitLog>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, HabitLogTransformer>();
 builder.Services.AddScoped<ITransformer<IReadOnlyCollection<User>, IReadOnlyCollection<IReadOnlyDictionary<string, object>>>, UserTransformer>();
-builder.Services.AddScoped<IRateLimitRepository, RateLimitRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IHabitRepository, HabitRepository>();
 builder.Services.AddScoped<IHabitLogRepository, HabitLogRepository>();
-builder.Services.AddScoped<IRateLimitService, RateLimitService>();
+builder.Services.AddSingleton<IRateLimitService, RateLimitService>((sp) =>
+{
+    ILogger<RateLimitService> logger = sp.GetRequiredService<ILogger<RateLimitService>>();
+    return new RateLimitService(new MemoryCache(new MemoryCacheOptions()), logger);
+});
 builder.Services.AddScoped<IHabitService, HabitService>();
-builder.Services.AddScoped<IHabitLogService, HabitLogService>();
+builder.Services.AddScoped<IHabitLogService, HabitLogService>((sp) =>
+{
+    ILogger<HabitLogService> logger = sp.GetRequiredService<ILogger<HabitLogService>>();
+    IHabitRepository habitRepository = sp.GetRequiredService<IHabitRepository>();
+    IHabitLogRepository habitLogRepository = sp.GetRequiredService<IHabitLogRepository>();
+
+    LogHabit unit = new LogHabit(logger, habitRepository, habitLogRepository);
+
+    return new HabitLogService(
+        habitLogRepository,
+        logger,
+        unit
+    );
+});
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IEventService<HabitTrackerEvent>, HabitTrackerEventService>();
 

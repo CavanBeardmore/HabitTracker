@@ -2,30 +2,28 @@
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Repository;
 using HabitTracker.Server.Exceptions;
-using HabitTracker.Server.Database.Entities;
 
 namespace HabitTracker.Server.UnitsOfWork
 {
-    public class LogHabit : TransactionalUnit<Tuple<Habit, HabitLog>>
+    public class LogHabit : TransactionalUnit<AddedHabitLogResult?, AddHabitLogData>
     {
         private readonly ILogger _logger;
         private readonly IHabitRepository _habitRepository;
         private readonly IHabitLogRepository _habitLogRepository;
-        private readonly PostHabitLog _habitLog;
-        private readonly int _userId;
-        public LogHabit(ILogger logger, IHabitRepository habitRepository, IHabitLogRepository habitLogRepository, PostHabitLog habitLog, int userId) : base(habitRepository.SqliteFacade, logger) 
+        public LogHabit(ILogger logger, IHabitRepository habitRepository, IHabitLogRepository habitLogRepository) : base(habitRepository.SqliteFacade, logger) 
         {
             _logger = logger;
             _habitRepository = habitRepository;
             _habitLogRepository = habitLogRepository;
-            _habitLog = habitLog;
-            _userId = userId;
         }
 
-        protected override Tuple<Habit, HabitLog> Work()
+        protected override AddedHabitLogResult Work(AddHabitLogData args)
         {
+            PostHabitLog postHabitLog = args.Habit;
+            int userId = args.UserId;
+
             _logger.LogInformation("LogHabit - Work - checking if habit log exists");
-            HabitLog? existingHabitLog = _habitLogRepository.GetByHabitIdAndStartDate(_habitLog.Habit_id, _userId, _habitLog.Start_date);
+            HabitLog? existingHabitLog = _habitLogRepository.GetByHabitIdAndStartDate(postHabitLog.Habit_id, userId, postHabitLog.Start_date);
 
             if (existingHabitLog != null)
             {
@@ -34,27 +32,27 @@ namespace HabitTracker.Server.UnitsOfWork
             }
 
             _logger.LogInformation("LogHabit - Work - getting most recent habit log");
-            HabitLog? mostRecentHabitLog = _habitLogRepository.GetMostRecentHabitLog(_habitLog.Habit_id, _userId, Transaction.Connection, Transaction.Transaction);
+            HabitLog? mostRecentHabitLog = _habitLogRepository.GetMostRecentHabitLog(postHabitLog.Habit_id, userId, Transaction.Connection, Transaction.Transaction);
 
             _logger.LogInformation("LogHabit - Work - got most recent habit log {@Log}", mostRecentHabitLog);
 
             _logger.LogInformation("LogHabit - Work - getting habit");
-            Habit? habit = _habitRepository.GetById(_habitLog.Habit_id, _userId, Transaction.Connection, Transaction.Transaction);
+            Habit? habit = _habitRepository.GetById(postHabitLog.Habit_id, userId, Transaction.Connection, Transaction.Transaction);
 
             if (habit == null)
             {
                 _logger.LogInformation("LogHabit - Work - could not find habit");
-                throw new NotFoundException($"Could not find Habit of {_habitLog.Habit_id} from Habit Log");
+                throw new NotFoundException($"Could not find Habit of {postHabitLog.Habit_id} from Habit Log");
             }
 
             _logger.LogInformation("LogHabit - Work - current habit streak {@StreakCount}", habit.StreakCount);
 
-            uint updatedStreakCount = GetStreakCount(habit.StreakCount, mostRecentHabitLog?.Start_date);
+            uint updatedStreakCount = GetStreakCount(habit.StreakCount, mostRecentHabitLog?.Start_date, postHabitLog.Start_date);
 
             _logger.LogInformation("LogHabit - Work - updated habit streak {@UpdatedStreakCount}", updatedStreakCount);
 
             _logger.LogInformation("LogHabit - Work - adding habit log");
-            HabitLog? habitLog = _habitLogRepository.Add(_habitLog, Transaction.Connection, Transaction.Transaction);
+            HabitLog? habitLog = _habitLogRepository.Add(postHabitLog, Transaction.Connection, Transaction.Transaction);
 
             if (habitLog == null)
             {
@@ -63,7 +61,7 @@ namespace HabitTracker.Server.UnitsOfWork
             }
 
             _logger.LogInformation("LogHabit - Work - updating habit");
-            Habit? updatedHabit = _habitRepository.Update(_userId, new PatchHabit(habit.Id, habit.Name, updatedStreakCount), Transaction.Connection, Transaction.Transaction);
+            Habit? updatedHabit = _habitRepository.Update(userId, new PatchHabit(habit.Id, habit.Name, updatedStreakCount), Transaction.Connection, Transaction.Transaction);
 
             if (updatedHabit == null)
             {
@@ -72,10 +70,10 @@ namespace HabitTracker.Server.UnitsOfWork
             }
 
             _logger.LogInformation("LogHabit - Work - successfully completed LogHabit unit");
-            return Tuple.Create(updatedHabit, habitLog);
+            return new AddedHabitLogResult(habitLog, updatedHabit);
         }
 
-        private uint GetStreakCount(uint currentStreakCount, DateTime? mostRecentLoggedDate)
+        private uint GetStreakCount(uint currentStreakCount, DateTime? mostRecentLoggedDate, DateTime newHabitLogStartDate)
         {
             if (currentStreakCount == 0 && mostRecentLoggedDate == null)
             {
@@ -89,9 +87,9 @@ namespace HabitTracker.Server.UnitsOfWork
                 throw new NotFoundException("Most recent logged date is null");
             }
 
-            _logger.LogInformation("LogHabit - GetStreakCount - previous log date: {Previous}, new log date: {New}", mostRecentLoggedDate.Value.Date, _habitLog.Start_date.Date);
+            _logger.LogInformation("LogHabit - GetStreakCount - previous log date: {Previous}, new log date: {New}", mostRecentLoggedDate.Value.Date, newHabitLogStartDate);
 
-            TimeSpan daysInBetween = _habitLog.Start_date.Date.Subtract(mostRecentLoggedDate.Value.Date);
+            TimeSpan daysInBetween = newHabitLogStartDate.Date.Subtract(mostRecentLoggedDate.Value.Date);
             _logger.LogInformation("LogHabit - GetStreakCount - days in between - {daysInBetween}", daysInBetween.Days);
             if (daysInBetween.Days == 0)
             {
