@@ -3,6 +3,7 @@ using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Exceptions;
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace HabitTracker.Server.Services
 {

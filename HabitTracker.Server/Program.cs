@@ -66,6 +66,8 @@ builder.Host.UseSerilog((context, services, config) =>
 
 builder.Services.AddScoped<IAuthentication>(provider => new Authentication(builder.Configuration["ApplicationSettings:JWT_Secret"]));
 
+builder.Services.AddMemoryCache();
+
 builder.Services.AddScoped<IStorage>(provider => new SqliteFacade(connectionString));
 builder.Services.AddDbContext<HabitTrackerDbContext>(options =>
 {
@@ -78,11 +80,7 @@ builder.Services.AddScoped<ITransformer<IReadOnlyCollection<User>, IReadOnlyColl
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IHabitRepository, HabitRepository>();
 builder.Services.AddScoped<IHabitLogRepository, HabitLogRepository>();
-builder.Services.AddSingleton<IRateLimitService, RateLimitService>((sp) =>
-{
-    ILogger<RateLimitService> logger = sp.GetRequiredService<ILogger<RateLimitService>>();
-    return new RateLimitService(new MemoryCache(new MemoryCacheOptions()), logger);
-});
+builder.Services.AddSingleton<IRateLimitService, RateLimitService>();
 builder.Services.AddScoped<IHabitService, HabitService>();
 builder.Services.AddScoped<IHabitLogService, HabitLogService>((sp) =>
 {
