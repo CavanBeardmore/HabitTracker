@@ -8,7 +8,7 @@ namespace HabitTracker.Server.Repository
     public interface IHabitRepository
     {
         IStorage SqliteFacade { get; }
-        IReadOnlyCollection<Habit> GetAllByUserId(int user_id);
+        IReadOnlyCollection<Habit> GetAllByUserId(int userId);
         Habit? GetById(int habitId, int userId, DbConnection? connection, DbTransaction? transaction);
         Habit? Add(int userId, PostHabit habit);
         Habit? Update(int userId, PatchHabit habit, DbConnection? connection, DbTransaction? transaction);

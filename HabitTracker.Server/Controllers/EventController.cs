@@ -10,7 +10,7 @@ namespace HabitTracker.Server.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("events/[controller]")]
+    [Route("[controller]")]
     public class EventController: Controller
     {
         private readonly IEventService<HabitTrackerEvent> _eventService;

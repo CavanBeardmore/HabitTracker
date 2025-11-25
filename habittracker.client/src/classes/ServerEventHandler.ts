@@ -36,7 +36,7 @@ export class ServerEventHandler implements IServerEventHandler {
 
     public async CreateConnection(): Promise<void> {
         const jwt = this.RetrieveJwtFromStorage();
-        this._eventSource = new EventSource(`${this._backendUrl}events/Event/stream?token=${jwt}`);
+        this._eventSource = new EventSource(`${this._backendUrl}/Event/stream?token=${jwt}`);
 
         this._eventSource.onmessage = (event: any) => this.OnMessage(event);
         this._eventSource.onerror = (event: any) => this.OnError(event);

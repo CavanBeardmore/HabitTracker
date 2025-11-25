@@ -12,7 +12,7 @@ namespace HabitTracker.Server.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("habits/[controller]")]
+    [Route("[controller]")]
     public class HabitController : ControllerBase
     {
 

@@ -5,7 +5,7 @@ namespace HabitTracker.Server.Services
 {
     public interface IHabitLogService
     {
-        Tuple<IReadOnlyCollection<HabitLog>, bool>? GetAllByHabitId(int id, int userId, uint pageNumber);
+        PaginatedHabitLogs? GetAllByHabitId(int id, int userId, uint pageNumber);
 
         HabitLog? GetById(int habitLogId, int userId);
 
@@ -15,7 +15,7 @@ namespace HabitTracker.Server.Services
 
         HabitLog? Update(PatchHabitLog habitLog);
 
-        bool Delete(int habitLogId, int userId);
+        DeleteHabitLogResult Delete(int habitLogId, int userId);
 
     }
 }

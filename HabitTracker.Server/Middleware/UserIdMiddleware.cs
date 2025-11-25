@@ -20,7 +20,7 @@ namespace HabitTracker.Server.Middleware
             
             if (username != null)
             {
-                User? user = userService.GetByUsername(username);
+                User? user = userService.Get(username);
 
                 if (user != null)
                 {

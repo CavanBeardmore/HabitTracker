@@ -22,11 +22,36 @@ namespace HabitTracker.Server.Services
             _logger = logger;
         }
 
-        public User? GetByUsername(string username)
+        public User? Get(int id)
         {
             try
             {
-                _logger.LogInformation("UserService - GetByUsername - getting user by username");
+                _logger.LogInformation("UserService - Get - getting user by id");
+                User? user = _userRepository.GetById(id);
+
+                if (user == null)
+                {
+                    throw new NotFoundException($"User of ID: - {id} - was not found");
+                }
+
+                _logger.LogInformation("UserService - Get - found user");
+                return user;
+            }
+            catch (NotFoundException ex)
+            {
+                throw new NotFoundException(ex.Message);
+            }
+            catch
+            {
+                throw new AppException($"An error occured when fetching the user from Id:  - {id}");
+            }
+        }
+
+        public User? Get(string username)
+        {
+            try
+            {
+                _logger.LogInformation("UserService - get - getting user by username");
                 User? user = _userRepository.GetByUsername(username);
 
                 if (user == null)
@@ -34,7 +59,7 @@ namespace HabitTracker.Server.Services
                     throw new NotFoundException($"User of - {username} - was not found");
                 }
 
-                _logger.LogInformation("UserService - GetByUsername - found user");
+                _logger.LogInformation("UserService - Get - found user");
                 return user;
             }
             catch (NotFoundException ex)
@@ -111,7 +136,7 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public Tuple<string?, User>? Update(int userId, PatchUser user)
+        public UpdatedUserResult? Update(int userId, PatchUser user)
         {
             try
             {
@@ -148,7 +173,7 @@ namespace HabitTracker.Server.Services
                 }
 
                 _logger.LogInformation("UserService - Update - updated user");
-                return string.IsNullOrEmpty(user.NewUsername) == false ? new Tuple<string?, User>(_auth.GenerateJWTToken(user.NewUsername), updatedUser) : null;
+                return string.IsNullOrEmpty(user.NewUsername) == false ? new UpdatedUserResult(_auth.GenerateJWTToken(user.NewUsername), updatedUser) : null;
             }
             catch (BadRequestException ex)
             {

@@ -17,7 +17,7 @@ namespace HabitTracker.Server.Repository
             _transformer = transformer;
         }
 
-        public Tuple<IReadOnlyCollection<HabitLog>, bool> GetAllByHabitId(int id, int userId, uint pageNumber, uint limit = 30)
+        public PaginatedHabitLogs GetAllByHabitId(int id, int userId, uint pageNumber, uint limit = 30)
         {
             string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT @limit OFFSET @offset;";
 
@@ -38,7 +38,7 @@ namespace HabitTracker.Server.Repository
             IReadOnlyCollection<HabitLog> limitedList = _transformer.Transform(result.Take((int)limit).ToList());
             bool hasMore = result.Count > limit;
 
-            return Tuple.Create(limitedList, hasMore);
+            return new PaginatedHabitLogs(limitedList, hasMore);
         }
 
         public HabitLog? GetById(int habitLogId, int userId)

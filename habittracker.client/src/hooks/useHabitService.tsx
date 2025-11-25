@@ -136,7 +136,6 @@ export const useHabitService = (): UseHabitServiceReturn => {
     };
 
     const getHabitById = async (id: number): Promise<void> => {
-        console.log("GETTING");
         const {success, status, data, errorMessage} = await habitService.GetHabitById(id);
 
         if (success && data) {

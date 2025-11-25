@@ -54,7 +54,7 @@ namespace HabitTracker.Server.Tests.Middleware
             var loggerMock = new Mock<ILogger<UserIdMiddleware>>();
             var userServiceMock = new Mock<IUserService>();
 
-            userServiceMock.Setup(service => service.GetByUsername("test")).Returns(new User(1, "test", "test", "test"));
+            userServiceMock.Setup(service => service.Get("test")).Returns(new User(1, "test", "test", "test"));
 
             var wasNextCalled = false;
             RequestDelegate next = ctx =>
@@ -88,7 +88,7 @@ namespace HabitTracker.Server.Tests.Middleware
             var loggerMock = new Mock<ILogger<UserIdMiddleware>>();
             var userServiceMock = new Mock<IUserService>();
 
-            userServiceMock.Setup(service => service.GetByUsername("test")).Returns((User)null);
+            userServiceMock.Setup(service => service.Get("test")).Returns((User)null);
 
             var wasNextCalled = false;
             RequestDelegate next = ctx =>
@@ -101,7 +101,7 @@ namespace HabitTracker.Server.Tests.Middleware
 
             await middleware.InvokeAsync(context, userServiceMock.Object);
 
-            userServiceMock.Verify(service => service.GetByUsername("test"), Times.Once());
+            userServiceMock.Verify(service => service.Get("test"), Times.Once());
             Assert.True(wasNextCalled);
         }
     }

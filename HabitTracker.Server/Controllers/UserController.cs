@@ -12,7 +12,7 @@ namespace HabitTracker.Server.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("user/[controller]")]
+    [Route("[controller]")]
     public class UserController : Controller
     {
         private readonly IUserService _userService;
@@ -66,6 +66,24 @@ namespace HabitTracker.Server.Controllers
         }
 
         [Authorize]
+        [HttpGet()]
+        public IActionResult GetUser()
+        {
+            _logger.LogInformation("UserController - GetUser - invoked");
+            
+            int userId = GetUserId();
+            User? user = _userService.Get(userId);
+
+            if (user == null)
+            {
+                throw new AppException("Could not get user.");
+            }
+            
+            _logger.LogInformation("UserController - GetUser - successfully retrieved user");
+            return Ok(user);
+        }
+        
+        [Authorize]
         [HttpPatch("update")]
         public IActionResult UpdateUser([FromBody] PatchUser user)
         {
@@ -85,12 +103,12 @@ namespace HabitTracker.Server.Controllers
             }
 
             _logger.LogInformation("UserController - AddUser - updating user");
-            Tuple<string?, User>? response = _userService.Update(userId, user);
+            UpdatedUserResult? response = _userService.Update(userId, user);
 
             if (response != null)
             {
                 _logger.LogInformation("UserController - AddUser - successfully updated user record and created new JWT");
-                _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.USER_UPDATED, new { jwt = response.Item1, user = response.Item2 }));
+                _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.USER_UPDATED, new { jwt = response.Jwt, user = response.User }));
                 return Ok();
             }
 

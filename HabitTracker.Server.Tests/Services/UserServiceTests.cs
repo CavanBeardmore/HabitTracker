@@ -34,7 +34,7 @@ namespace HabitTracker.Server.Tests.Services
 
             _mockUserRepository.Setup(repository => repository.GetByUsername(username)).Returns(new User(1234, username, "test2", "test3"));
 
-            var result = _service.GetByUsername(username);
+            var result = _service.Get(username);
 
             Assert.NotNull(result);
             Assert.True(result.Id == 1234);
@@ -50,7 +50,7 @@ namespace HabitTracker.Server.Tests.Services
 
             _mockUserRepository.Setup(repository => repository.GetByUsername(username)).Returns((User)null);
 
-            Assert.Throws<NotFoundException>(() => _service.GetByUsername(username));
+            Assert.Throws<NotFoundException>(() => _service.Get(username));
         }
         [Fact]
         public void GetByUsername_ThrowsAppException()
@@ -59,7 +59,42 @@ namespace HabitTracker.Server.Tests.Services
 
             _mockUserRepository.Setup(repository => repository.GetByUsername(username)).Throws<AppException>(() => throw new AppException("test"));
 
-            Assert.Throws<AppException>(() => _service.GetByUsername(username));
+            Assert.Throws<AppException>(() => _service.Get(username));
+        }
+        
+        [Fact]
+        public void GetById_ReturnsUser()
+        {
+            int id = 1;
+
+            _mockUserRepository.Setup(repository => repository.GetById(1)).Returns(new User(id, "test username", "test2", "test3"));
+
+            var result = _service.Get(id);
+
+            Assert.NotNull(result);
+            Assert.True(result.Id == id);
+            Assert.True(result.Username == "test username");
+            Assert.True(result.Email == "test2");
+            Assert.True(result.Password == "test3");
+        }
+
+        [Fact]
+        public void GetById_ThrowsNotFoundException()
+        {
+            int id = 1;
+
+            _mockUserRepository.Setup(repository => repository.GetById(id)).Returns((User)null);
+
+            Assert.Throws<NotFoundException>(() => _service.Get(id));
+        }
+        [Fact]
+        public void GetById_ThrowsAppException()
+        {
+            int id = 1;
+
+            _mockUserRepository.Setup(repository => repository.GetById(id)).Throws<AppException>(() => throw new AppException("test"));
+
+            Assert.Throws<AppException>(() => _service.Get(id));
         }
 
         [Fact]
@@ -215,11 +250,11 @@ namespace HabitTracker.Server.Tests.Services
             var result = _service.Update(userId, user);
 
             Assert.NotNull(result);
-            Assert.True(result.Item1 == "test1234");
-            Assert.True(result.Item2.Id == 1234);
-            Assert.True(result.Item2.Username == "test1");
-            Assert.True(result.Item2.Email == "test2");
-            Assert.True(result.Item2.Password == "test3");
+            Assert.True(result.Jwt == "test1234");
+            Assert.True(result.User.Id == 1234);
+            Assert.True(result.User.Username == "test1");
+            Assert.True(result.User.Email == "test2");
+            Assert.True(result.User.Password == "test3");
         }
 
         [Fact]
@@ -238,11 +273,11 @@ namespace HabitTracker.Server.Tests.Services
             var result = _service.Update(userId, user);
 
             Assert.NotNull(result);
-            Assert.True(result.Item1 == "test1234");
-            Assert.True(result.Item2.Id == 1234);
-            Assert.True(result.Item2.Username == "test1");
-            Assert.True(result.Item2.Email == "test2");
-            Assert.True(result.Item2.Password == "test3");
+            Assert.True(result.Jwt == "test1234");
+            Assert.True(result.User.Id == 1234);
+            Assert.True(result.User.Username == "test1");
+            Assert.True(result.User.Email == "test2");
+            Assert.True(result.User.Password == "test3");
         }
 
         [Fact]

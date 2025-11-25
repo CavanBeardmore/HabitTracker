@@ -1,5 +1,5 @@
-import { HttpService, RequestMethod } from "./HttpService";
 import { jwtDecode } from "jwt-decode";
+import { IHttpService, RequestMethod } from "./IHttpService";
 
 const AUTH_TOKEN = "AUTH_TOKEN";
 
@@ -8,18 +8,19 @@ export interface Credentials {
     password: string;
 }
 
-export class AuthenticationService extends HttpService {
+export class AuthenticationService {
 
     private _authToken: string | null = null;
 
-    constructor(private readonly _backendUrl: string) {
-        super();
-    }
+    constructor(
+        private readonly _backendUrl: string,
+        private readonly _httpService: IHttpService
+    ) {}
 
     public async Login(credentials: Credentials): Promise<[boolean, string]> {
         console.log("AuthenticationService - Login - attempting to log in");
-        const {success, data} = await this.Request<{token?: string, StatusCode?: number, Message?: string}>(
-            `${this._backendUrl}auth/Auth/login`,
+        const {success, data} = await this._httpService.Request<{token?: string, StatusCode?: number, Message?: string}>(
+            `${this._backendUrl}/Auth/login`,
             {
                 method: RequestMethod.GET,
                 params: [

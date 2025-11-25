@@ -1,5 +1,6 @@
+import { User } from "../data/User";
 import { Credentials } from "./AuthenticationService";
-import { HttpService, RequestMethod } from "./HttpService";
+import { HttpServiceRes, IHttpService, RequestMethod } from "./IHttpService";
 
 export interface CredentialsWithEmail extends Credentials {
     email: string;
@@ -12,14 +13,28 @@ export interface UpdateUserArgs {
     NewPassword?: string; 
 } 
 
-export class UserService extends HttpService {
+export class UserService {
 
-    constructor(private readonly _backendUrl: string) {super()}
+    constructor(
+        private readonly _backendUrl: string,
+        private readonly _httpService: IHttpService,
+        private readonly _authedHttpService: IHttpService
+    ) {}
+
+    public async GetUser(): Promise<HttpServiceRes<User>> {
+        console.log("UserService - CreateUser - attempting to get user");
+        return await this._httpService.Request<User>(
+            `${this._backendUrl}/User`,
+            {
+                method: RequestMethod.GET,
+            }
+        );
+    }
 
     public async CreateUser(credentials: CredentialsWithEmail): Promise<[boolean, string]> {
         console.log("UserService - CreateUser - attempting to create user");
-        const {success, data} = await this.Request<{StatusCode?: number, Message?: string}>(
-            `${this._backendUrl}user/User`,
+        const {success, data} = await this._httpService.Request<{StatusCode?: number, Message?: string}>(
+            `${this._backendUrl}/User`,
             {
                 method: RequestMethod.POST,
                 headers: [{key: "Content-Type", value: "application/json"}],
@@ -37,8 +52,8 @@ export class UserService extends HttpService {
     public async UpdateUser(args: UpdateUserArgs): Promise<void> {
         console.log("UserService - UpdateUser - attempting to update user");
 
-        await this.Request(
-            `${this._backendUrl}user/User/update`,
+        await this._authedHttpService.Request(
+            `${this._backendUrl}/User/update`,
             {
                 method: RequestMethod.PATCH,
                 body: JSON.stringify(args)
@@ -49,8 +64,8 @@ export class UserService extends HttpService {
     public async DeleteUser(creds: Credentials): Promise<void> {
         console.log("UserService - DeleteUser - attempting to delete user");
 
-        await this.Request(
-            `${this._backendUrl}user/User/delete`,
+        await this._authedHttpService.Request(
+            `${this._backendUrl}/User/delete`,
             {
                 method: RequestMethod.DELETE,
                 body: JSON.stringify(creds)

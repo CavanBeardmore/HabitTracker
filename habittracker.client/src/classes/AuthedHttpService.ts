@@ -1,12 +1,16 @@
-import { httpOptions, HttpService, HttpServiceRes } from "./HttpService";
+import { httpOptions, HttpServiceRes, IHttpService } from "./IHttpService";
 
 const AUTH_TOKEN = "AUTH_TOKEN";
 
-export abstract class AuthedHttpService extends HttpService {
+export class AuthedHttpService implements IHttpService {
+
+    constructor(
+        private readonly _httpService: IHttpService
+    ){}
     
-    public async AuthedRequest<T>(url: string, options: httpOptions): Promise<HttpServiceRes<T>> {
+    public async Request<T>(url: string, options: httpOptions): Promise<HttpServiceRes<T>> {
         const jwt = this.RetrieveJwtFromStorage()
-        return await this.Request(
+        return await this._httpService.Request(
             url,
             {
                 method: options.method,

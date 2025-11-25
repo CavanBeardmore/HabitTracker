@@ -8,7 +8,7 @@ using System.Text.Json;
 namespace HabitTracker.Server.Controllers
 {
     [ApiController]
-    [Route("auth/[controller]")]
+    [Route("[controller]")]
     public class AuthController : Controller
     {
         private readonly IAuthentication _auth;

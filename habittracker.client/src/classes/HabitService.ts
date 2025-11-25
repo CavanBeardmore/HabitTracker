@@ -1,15 +1,15 @@
 import { Habit } from "../data/Habit";
-import { AuthedHttpService } from "./AuthedHttpService";
-import { HttpServiceRes, RequestMethod } from "./HttpService";
+import { HttpServiceRes, IHttpService, RequestMethod } from "./IHttpService";
 
-export class HabitService extends AuthedHttpService {
-    constructor(private readonly _backendUrl: string) {
-        super();
-    }
+export class HabitService {
+    constructor(
+        private readonly _backendUrl: string,
+        private readonly _httpService: IHttpService
+    ) {}
 
     public async CreateHabit(name: string): Promise<void> {
-        await this.AuthedRequest(
-            `${this._backendUrl}habits/Habit`,
+        await this._httpService.Request(
+            `${this._backendUrl}/Habit`,
             {
                 method: RequestMethod.POST,
                 headers: [
@@ -24,8 +24,8 @@ export class HabitService extends AuthedHttpService {
     }
 
     public async GetHabits(): Promise<HttpServiceRes<Habit[]>> {
-        return await this.AuthedRequest<Habit[]>(
-            `${this._backendUrl}habits/Habit`,
+        return await this._httpService.Request<Habit[]>(
+            `${this._backendUrl}/Habit`,
             {
                 method: RequestMethod.GET,
                 headers: [
@@ -39,8 +39,8 @@ export class HabitService extends AuthedHttpService {
     }
 
     public async GetHabitById(habitId: number): Promise<HttpServiceRes<Habit>> {
-        return await this.AuthedRequest<Habit>(
-            `${this._backendUrl}habits/Habit/${habitId}`,
+        return await this._httpService.Request<Habit>(
+            `${this._backendUrl}/Habit/${habitId}`,
             {
                 method: RequestMethod.GET,
                 headers: [
@@ -54,8 +54,8 @@ export class HabitService extends AuthedHttpService {
     }
 
     public async UpdateHabit(id: number, name: string, streakCount: number): Promise<void> {
-        await this.AuthedRequest(
-            `${this._backendUrl}habits/Habit/update`,
+        await this._httpService.Request(
+            `${this._backendUrl}/Habit/update`,
             {
                 method: RequestMethod.PATCH,
                 headers: [
@@ -74,8 +74,8 @@ export class HabitService extends AuthedHttpService {
     }
 
     public async DeleteHabit(id: number): Promise<void> {
-        await this.AuthedRequest(
-            `${this._backendUrl}habits/Habit/delete/${id}`,
+        await this._httpService.Request(
+            `${this._backendUrl}/Habit/delete/${id}`,
             {
                 method: RequestMethod.DELETE,
             }
