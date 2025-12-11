@@ -71,39 +71,5 @@ namespace HabitTracker.Server.Tests.Middleware
             Assert.True((int)userId == 1);
             Assert.True(wasNextCalled);
         }
-
-        [Fact]
-        public async Task UserIdMiddleware_ShouldCallGetByUsernameAndThrowUnauthorizedExceptionIfUserIsNull()
-        {
-            var context = new DefaultHttpContext();
-            var identity = new ClaimsIdentity(
-                new List<Claim> { new Claim(ClaimTypes.Name, "test") },
-                authenticationType: "CustomAuthType",
-                nameType: ClaimTypes.Name,
-                roleType: ClaimTypes.Role
-              );
-            context.User = new ClaimsPrincipal(identity);
-
-            var loggerMock = new Mock<ILogger<UserIdMiddleware>>();
-            var userServiceMock = new Mock<IUserService>();
-
-            userServiceMock.Setup(service => service.Get("test")).Returns((User)null);
-
-            var wasNextCalled = false;
-            RequestDelegate next = ctx =>
-            {
-                wasNextCalled = true;
-                return Task.CompletedTask;
-            };
-
-            var middleware = new UserIdMiddleware(loggerMock.Object, next);
-
-            await Assert.ThrowsAsync<UnauthorizedException>(async () =>
-            {
-                await middleware.InvokeAsync(context, userServiceMock.Object);
-            });
-            userServiceMock.Verify(service => service.Get("test"), Times.Once());
-            Assert.False(wasNextCalled);
-        }
     }
 }

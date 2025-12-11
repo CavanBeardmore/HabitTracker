@@ -77,8 +77,6 @@ namespace HabitTracker.Server.Middleware
             context.Response.StatusCode = (int)statusCode;
 
             int? userId = GetUserId(context);
-            _logger.LogDebug("ExceptionMiddleware - HandleExceptionAsync - user id: {UserId}", userId);
-            _logger.LogDebug("ExceptionMiddleware - HandleExceptionAsync - is active: {Active}", _eventService.IsActiveForUser((int)userId));
             if (userId != null && _eventService.IsActiveForUser((int)userId))
             {
                 _logger.LogError("ExceptionMiddleware - HandleExceptionAsync - adding error event to event stream");

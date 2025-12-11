@@ -58,6 +58,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void GetUserHabits_ReturnsOkObjectResult()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
@@ -71,6 +72,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void GetUserHabits_ThrowsUnauthorizedException()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
 
             Assert.Throws<UnauthorizedException>(() => _controller.GetUserHabits());
@@ -79,6 +81,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void GetUserHabits_ReturnsCollectionOfHabitsFromCache()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
@@ -90,6 +93,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void CreateHabit_ReturnsCreatedResult()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             PostHabit habit = new PostHabit("test");
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
@@ -105,6 +109,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void CreateHabit_ThrowsUnauthorizedException()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             PostHabit habit = new PostHabit("test");
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -114,6 +119,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void CreateHabit_ThrowsBadRequestException()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             PostHabit habit = new PostHabit("test");
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
@@ -127,6 +133,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void CreateHabit_ThrowsAppException()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             PostHabit habit = new PostHabit("test");
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
@@ -139,6 +146,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void UpdateHabit_ReturnsOkResult()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             PatchHabit habit = new PatchHabit(1234, "test", 7);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
@@ -154,6 +162,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void UpdateHabit_ThrowsUnauthorizedException()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             PatchHabit habit = new PatchHabit(1234, "test", 7);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -163,6 +172,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void UpdateHabit_ThrowsBadRequestException()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             PatchHabit habit = new PatchHabit(1234, "test", 7);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
@@ -174,6 +184,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void UpdateHabit_ThrowsAppException()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             PatchHabit habit = new PatchHabit(1234, "test", 7);
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
@@ -186,6 +197,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void DeleteHabit_ReturnsNoContentResult()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             int habitId = 1234;
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
@@ -200,6 +212,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void DeleteHabit_ThrowsUnauthorizedException()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             int habitId = 1234;
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -209,6 +222,7 @@ namespace HabitTracker.Server.Tests.Controller
         [Fact]
         public void DeleteHabit_ThrowsAppException()
         {
+            _controller = new HabitController(_mockLogger.Object, _mockEventService.Object, _mockHabitService.Object);
             int habitId = 1234;
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
