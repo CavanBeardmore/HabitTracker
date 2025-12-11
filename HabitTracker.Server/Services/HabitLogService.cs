@@ -3,6 +3,7 @@ using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Exceptions;
 using HabitTracker.Server.UnitsOfWork;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Services
 {
@@ -81,7 +82,7 @@ namespace HabitTracker.Server.Services
                 _logger.LogInformation("HabitLogService - GetAllByHabitId - getting all habit logs by habit id");
 
                 PaginatedHabitLogs result = _habitLogRepository.GetAllByHabitId(habitId, userId, pageNumber);
-
+   
                 if (result.HabitLogs.Any())
                 {
                     _logger.LogInformation("HabitLogService - GetAllByHabitId - found habit logs");
@@ -124,7 +125,7 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public HabitLog? Update(PatchHabitLog habitLog)
+        public HabitLog? Update(PatchHabitLog habitLog, int userId)
         {
             try
             {

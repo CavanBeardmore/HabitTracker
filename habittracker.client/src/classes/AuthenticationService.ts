@@ -95,4 +95,8 @@ export class AuthenticationService {
         localStorage.removeItem(AUTH_TOKEN);
         this._authToken = null;
     }
+
+    public ReplaceAuthToken(token: string): void {
+        localStorage.setItem(AUTH_TOKEN, token);
+    }
 }

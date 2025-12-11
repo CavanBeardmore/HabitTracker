@@ -13,7 +13,7 @@ namespace HabitTracker.Server.Services
 
         AddedHabitLogResult? Add(PostHabitLog habitLog, int userId);
 
-        HabitLog? Update(PatchHabitLog habitLog);
+        HabitLog? Update(PatchHabitLog habitLog, int userId);
 
         DeleteHabitLogResult Delete(int habitLogId, int userId);
 

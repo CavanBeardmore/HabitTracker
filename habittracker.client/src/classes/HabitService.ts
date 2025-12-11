@@ -55,7 +55,7 @@ export class HabitService {
 
     public async UpdateHabit(id: number, name: string, streakCount: number): Promise<void> {
         await this._httpService.Request(
-            `${this._backendUrl}/Habit/update`,
+            `${this._backendUrl}/Habit`,
             {
                 method: RequestMethod.PATCH,
                 headers: [
@@ -75,7 +75,7 @@ export class HabitService {
 
     public async DeleteHabit(id: number): Promise<void> {
         await this._httpService.Request(
-            `${this._backendUrl}/Habit/delete/${id}`,
+            `${this._backendUrl}/Habit/${id}`,
             {
                 method: RequestMethod.DELETE,
             }

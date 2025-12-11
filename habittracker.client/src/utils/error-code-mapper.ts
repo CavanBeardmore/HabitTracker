@@ -8,6 +8,8 @@ const errorCodeToMessageMap: Map<number, string> = new Map<number, string>([
 ])
 
 export const errorCodeMapper = (errorCode: number) => {
+    console.log("error code", errorCode)
     const message: string | undefined = errorCodeToMessageMap.get(errorCode);
+    console.log("message", message)
     return message ? message : "An error has occurred.";
 }

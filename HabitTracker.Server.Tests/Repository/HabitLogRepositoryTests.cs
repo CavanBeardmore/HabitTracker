@@ -101,7 +101,7 @@ namespace HabitTracker.Server.Tests.Repository
             int userId = 4321;
             uint pageNumber = 1;
             uint limit = 2;
-            uint offset = limit * pageNumber;
+            uint offset = limit * (pageNumber - 1);
             DateTime date = DateTime.UtcNow;
 
             IReadOnlyCollection<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>
@@ -147,7 +147,7 @@ namespace HabitTracker.Server.Tests.Repository
             int userId = 4321;
             uint pageNumber = 1;
             uint limit = 2;
-            uint offset = limit * pageNumber;
+            uint offset = limit * (pageNumber - 1);
             DateTime date = DateTime.UtcNow;
 
             IReadOnlyCollection<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>

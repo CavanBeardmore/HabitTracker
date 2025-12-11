@@ -198,9 +198,10 @@ namespace HabitTracker.Server.Tests.Services
             PatchHabitLog habitLog = new PatchHabitLog(1, true);
 
             DateTime date = DateTime.UtcNow;
+            int userId = 1;
             _mockHabitLogRepository.Setup(repository => repository.Update(habitLog)).Returns(new HabitLog(1234, 4321, date, true, 1));
 
-            var result = _service.Update(habitLog);
+            var result = _service.Update(habitLog, userId);
 
             Assert.NotNull(result);
             Assert.True(result.Id == 1234);
@@ -214,20 +215,20 @@ namespace HabitTracker.Server.Tests.Services
         public void Update_ThrowsAppExceptionWhenNullIsReturned()
         {
             PatchHabitLog habitLog = new PatchHabitLog(1, true);
-
+            int userId = 1;
             _mockHabitLogRepository.Setup(repository => repository.Update(habitLog)).Returns((HabitLog)null);
 
-            Assert.Throws<AppException>(() => _service.Update(habitLog));
+            Assert.Throws<AppException>(() => _service.Update(habitLog, userId));
         }
 
         [Fact]
         public void Update_ThrowsAppException()
         {
             PatchHabitLog habitLog = new PatchHabitLog(1, true);
-
+            int userId = 1;
             _mockHabitLogRepository.Setup(repository => repository.Update(habitLog)).Throws<AppException>(() => throw new AppException("test"));
 
-            Assert.Throws<AppException>(() => _service.Update(habitLog));
+            Assert.Throws<AppException>(() => _service.Update(habitLog, userId));
         }
 
         [Fact]
@@ -281,7 +282,7 @@ namespace HabitTracker.Server.Tests.Services
             int habitLogId = 1;
             int userId = 2;
 
-            _mockHabitLogRepository.Setup(repository => repository.Delete(habitLogId, userId)).Throws<AppException>(() => throw new AppException("test"));
+            _mockHabitLogRepository.Setup(repository => repository.GetById(habitLogId, userId)).Throws<AppException>(() => throw new AppException("test"));
 
             Assert.Throws<AppException>(() => _service.Delete(habitLogId, userId));
         }

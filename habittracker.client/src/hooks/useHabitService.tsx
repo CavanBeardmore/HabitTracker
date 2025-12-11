@@ -6,6 +6,7 @@ import { Habit } from "../data/Habit";
 import { EventType } from "../classes/ServerEventHandler";
 import { HabitLog } from "../data/HabitLog";
 import { createRandomUUID } from "../utils/createRandomUUID";
+import { useNavigate } from "react-router-dom";
 
 interface UseHabitServiceReturn {
     habit(id: number): Habit | null;
@@ -19,6 +20,8 @@ interface UseHabitServiceReturn {
     registerHabitEvents(): void;
 }
 export const useHabitService = (): UseHabitServiceReturn => {
+
+    const navigate = useNavigate();
 
     const habitService = Resolve<HabitService>(HabitService);
     const globalEventObserver = Resolve<GlobalEventObserver>(GlobalEventObserver);
@@ -67,7 +70,10 @@ export const useHabitService = (): UseHabitServiceReturn => {
         globalEventObserver.add(
             EventType.HABIT_DELETED, 
             `${EventType.HABIT_DELETED}_ID`,
-            (id: number) => deleteHabitFromState(id)
+            (id: number) => {
+                deleteHabitFromState(id);
+                navigate(-1)
+            }
         );
     }
 
@@ -127,11 +133,10 @@ export const useHabitService = (): UseHabitServiceReturn => {
         }
 
         if (status === 401 || status == 403) {
-            globalEventObserver.raise("UNAUTHED", errorMessage);
+            globalEventObserver.raise(EventType.UNAUTHED, errorMessage);
             return null;
         }
 
-        if (success === false) globalEventObserver.raise(EventType.ERROR);
         return null;
     };
 
@@ -144,11 +149,9 @@ export const useHabitService = (): UseHabitServiceReturn => {
         }
 
         if (status === 401 || status == 403) {
-            globalEventObserver.raise("UNAUTHED", errorMessage);
+            globalEventObserver.raise(EventType.UNAUTHED, errorMessage);
             return;
         }
-
-        if (success === false) globalEventObserver.raise(EventType.ERROR);
     }
 
     const addHabit = async (name: string): Promise<void> => await habitService.CreateHabit(name);

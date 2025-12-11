@@ -27,14 +27,14 @@ export const Header = () => {
                     src={atomic} 
                     alt="atomic-icon" 
                     height={50} 
-                    width={50} 
+                    width={50}
                 />
             </div>
             <div className="flex flex-row items-center justify-items-center space-x-8">
                 <button onClick={() => navigateToPath(HeaderButtonPath.HOME)}><Home className="text-stone-300" fontSize="large"/></button>
                 <button onClick={() => navigateToPath(HeaderButtonPath.HABITS)}><FactCheck className="text-stone-300" fontSize="large"/></button>
-                <button onClick={() => navigateToPath(HeaderButtonPath.LOGS)}><DateRange className="text-stone-300" fontSize="large"/></button>
-                <button onClick={() => navigateToPath(HeaderButtonPath.CHARTS)}><AutoGraph className="text-stone-300" fontSize="large"/></button>
+                {/* <button onClick={() => navigateToPath(HeaderButtonPath.LOGS)}><DateRange className="text-stone-300" fontSize="large"/></button>
+                <button onClick={() => navigateToPath(HeaderButtonPath.CHARTS)}><AutoGraph className="text-stone-300" fontSize="large"/></button> */}
                 <button onClick={() => navigateToPath(HeaderButtonPath.ACCOUNT)}><AccountBox className="text-stone-300" fontSize="large"/></button>
             </div>
         </div>

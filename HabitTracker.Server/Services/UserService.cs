@@ -3,7 +3,6 @@ using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Auth;
 using HabitTracker.Server.Exceptions;
-using System.Text.Json;
 
 namespace HabitTracker.Server.Services
 {
@@ -172,7 +171,7 @@ namespace HabitTracker.Server.Services
                     throw new AppException($"Could not update user of user id - {userId}");
                 }
 
-                _logger.LogInformation("UserService - Update - updated user");
+                _logger.LogInformation("UserService - Update - updated user {@User}", updatedUser);
                 return string.IsNullOrEmpty(user.NewUsername) == false ? new UpdatedUserResult(_auth.GenerateJWTToken(user.NewUsername), updatedUser) : null;
             }
             catch (BadRequestException ex)

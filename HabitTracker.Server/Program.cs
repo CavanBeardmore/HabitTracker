@@ -10,6 +10,7 @@ using HabitTracker.Server.Transformer;
 using HabitTracker.Server.UnitsOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -79,9 +80,17 @@ builder.Services.AddScoped<ITransformer<IReadOnlyCollection<User>, IReadOnlyColl
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IHabitRepository, HabitRepository>();
 builder.Services.AddScoped<IHabitLogRepository, HabitLogRepository>();
-builder.Services.AddSingleton<IRateLimitService, RateLimitService>();
-builder.Services.AddScoped<IHabitService, HabitService>();
-builder.Services.AddScoped<IHabitLogService, HabitLogService>((sp) =>
+builder.Services.AddScoped<IRateLimitService, RateLimitService>();
+builder.Services.AddScoped<HabitService>();
+builder.Services.AddScoped<IHabitService, CachedHabitService>((sp) =>
+{
+    return new CachedHabitService(
+        sp.GetRequiredService<HabitService>(),
+        sp.GetRequiredService<ILogger<CachedHabitService>>(),
+        sp.GetRequiredService<IMemoryCache>()
+    );
+});
+builder.Services.AddScoped<HabitLogService>((sp) =>
 {
     ILogger<HabitLogService> logger = sp.GetRequiredService<ILogger<HabitLogService>>();
     IHabitRepository habitRepository = sp.GetRequiredService<IHabitRepository>();
@@ -93,6 +102,14 @@ builder.Services.AddScoped<IHabitLogService, HabitLogService>((sp) =>
         habitLogRepository,
         logger,
         unit
+    );
+});
+builder.Services.AddScoped<IHabitLogService, CachedHabitLogService>((sp) =>
+{
+    return new CachedHabitLogService(
+        sp.GetRequiredService<HabitLogService>(),
+        sp.GetRequiredService<ILogger<CachedHabitLogService>>(),
+        sp.GetRequiredService<IMemoryCache>()
     );
 });
 builder.Services.AddScoped<IUserService, UserService>();
@@ -169,9 +186,9 @@ app.UseMiddleware<AddAuthQueryToHeaderMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<RateLimitingMiddleware>();
 app.UseMiddleware<UserIdMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<RateLimitingMiddleware>();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

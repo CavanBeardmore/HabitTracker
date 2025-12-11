@@ -15,7 +15,8 @@ export enum EventType {
     HABIT_LOG_ADDED = "HABIT_LOG_ADDED",
     HABIT_LOG_UPDATED = "HABIT_LOG_UPDATED",
     HABIT_LOG_DELETED = "HABIT_LOG_DELETED",
-    ERROR = "ERROR"
+    ERROR = "ERROR",
+    UNAUTHED = "UNAUTHED"
 }
 
 interface ServerEvent {

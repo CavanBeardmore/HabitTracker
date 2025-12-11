@@ -12,7 +12,7 @@ export class HabitLogService {
         return getToday();
     }
 
-    public async AddHabitLog(habitId: number): Promise<void> {
+    public async CreateHabitLog(habitId: number): Promise<void> {
         await this._httpService.Request(
             `${this._backendUrl}/HabitLog`,
             {

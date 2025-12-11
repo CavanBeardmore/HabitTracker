@@ -98,11 +98,9 @@ export const useHabitLogService = (): UseHabitLogServiceReturn => {
         }
 
         if (status === 401 || status == 403) {
-            globalEventObserver.raise("UNAUTHED", errorMessage);
+            globalEventObserver.raise(EventType.UNAUTHED, errorMessage);
             return null;
         }
-
-        if (success === false) globalEventObserver.raise(EventType.ERROR);
         return null;
     };
 
@@ -139,11 +137,10 @@ export const useHabitLogService = (): UseHabitLogServiceReturn => {
         }
 
         if (status === 401 || status == 403) {
-            globalEventObserver.raise("UNAUTHED", errorMessage);
+            globalEventObserver.raise(EventType.UNAUTHED, errorMessage);
             return [];
         }
-
-        if (success === false) globalEventObserver.raise(EventType.ERROR);
+        
         return [];
     }
 
@@ -153,7 +150,7 @@ export const useHabitLogService = (): UseHabitLogServiceReturn => {
             newMap.set(habitId, true);
             return newMap;
         })
-        await habitLogService.AddHabitLog(habitId);
+        await habitLogService.CreateHabitLog(habitId);
     }
 
     return {

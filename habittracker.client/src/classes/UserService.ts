@@ -23,7 +23,7 @@ export class UserService {
 
     public async GetUser(): Promise<HttpServiceRes<User>> {
         console.log("UserService - CreateUser - attempting to get user");
-        return await this._httpService.Request<User>(
+        return await this._authedHttpService.Request<User>(
             `${this._backendUrl}/User`,
             {
                 method: RequestMethod.GET,
@@ -53,9 +53,10 @@ export class UserService {
         console.log("UserService - UpdateUser - attempting to update user");
 
         await this._authedHttpService.Request(
-            `${this._backendUrl}/User/update`,
+            `${this._backendUrl}/User`,
             {
                 method: RequestMethod.PATCH,
+                headers: [{key: "Content-Type", value: "application/json"}],
                 body: JSON.stringify(args)
             }
         );
@@ -65,9 +66,10 @@ export class UserService {
         console.log("UserService - DeleteUser - attempting to delete user");
 
         await this._authedHttpService.Request(
-            `${this._backendUrl}/User/delete`,
+            `${this._backendUrl}/User`,
             {
                 method: RequestMethod.DELETE,
+                headers: [{key: "Content-Type", value: "application/json"}],
                 body: JSON.stringify(creds)
             }
         );

@@ -24,42 +24,20 @@ namespace HabitTracker.Server.Tests.Controller
             _mockHabitLogService = new Mock<IHabitLogService>();
             _mockLogger = new Mock<ILogger<HabitLogController>>();
             _mockEventService = new Mock<IEventService<HabitTrackerEvent>>();
-            _controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object, new MemoryCache(new MemoryCacheOptions()));
+            _controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object);
         }
         
         [Fact]
         public void GetMostRecentLogFromHabit_ReturnsOkObjectResult()
         {
             int habitId = 2;
-            IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
-            var controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object, cache);
-            controller.ControllerContext.HttpContext = new DefaultHttpContext();
-            controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
             HabitLog log = new HabitLog(1, 2, DateTime.UtcNow, true, 7);
 
             _mockHabitLogService.Setup(service => service.GetMostRecentByHabitId(habitId, 1234)).Returns(log);
 
-            var result = controller.GetMostRecentLogFromHabit(habitId);
-
-            var cachedLog = cache.Get("mostRecentHabitLog_user:1234_habit:2");
-
-            Assert.Equal(cachedLog, log);
-            Assert.IsType<OkObjectResult>(result);
-        }
-        
-        [Fact]
-        public void GetMostRecentLogFromHabit_ReturnsCachedHabitLog()
-        {
-            int habitId = 2;
-            HabitLog habitLog = new HabitLog(1, habitId, DateTime.UtcNow, true, 7);
-            IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
-            var controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object, cache);
-            controller.ControllerContext.HttpContext = new DefaultHttpContext();
-            controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
-            cache.Set("mostRecentHabitLog_user:1234_habit:2", habitLog);
-            
-            var result = controller.GetMostRecentLogFromHabit(habitId);
-
+            var result = _controller.GetMostRecentLogFromHabit(habitId);
             Assert.IsType<OkObjectResult>(result);
         }
 
@@ -158,25 +136,18 @@ namespace HabitTracker.Server.Tests.Controller
         public void CreateHabitLog_ReturnsCreatedResult()
         {
             PostHabitLog habitlog = new PostHabitLog(1, DateTime.UtcNow, true, 7);
-            HabitLog cacheableLog = new HabitLog(1, 2, DateTime.Now, true, 1);
-            IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
-            var controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object, cache);
-            controller.ControllerContext.HttpContext = new DefaultHttpContext();
-            controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
             var log = new HabitLog(1, 2, DateTime.Now, true, 7);
             var habit = new Habit(2, 5, "This is a test habit", 1);
-            cache.Set("mostRecentHabitLog_user:1234_habit:2", cacheableLog);
 
             _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns(new AddedHabitLogResult(
                 log,
                 habit
             ));
 
-            var result = controller.CreateHabitLog(habitlog);
+            var result = _controller.CreateHabitLog(habitlog);
 
-            var cachedLog = cache.Get("mostRecentHabitLog_user:1234_habit:2");
-            
-            Assert.Null(cachedLog);
             Assert.IsType<OkResult>(result);
         }
 
@@ -211,19 +182,12 @@ namespace HabitTracker.Server.Tests.Controller
         public void CreateHabitLog_ThrowsAppException()
         {
             PostHabitLog habitlog = new PostHabitLog(1, DateTime.UtcNow, true, 7);
-            HabitLog log = new HabitLog(1, 2, DateTime.Now, true, 1);
-            IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
-            var controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object, cache);
-            controller.ControllerContext.HttpContext = new DefaultHttpContext();
-            controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
-            cache.Set("mostRecentHabitLog_user:1234_habit:2", log);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
             _mockHabitLogService.Setup(service => service.Add(habitlog, 1234)).Returns(It.IsAny<AddedHabitLogResult>());
 
-            Assert.Throws<AppException>(() => controller.CreateHabitLog(habitlog));
-            var cachedLog = cache.Get("mostRecentHabitLog_user:1234_habit:2");
-            Assert.NotNull(cachedLog);
-            Assert.Equal(log, cachedLog);
+            Assert.Throws<AppException>(() => _controller.CreateHabitLog(habitlog));
         }
 
         [Fact]
@@ -231,20 +195,14 @@ namespace HabitTracker.Server.Tests.Controller
         {
             PatchHabitLog habitLog = new PatchHabitLog(1, true);
             HabitLog log = new HabitLog(1, 2, DateTime.Now, true, 1);
-            IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
-            var controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object, cache);
-            controller.ControllerContext.HttpContext = new DefaultHttpContext();
-            controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
-            cache.Set("mostRecentHabitLog_user:1234_habit:2", log);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockHabitLogService.Setup(service => service.Update(habitLog)).Returns(log);
+            _mockHabitLogService.Setup(service => service.Update(habitLog, 1234)).Returns(log);
 
-            var result = controller.UpdateHabitLog(habitLog);
-
-            var cachedLog = cache.Get("mostRecentHabitLog_user:1234_habit:2");
+            var result = _controller.UpdateHabitLog(habitLog);
             
             Assert.IsType<OkResult>(result);
-            Assert.Null(cachedLog);
         }
 
         [Fact]
@@ -261,18 +219,13 @@ namespace HabitTracker.Server.Tests.Controller
         {
             HabitLog log = new HabitLog(1, 2, DateTime.Now, true, 7); 
             PatchHabitLog habitLog = new PatchHabitLog(1, true);
-            IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
-            var controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object, cache);
-            controller.ControllerContext.HttpContext = new DefaultHttpContext();
-            controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
-            cache.Set("mostRecentHabitLog_user:1234_habit:2", log);
 
-            _mockHabitLogService.Setup(service => service.Update(habitLog)).Returns((HabitLog)null);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            Assert.Throws<AppException>(() => controller.UpdateHabitLog(habitLog));
-            var cachedLog = cache.Get("mostRecentHabitLog_user:1234_habit:2");
-            Assert.NotNull(cachedLog);
-            Assert.Equal(log, cachedLog);
+            _mockHabitLogService.Setup(service => service.Update(habitLog, 1234)).Returns((HabitLog)null);
+
+            Assert.Throws<AppException>(() => _controller.UpdateHabitLog(habitLog));
         }
 
         [Fact]
@@ -280,20 +233,15 @@ namespace HabitTracker.Server.Tests.Controller
         {
             int habitLogId = 1;
             HabitLog log = new HabitLog(habitLogId, 2, DateTime.Now, true, 1);
-            IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
-            var controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object, cache);
-            controller.ControllerContext.HttpContext = new DefaultHttpContext();
-            controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
-            cache.Set("mostRecentHabitLog_user:1234_habit:2", log);
+
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
             _mockHabitLogService.Setup(service => service.Delete(habitLogId, 1234)).Returns(new DeleteHabitLogResult(true, log));
 
-            var result = controller.DeleteHabitLog(habitLogId);
-            
-            var cachedLog = cache.Get("mostRecentHabitLog_user:1234_habit:2");
+            var result = _controller.DeleteHabitLog(habitLogId);
 
             Assert.IsType<NoContentResult>(result);
-            Assert.Null(cachedLog);
         }
 
         [Fact]
@@ -310,18 +258,12 @@ namespace HabitTracker.Server.Tests.Controller
         {
             int habitLogId = 1;
             HabitLog log = new HabitLog(habitLogId, 2, DateTime.Now, true, 1);
-            IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
-            var controller = new HabitLogController(_mockLogger.Object, _mockHabitLogService.Object, _mockEventService.Object, cache);
-            controller.ControllerContext.HttpContext = new DefaultHttpContext();
-            controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
-            cache.Set("mostRecentHabitLog_user:1234_habit:2", log);
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
             _mockHabitLogService.Setup(service => service.Delete(habitLogId, 1234)).Returns(new DeleteHabitLogResult(false, log));
 
-            Assert.Throws<AppException>(() => controller.DeleteHabitLog(habitLogId));
-            var cachedLog = cache.Get("mostRecentHabitLog_user:1234_habit:2");
-            Assert.NotNull(cachedLog);
-            Assert.Equal(log, cachedLog);
+            Assert.Throws<AppException>(() => _controller.DeleteHabitLog(habitLogId));
         }
     }
 }

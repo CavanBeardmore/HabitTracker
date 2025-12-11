@@ -80,11 +80,11 @@ namespace HabitTracker.Server.Controllers
             }
             
             _logger.LogInformation("UserController - GetUser - successfully retrieved user");
-            return Ok(user);
+            return Ok(new { Email = user.Email, Username = user.Username});
         }
         
         [Authorize]
-        [HttpPatch("update")]
+        [HttpPatch()]
         public IActionResult UpdateUser([FromBody] PatchUser user)
         {
             _logger.LogInformation("UserController - UpdateUser - invoked");
@@ -116,7 +116,7 @@ namespace HabitTracker.Server.Controllers
         }
 
         [Authorize]
-        [HttpDelete("delete")]
+        [HttpDelete()]
         public IActionResult DeleteUser([FromBody] AuthUser user)
         {
             _logger.LogInformation("UserController - DeleteUser - invoked");

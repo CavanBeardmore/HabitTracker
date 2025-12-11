@@ -24,7 +24,7 @@ export const SelectedHabit = () => {
 
     const onDeleteHabit = () => {
         if (selectedHabit?.Id) {
-            deleteHabit(selectedHabit?.Id);
+            deleteHabit(selectedHabit.Id);
         }
     }
 
