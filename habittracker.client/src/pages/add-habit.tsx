@@ -6,7 +6,6 @@ import { Autorenew } from "@mui/icons-material";
 import { Resolve } from "@here-mobility/micro-di";
 import { GlobalEventObserver } from "../classes/GlobalEventObserver";
 import { EventType } from "../classes/ServerEventHandler";
-import { Habit } from "../data/Habit";
 import { useHabitService } from "../hooks/useHabitService";
 
 export const AddHabit = () => {
