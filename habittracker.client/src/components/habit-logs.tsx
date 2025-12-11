@@ -1,6 +1,6 @@
-import { Autorenew, Beenhere, ChevronLeft, ChevronRight } from "@mui/icons-material"
+import { Autorenew, Beenhere } from "@mui/icons-material"
 import { HabitLog } from "../data/HabitLog"
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Paginator } from "./paginator";
 
 interface HabitLogsProps {

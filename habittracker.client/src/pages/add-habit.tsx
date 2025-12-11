@@ -42,7 +42,7 @@ export const AddHabit = () => {
     }
 
     useEffect(() => {
-        globalEventObserver.add(EventType.HABIT_ADDED, `${EventType.HABIT_ADDED}_ID`, (habit: Habit) => {
+        globalEventObserver.add(EventType.HABIT_ADDED, `${EventType.HABIT_ADDED}_ID`, () => {
             showToast("Successfully added your new habit", [])
         })
 

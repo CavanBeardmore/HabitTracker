@@ -2,7 +2,6 @@ import { Resolve } from "@here-mobility/micro-di";
 import { UpdateUserArgs, UserService } from "../classes/UserService";
 import { GlobalEventObserver } from "../classes/GlobalEventObserver";
 import { EventType } from "../classes/ServerEventHandler";
-import { createRandomUUID } from "../utils/createRandomUUID";
 import { AuthenticationService, Credentials } from "../classes/AuthenticationService";
 import { useState } from "react";
 import { User } from "../data/User";

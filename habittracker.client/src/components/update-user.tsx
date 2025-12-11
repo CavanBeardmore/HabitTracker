@@ -1,7 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react"
 import { UpdateUserArgs } from "../classes/UserService"
 import { User } from "../data/User";
-import { Autorenew } from "@mui/icons-material";
 
 export const UpdateUser = ({userDetails, onUpdateUser}: {userDetails: User, onUpdateUser: (data: UpdateUserArgs) => void}) => {
     const [updateUserData, setUpdateUserData] = useState<UpdateUserArgs>({Email: userDetails.Email, NewUsername: userDetails.Username});
