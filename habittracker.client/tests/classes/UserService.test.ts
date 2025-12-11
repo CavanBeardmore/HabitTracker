@@ -43,7 +43,7 @@ describe("UserService", () => {
 
             await userService.GetUser();
 
-            expect(nonAuthedRequest).toBeCalledWith(
+            expect(authedRequest).toBeCalledWith(
                 "/testurl/User",
                 {
                     method: RequestMethod.GET,
@@ -62,7 +62,7 @@ describe("UserService", () => {
                 } as User
             };
 
-            nonAuthedRequest.mockResolvedValue(data);
+            authedRequest.mockResolvedValue(data);
 
             const result = await userService.GetUser();
 
