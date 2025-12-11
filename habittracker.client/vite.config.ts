@@ -71,5 +71,13 @@ export default defineConfig({
         globals: true,
         silent: true,
         environment: 'jsdom'
+    },
+
+    build: {
+        terserOptions: {
+            compress: {
+                drop_console: true
+            }
+        }
     }
 })

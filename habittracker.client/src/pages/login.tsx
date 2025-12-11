@@ -120,7 +120,7 @@ export const Login = ({ onLoginSubmit, onRegisterSubmit }: LoginProps) => {
 
     return (
         <Wrapper>
-            <div className="flex flex-col justify-center text-center items-center bg-gray-700 h-fit w-[45%] rounded-lg m-auto py-8 shadow-lg">
+            <div className="flex flex-col justify-center text-center items-center bg-gray-700 h-fit w-full rounded-lg m-auto py-8 shadow-lg">
                 <div className="flex flex-col w-[85%] space-y-4">
                     <img src={atomic} alt="atomic-icon" height={100} width={100} className="m-auto"/>
                     <p className="text-stone-300 font-bold text-3xl">ATOMIC TRACKER</p>

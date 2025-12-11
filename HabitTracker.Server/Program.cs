@@ -22,10 +22,17 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://localhost:5173") // Frontend port
+        if (builder.Environment.IsProduction())
+        {
+            policy.WithOrigins("https://atomictracker.beardmore.dev")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        } else
+        {
+            policy.WithOrigins("https://localhost:5173")
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials(); // Optional: if you're sending cookies
+              .AllowAnyMethod();
+        }
     });
 });
 

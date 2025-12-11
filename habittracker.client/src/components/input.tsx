@@ -31,7 +31,7 @@ export const Input = ({
         <div className="relative flex flex-row bg-gray-500 p-2 rounded-md text-stone-300 placeholder:text-stone-300 border-stone-300 border-1 w-full">
             <input 
                 required={required}
-                className="flex-grow placeholder:text-stone-300 focus:outline-none"
+                className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap placeholder:text-stone-300 focus:outline-none"
                 type={isVisible ? InputType.TEXT : type}
                 onChange={onChange} 
                 value={value} 

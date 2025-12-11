@@ -34,7 +34,7 @@ RegisterResolver(HabitLogService, () => new HabitLogService(VITE_BACKEND_URL, Re
 RegisterResolver(UserService, () => new UserService(VITE_BACKEND_URL, Resolve<HttpService>(HttpService), Resolve<AuthedHttpService>(AuthedHttpService)));
 
 createRoot(document.getElementById('root')!).render(
-  <BrowserRouter>
+  <BrowserRouter basename='/'>
     <App />
   </BrowserRouter>
 )
