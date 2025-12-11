@@ -76,13 +76,12 @@ export const App = () => {
     const handleError = (error: {statusCode: number, errorMessage: string}) => {
         showToast(error.errorMessage, []);
         if (error.statusCode === UNAUTHORISED_CODE) {
-            closeServerConnection();
-            authService.RemoveAuthToken();
             handleUnauthed();
         }
     }
 
     const handleUnauthed = () => {
+        authService.RemoveAuthToken();
         setIsAuthed(false);
         closeServerConnection();
         navigate("/login");
