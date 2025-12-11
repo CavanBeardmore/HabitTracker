@@ -3,6 +3,7 @@ using HabitTracker.Server.Storage;
 using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Transformer;
 using System.Data.Common;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Repository
 {
@@ -17,11 +18,11 @@ namespace HabitTracker.Server.Repository
             _transformer = transformer;
         }
 
-        public Tuple<IReadOnlyCollection<HabitLog>, bool> GetAllByHabitId(int id, int userId, uint pageNumber, uint limit = 30)
+        public PaginatedHabitLogs GetAllByHabitId(int id, int userId, uint pageNumber, uint limit = 30)
         {
             string query = "SELECT hl.* FROM HabitLogs hl INNER JOIN Habits h ON hl.Habit_id = h.Id INNER JOIN Users u ON h.User_id = u.Id WHERE hl.Habit_id = @id AND u.Id = @userId AND u.IsDeleted = 0 ORDER BY Start_date DESC LIMIT @limit OFFSET @offset;";
 
-            uint offset = limit * pageNumber;
+            uint offset = limit * (pageNumber - 1);
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "@id", id },
@@ -34,11 +35,12 @@ namespace HabitTracker.Server.Repository
                 query,
                 parameters
             );
+            Console.WriteLine(JsonSerializer.Serialize(result));
 
             IReadOnlyCollection<HabitLog> limitedList = _transformer.Transform(result.Take((int)limit).ToList());
             bool hasMore = result.Count > limit;
 
-            return Tuple.Create(limitedList, hasMore);
+            return new PaginatedHabitLogs(limitedList, hasMore);
         }
 
         public HabitLog? GetById(int habitLogId, int userId)

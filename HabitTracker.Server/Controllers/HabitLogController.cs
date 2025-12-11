@@ -6,12 +6,13 @@ using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Exceptions;
 using System.Text.Json;
 using HabitTracker.Server.SSE;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace HabitTracker.Server.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("habitLogs/[controller]")]
+    [Route("[controller]")]
     public class HabitLogController : ControllerBase
     {
 
@@ -19,7 +20,11 @@ namespace HabitTracker.Server.Controllers
         private readonly ILogger<HabitLogController> _logger;
         private readonly IEventService<HabitTrackerEvent> _eventService;
 
-        public HabitLogController(ILogger<HabitLogController>  logger, IHabitLogService habitLogService, IEventService<HabitTrackerEvent> eventService)
+        public HabitLogController(
+            ILogger<HabitLogController>  logger, 
+            IHabitLogService habitLogService, 
+            IEventService<HabitTrackerEvent> eventService
+            )
         {
             _logger = logger;
             _habitLogService = habitLogService;
@@ -35,7 +40,7 @@ namespace HabitTracker.Server.Controllers
 
             return userId;
         }
-
+        
         [Authorize]
         [HttpGet("{habitLogId}")]
         public IActionResult GetHabitLog(int habitLogId)
@@ -62,7 +67,7 @@ namespace HabitTracker.Server.Controllers
         {
             _logger.LogInformation("HabitLogController - GetMostRecentLogFromHabit - invoked");
             int userId = GetUserId();
-
+            
             _logger.LogInformation("HabitLogController - GetMostRecentLogFromHabit - getting most recent habit log for user - {@Userid} that belongs to habit {@Habitid}", userId, habitId);
             HabitLog? habitLog = _habitLogService.GetMostRecentByHabitId(habitId, userId);
 
@@ -83,7 +88,7 @@ namespace HabitTracker.Server.Controllers
             int userId = GetUserId();
 
             _logger.LogInformation("HabitLogController - GetHabitLogsFromHabit - getting habit logs from habit id for - {@Userid}", userId);
-            Tuple<IReadOnlyCollection<HabitLog>, bool>? result = _habitLogService.GetAllByHabitId(habitId, userId, pageNumber);
+            PaginatedHabitLogs? result = _habitLogService.GetAllByHabitId(habitId, userId, pageNumber);
 
             if (result == null)
             {
@@ -91,7 +96,7 @@ namespace HabitTracker.Server.Controllers
             }
 
             _logger.LogInformation("HabitLogController - GetHabitLogsFromHabit - successfully retrieved habit logs - {@Result} from habit id for - {@Userid}", result, userId);
-            return Ok(new { habitLogs = result.Item1, hasMore = result.Item2});
+            return Ok(new { habitLogs = result.HabitLogs, hasMore = result.HasMore});
         }
 
         [Authorize]
@@ -127,7 +132,7 @@ namespace HabitTracker.Server.Controllers
         }
 
         [Authorize]
-        [HttpPatch("update")]
+        [HttpPatch()]
         public IActionResult UpdateHabitLog([FromBody] PatchHabitLog habitLog)
         {
             if (!ModelState.IsValid)
@@ -145,7 +150,8 @@ namespace HabitTracker.Server.Controllers
 
             _logger.LogInformation("HabitLogController - UpdateHabitLog - invoked");
             _logger.LogInformation("HabitLogController - UpdateHabitLog - updating habit log");
-            HabitLog? updatedLog = _habitLogService.Update(habitLog);
+
+            HabitLog? updatedLog = _habitLogService.Update(habitLog, userId);
 
             if (updatedLog != null)
             {
@@ -158,16 +164,16 @@ namespace HabitTracker.Server.Controllers
         }
 
         [Authorize]
-        [HttpDelete("delete/{habitLogId}")]
+        [HttpDelete("/{habitLogId}")]
         public IActionResult DeleteHabitLog(int habitLogId)
         {
             _logger.LogInformation("HabitLogController - DeleteHabitLog - invoked");
             int userId = GetUserId();
 
             _logger.LogInformation("HabitLogController - DeleteHabitLog - deleting habit log for {@Userid}", userId);
-            bool success = _habitLogService.Delete(habitLogId, userId);
+            DeleteHabitLogResult result = _habitLogService.Delete(habitLogId, userId);
 
-            if (success)
+            if (result.Success)
             {
                 _logger.LogInformation("HabitLogController - DeleteHabitLog - successfully deleted habit log for {@Userid}", userId);
                 _eventService.AddEvent(userId, new HabitTrackerEvent(HabitTrackerEventTypes.HABIT_LOG_DELETED, habitLogId));

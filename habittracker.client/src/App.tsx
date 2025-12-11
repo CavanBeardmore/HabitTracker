@@ -10,11 +10,11 @@ import { IServerEventHandler } from './classes/IServerEventHandler';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { EventType } from './classes/ServerEventHandler';
 import { Habits } from './pages/habits';
-import { ToastContainer } from './components/toast/toast-container';
-import { AddHabit } from './pages/add-habit';
+import { ToastContainer } from './components/toast/toast-container';;
 import { useToast } from './hooks/useToast';
-import { SelectedHabit } from './pages/habit';
 import { Account } from './pages/account';
+import { AddHabit } from './pages/add-habit';
+import { SelectedHabit } from './pages/habit';
 
 const UNAUTHORISED_CODE = 401;
 
@@ -73,9 +73,9 @@ export const App = () => {
         sseEventHandler.CloseConnection();
     }
 
-    const handleError = (statusCode: number, message: string) => {
-        showToast(message, []);
-        if (statusCode === UNAUTHORISED_CODE) {
+    const handleError = (error: {statusCode: number, errorMessage: string}) => {
+        showToast(error.errorMessage, []);
+        if (error.statusCode === UNAUTHORISED_CODE) {
             closeServerConnection();
             authService.RemoveAuthToken();
             handleUnauthed();
@@ -84,6 +84,7 @@ export const App = () => {
 
     const handleUnauthed = () => {
         setIsAuthed(false);
+        closeServerConnection();
         navigate("/login");
     }
 
@@ -96,22 +97,63 @@ export const App = () => {
             return;
         }
 
-        createServerConnection();
         setIsAuthed(true);
+    }, []);
+
+    useEffect(() => {
+        if (!isAuthed) return;
+
+        createServerConnection();
+
+        return () => {
+            if (!isAuthed) return;
+            closeServerConnection();
+        } 
+    }, [isAuthed]);
+
+    useEffect(() => {
         globalEvents.add(
             EventType.ERROR, 
             `APP_${EventType.ERROR}_ID`, 
-            ({statusCode, errorMessage}: {statusCode: number, errorMessage: string}) => handleError(statusCode, errorMessage)
+            (error: {statusCode: number, errorMessage: string}) => handleError(error)
         );
+
+        globalEvents.add(
+            EventType.UNAUTHED, 
+            `APP_${EventType.UNAUTHED}_ID`, 
+            () => {
+                console.log("HANDLING UNAUTHED");
+                handleUnauthed();
+            }
+        );
+
+        globalEvents.add(
+            EventType.USER_DELETED,
+            `APP_${EventType.USER_DELETED}_ID`, 
+            () => {
+                setTimeout(() => {
+                    handleUnauthed();
+                }, 2_000);
+            }
+        )
 
         return () => {
             globalEvents.remove(
                 EventType.ERROR, 
                 `${EventType.ERROR}_ID`,
             );
+            globalEvents.remove(
+                EventType.UNAUTHED, 
+                `APP_${EventType.UNAUTHED}_ID`,
+            );
+            globalEvents.remove(
+                EventType.USER_DELETED,
+                `APP_${EventType.USER_DELETED}_ID`,
+            )
             closeServerConnection();
         }
-    }, []);
+
+    }, [globalEvents])
 
     return (
         <div className='w-full font-sans'>
@@ -119,9 +161,9 @@ export const App = () => {
                 <Routes>
                     <Route path={Paths.HOME} element={<Home />} />
                     <Route path={Paths.HABITS} element={<Habits />} />
-                    {/* <Route path={Paths.HABITS_ADD} element={<AddHabit />} />
-                    <Route path={Paths.HABIT} element={<SelectedHabit />} /> */}
-                    <Route path={Paths.ACCOUNT} element={<Account />} />
+                    <Route path={Paths.HABITS_ADD} element={<AddHabit />} />
+                    <Route path={Paths.HABIT} element={<SelectedHabit />} />
+                    <Route path={Paths.ACCOUNT} element={<Account onLogOut={handleUnauthed} />} />
                 </Routes>
             )}
             {isAuthed === false && (

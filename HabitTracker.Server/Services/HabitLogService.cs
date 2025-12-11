@@ -3,6 +3,7 @@ using HabitTracker.Server.DTOs;
 using HabitTracker.Server.Models;
 using HabitTracker.Server.Exceptions;
 using HabitTracker.Server.UnitsOfWork;
+using System.Text.Json;
 
 namespace HabitTracker.Server.Services
 {
@@ -74,15 +75,15 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public Tuple<IReadOnlyCollection<HabitLog>, bool>? GetAllByHabitId(int habitId, int userId, uint pageNumber)
+        public PaginatedHabitLogs? GetAllByHabitId(int habitId, int userId, uint pageNumber)
         {
             try
             {
                 _logger.LogInformation("HabitLogService - GetAllByHabitId - getting all habit logs by habit id");
 
-                Tuple<IReadOnlyCollection<HabitLog>, bool> result = _habitLogRepository.GetAllByHabitId(habitId, userId, pageNumber);
-
-                if (result.Item1.Count() != 0)
+                PaginatedHabitLogs result = _habitLogRepository.GetAllByHabitId(habitId, userId, pageNumber);
+   
+                if (result.HabitLogs.Any())
                 {
                     _logger.LogInformation("HabitLogService - GetAllByHabitId - found habit logs");
                     return result;
@@ -124,7 +125,7 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public HabitLog? Update(PatchHabitLog habitLog)
+        public HabitLog? Update(PatchHabitLog habitLog, int userId)
         {
             try
             {
@@ -148,12 +149,23 @@ namespace HabitTracker.Server.Services
             }
         }
 
-        public bool Delete(int habitLogId, int userId)
+        public DeleteHabitLogResult Delete(int habitLogId, int userId)
         {
             try
             {
+                _logger.LogInformation("HabitLogService - Delete - checking if habit log exists");
+                HabitLog? habitLog = _habitLogRepository.GetById(habitLogId, userId);
+
+                if (habitLog == null)
+                {
+                    _logger.LogInformation("HabitLogService - Delete - habit log doesn't exist");
+                    return new DeleteHabitLogResult(false, habitLog);
+                }
+                
                 _logger.LogInformation("HabitLogService - Delete - deleting habit log");
-                return _habitLogRepository.Delete(habitLogId, userId);
+                bool success =  _habitLogRepository.Delete(habitLogId, userId);
+                
+                return new DeleteHabitLogResult(success, success ? habitLog : null);
             }
             catch
             {

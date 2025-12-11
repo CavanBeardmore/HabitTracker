@@ -1,38 +1,8 @@
-interface Header {
-    key: string,
-    value: string
-}
+import { httpOptions, HttpServiceRes, Param, Header, IHttpService } from "./IHttpService";
 
-interface Param {
-    key: string,
-    value: any
-}
+export class HttpService implements IHttpService {
 
-export enum RequestMethod {
-    GET = "GET",
-    PATCH = "PATCH",
-    POST = "POST",
-    DELETE = "DELETE"
-} 
-
-export interface httpOptions {
-    method: RequestMethod
-    headers?: Header[],
-    params?: Param[]
-    body?: string,
-}
-
-export interface HttpServiceRes<T = null> {
-    success: boolean;
-    status: number;
-    data: T | null
-    errorMessage?: string;
-}
-
-export abstract class HttpService {
-
-    protected async Request<T>(url: string, options: httpOptions): Promise<HttpServiceRes<T>> {
-
+    public async Request<T>(url: string, options: httpOptions): Promise<HttpServiceRes<T>> {
         const {
             method,
             params,

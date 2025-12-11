@@ -101,7 +101,7 @@ namespace HabitTracker.Server.Tests.Repository
             int userId = 4321;
             uint pageNumber = 1;
             uint limit = 2;
-            uint offset = limit * pageNumber;
+            uint offset = limit * (pageNumber - 1);
             DateTime date = DateTime.UtcNow;
 
             IReadOnlyCollection<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>
@@ -132,8 +132,8 @@ namespace HabitTracker.Server.Tests.Repository
             var result = _repository.GetAllByHabitId(id, userId, pageNumber, 2);
 
             Assert.NotNull(result);
-            Assert.True(result.Item1.Any());
-            Assert.Contains(result.Item1, hl => hl.Id == 1
+            Assert.True(result.HabitLogs.Any());
+            Assert.Contains(result.HabitLogs, hl => hl.Id == 1
                                           && hl.Habit_id == id
                                           && hl.Start_date == date
                                           && hl.Habit_logged == true
@@ -147,7 +147,7 @@ namespace HabitTracker.Server.Tests.Repository
             int userId = 4321;
             uint pageNumber = 1;
             uint limit = 2;
-            uint offset = limit * pageNumber;
+            uint offset = limit * (pageNumber - 1);
             DateTime date = DateTime.UtcNow;
 
             IReadOnlyCollection<IReadOnlyDictionary<string, object>> facadeData = new List<IReadOnlyDictionary<string, object>>
@@ -192,7 +192,7 @@ namespace HabitTracker.Server.Tests.Repository
             var result = _repository.GetAllByHabitId(id, userId, pageNumber, 2);
 
             Assert.NotNull(result);
-            Assert.True(result.Item2);
+            Assert.True(result.HasMore);
         }
 
         [Fact]

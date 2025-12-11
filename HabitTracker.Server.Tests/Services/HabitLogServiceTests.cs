@@ -75,13 +75,13 @@ namespace HabitTracker.Server.Tests.Services
             uint pageNumber = 3;
             DateTime date = DateTime.UtcNow;
 
-            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 30)).Returns(Tuple.Create<IReadOnlyCollection<HabitLog>, bool>(new List<HabitLog> { new HabitLog(1, 2, date, true, 7) }, true));
+            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 30)).Returns(new PaginatedHabitLogs(new List<HabitLog> { new HabitLog(1, 2, date, true, 7) }, true));
 
             var result = _service.GetAllByHabitId(habitId, userId, pageNumber);
 
             Assert.NotNull(result);
-            Assert.True(result.Item1.Any());
-            Assert.Contains(result.Item1, hl => hl.Id == 1 
+            Assert.True(result.HabitLogs.Any());
+            Assert.Contains(result.HabitLogs, hl => hl.Id == 1 
                 && hl.Habit_id == 2
                 && hl.Start_date == date
                 && hl.Habit_logged == true
@@ -97,7 +97,7 @@ namespace HabitTracker.Server.Tests.Services
             uint pageNumber = 3;
             DateTime date = DateTime.UtcNow;
 
-            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 30)).Returns(Tuple.Create<IReadOnlyCollection<HabitLog>, bool>(Array.Empty<HabitLog>(), false));
+            _mockHabitLogRepository.Setup(repository => repository.GetAllByHabitId(habitId, userId, pageNumber, 30)).Returns(new PaginatedHabitLogs(Array.Empty<HabitLog>(), false));
 
             Assert.Throws<NotFoundException>(() => _service.GetAllByHabitId(habitId, userId, pageNumber));
         }
@@ -198,9 +198,10 @@ namespace HabitTracker.Server.Tests.Services
             PatchHabitLog habitLog = new PatchHabitLog(1, true);
 
             DateTime date = DateTime.UtcNow;
+            int userId = 1;
             _mockHabitLogRepository.Setup(repository => repository.Update(habitLog)).Returns(new HabitLog(1234, 4321, date, true, 1));
 
-            var result = _service.Update(habitLog);
+            var result = _service.Update(habitLog, userId);
 
             Assert.NotNull(result);
             Assert.True(result.Id == 1234);
@@ -214,20 +215,20 @@ namespace HabitTracker.Server.Tests.Services
         public void Update_ThrowsAppExceptionWhenNullIsReturned()
         {
             PatchHabitLog habitLog = new PatchHabitLog(1, true);
-
+            int userId = 1;
             _mockHabitLogRepository.Setup(repository => repository.Update(habitLog)).Returns((HabitLog)null);
 
-            Assert.Throws<AppException>(() => _service.Update(habitLog));
+            Assert.Throws<AppException>(() => _service.Update(habitLog, userId));
         }
 
         [Fact]
         public void Update_ThrowsAppException()
         {
             PatchHabitLog habitLog = new PatchHabitLog(1, true);
-
+            int userId = 1;
             _mockHabitLogRepository.Setup(repository => repository.Update(habitLog)).Throws<AppException>(() => throw new AppException("test"));
 
-            Assert.Throws<AppException>(() => _service.Update(habitLog));
+            Assert.Throws<AppException>(() => _service.Update(habitLog, userId));
         }
 
         [Fact]
@@ -235,25 +236,44 @@ namespace HabitTracker.Server.Tests.Services
         {
             int habitLogId = 1;
             int userId = 2;
+            HabitLog log = new HabitLog(1, 3, DateTime.UtcNow, true, 1);
 
+            _mockHabitLogRepository.Setup(repository => repository.GetById(habitLogId, userId)).Returns(log);
             _mockHabitLogRepository.Setup(repository => repository.Delete(habitLogId, userId)).Returns(true);
 
             var result = _service.Delete(habitLogId, userId);
 
-            Assert.True(result);
+            Assert.True(result.Success);
+            Assert.Equal(result.HabitLog, log);
         }
 
         [Fact]
-        public void Delete_ReturnsFalse()
+        public void Delete_ReturnsFalseIfLogIsNotFound()
         {
             int habitLogId = 1;
             int userId = 2;
 
+            _mockHabitLogRepository.Setup(repository => repository.GetById(habitLogId, userId)).Returns((HabitLog)null);
+            var result = _service.Delete(habitLogId, userId);
+
+            Assert.False(result.Success);
+            Assert.Null(result.HabitLog);
+        }
+        
+        [Fact]
+        public void Delete_ReturnsFalseIfDeleteFails()
+        {
+            int habitLogId = 1;
+            int userId = 2;
+            HabitLog log = new HabitLog(1, 3, DateTime.UtcNow, true, 1);
+
+            _mockHabitLogRepository.Setup(repository => repository.GetById(habitLogId, userId)).Returns(log);
             _mockHabitLogRepository.Setup(repository => repository.Delete(habitLogId, userId)).Returns(false);
 
             var result = _service.Delete(habitLogId, userId);
 
-            Assert.False(result);
+            Assert.False(result.Success);
+            Assert.Null(result.HabitLog);
         }
 
         [Fact]
@@ -262,7 +282,7 @@ namespace HabitTracker.Server.Tests.Services
             int habitLogId = 1;
             int userId = 2;
 
-            _mockHabitLogRepository.Setup(repository => repository.Delete(habitLogId, userId)).Throws<AppException>(() => throw new AppException("test"));
+            _mockHabitLogRepository.Setup(repository => repository.GetById(habitLogId, userId)).Throws<AppException>(() => throw new AppException("test"));
 
             Assert.Throws<AppException>(() => _service.Delete(habitLogId, userId));
         }

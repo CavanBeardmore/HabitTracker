@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Server.Services;
 using HabitTracker.Server.DTOs;
+using HabitTracker.Server.Exceptions;
 
 namespace HabitTracker.Server.Middleware
 {
@@ -17,21 +18,18 @@ namespace HabitTracker.Server.Middleware
         public async Task InvokeAsync(HttpContext context, IUserService userService)
         {
             string? username = context.User.Identity?.Name;
-            
+
             if (username != null)
             {
-                User? user = userService.GetByUsername(username);
+                User? user = userService.Get(username);
 
                 if (user != null)
                 {
                     int userId = user.Id;
                     context.Items.Add("userId", userId);
                 }
-            } else
-            {
-                _logger.LogInformation("UserIdMiddleware - InvokeAsync - No username found in JWT");
             }
-
+                    
             await _next(context);
         }
     }

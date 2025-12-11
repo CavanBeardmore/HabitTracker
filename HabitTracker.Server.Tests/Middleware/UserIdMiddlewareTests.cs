@@ -1,12 +1,11 @@
 ﻿using HabitTracker.Server.Middleware;
 using HabitTracker.Server.Services;
-using HabitTracker.Server.SSE;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using HabitTracker.Server.DTOs;
 using System.Security.Claims;
-using Xunit.Abstractions;
+using HabitTracker.Server.Exceptions;
 
 namespace HabitTracker.Server.Tests.Middleware
 {
@@ -54,7 +53,7 @@ namespace HabitTracker.Server.Tests.Middleware
             var loggerMock = new Mock<ILogger<UserIdMiddleware>>();
             var userServiceMock = new Mock<IUserService>();
 
-            userServiceMock.Setup(service => service.GetByUsername("test")).Returns(new User(1, "test", "test", "test"));
+            userServiceMock.Setup(service => service.Get("test")).Returns(new User(1, "test", "test", "test"));
 
             var wasNextCalled = false;
             RequestDelegate next = ctx =>
@@ -74,7 +73,7 @@ namespace HabitTracker.Server.Tests.Middleware
         }
 
         [Fact]
-        public async Task UserIdMiddleware_ShouldCallGetByUsernameButNotAddItemIfUserIsNull()
+        public async Task UserIdMiddleware_ShouldCallGetByUsernameAndThrowUnauthorizedExceptionIfUserIsNull()
         {
             var context = new DefaultHttpContext();
             var identity = new ClaimsIdentity(
@@ -88,7 +87,7 @@ namespace HabitTracker.Server.Tests.Middleware
             var loggerMock = new Mock<ILogger<UserIdMiddleware>>();
             var userServiceMock = new Mock<IUserService>();
 
-            userServiceMock.Setup(service => service.GetByUsername("test")).Returns((User)null);
+            userServiceMock.Setup(service => service.Get("test")).Returns((User)null);
 
             var wasNextCalled = false;
             RequestDelegate next = ctx =>
@@ -99,10 +98,12 @@ namespace HabitTracker.Server.Tests.Middleware
 
             var middleware = new UserIdMiddleware(loggerMock.Object, next);
 
-            await middleware.InvokeAsync(context, userServiceMock.Object);
-
-            userServiceMock.Verify(service => service.GetByUsername("test"), Times.Once());
-            Assert.True(wasNextCalled);
+            await Assert.ThrowsAsync<UnauthorizedException>(async () =>
+            {
+                await middleware.InvokeAsync(context, userServiceMock.Object);
+            });
+            userServiceMock.Verify(service => service.Get("test"), Times.Once());
+            Assert.False(wasNextCalled);
         }
     }
 }

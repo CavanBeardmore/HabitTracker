@@ -27,6 +27,28 @@ namespace HabitTracker.Server.Tests.Controller
         }
 
         [Fact]
+        public void GetUser_ReturnsOkResult()
+        {
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);   
+            _mockUserService.Setup(service => service.Get(1234)).Returns(new User(1234, "test-username", "test-email", "test-password"));
+
+            var result = _controller.GetUser();
+
+            Assert.IsType<OkObjectResult>(result);
+        }
+        
+        [Fact]
+        public void GetUser_ThrowsAppException()
+        {
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);   
+            _mockUserService.Setup(service => service.Get(1234)).Returns((User)null);
+            
+            Assert.Throws<AppException>(() => _controller.GetUser());
+        }
+
+        [Fact]
         public void AddUser_ReturnsCreatedResult()
         {
             PostUser user = new PostUser("test1", "test2", "test3");
@@ -70,7 +92,7 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ControllerContext.HttpContext = new DefaultHttpContext();
             _controller.ControllerContext.HttpContext.Items.Add("userId", 1234);
 
-            _mockUserService.Setup(service => service.Update(1234, user)).Returns(Tuple.Create("test1233", new User(1234, "test1", "test2", "test3")));
+            _mockUserService.Setup(service => service.Update(1234, user)).Returns(new UpdatedUserResult("test1233", new User(1234, "test1", "test2", "test3")));
 
             var result = _controller.UpdateUser(user);
 
@@ -88,7 +110,7 @@ namespace HabitTracker.Server.Tests.Controller
             _controller.ModelState.Clear();
             _controller.ModelState.AddModelError("Username", "The Username field is required.");
 
-            _mockUserService.Setup(service => service.Update(1234, user)).Returns(Tuple.Create("test1233", new User(1234, "test1", "test2", "test3")));
+            _mockUserService.Setup(service => service.Update(1234, user)).Returns(new UpdatedUserResult("test1233", new User(1234, "test1", "test2", "test3")));
 
             Assert.Throws<BadRequestException>(() => _controller.UpdateUser(user));
         }

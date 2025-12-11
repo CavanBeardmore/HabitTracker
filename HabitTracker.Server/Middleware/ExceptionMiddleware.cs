@@ -30,42 +30,42 @@ namespace HabitTracker.Server.Middleware
             }
             catch (ForbiddenException ex)
             {
-                _logger.LogError("ExceptionMiddleware - InvokeAsync - FORBIDDEN");
+                _logger.LogError("ExceptionMiddleware - InvokeAsync - FORBIDDEN - {Message}", ex.Message);
                 await HandleExceptionAsync(context, HttpStatusCode.Forbidden, ex.Message);
             }
             catch (ConflictException ex)
             {
-                _logger.LogError("ExceptionMiddleware - InvokeAsync - CONFLICT");
+                _logger.LogError("ExceptionMiddleware - InvokeAsync - CONFLICT - {Message}", ex.Message);
                 await HandleExceptionAsync(context, HttpStatusCode.Conflict, ex.Message);
             }
             catch (BadRequestException ex)
             {
-                _logger.LogError("ExceptionMiddleware - InvokeAsync - BAD REQUEST");
+                _logger.LogError("ExceptionMiddleware - InvokeAsync - BAD REQUEST - {Message}", ex.Message);
                 await HandleExceptionAsync(context, HttpStatusCode.BadRequest, ex.Message);
             }
             catch (TooManyRequestsException ex)
             {
-                _logger.LogError("ExceptionMiddleware - InvokeAsync - TOO MANY REQUESTS");
+                _logger.LogError("ExceptionMiddleware - InvokeAsync - TOO MANY REQUESTS - {Message}", ex.Message);
                 await HandleExceptionAsync(context, HttpStatusCode.TooManyRequests, ex.Message);
             }
             catch (UnauthorizedException ex)
             {
-                _logger.LogError("ExceptionMiddleware - InvokeAsync - UNAUTHORIZED");
+                _logger.LogError("ExceptionMiddleware - InvokeAsync - UNAUTHORIZED - {Message}", ex.Message);
                 await HandleExceptionAsync(context, HttpStatusCode.Unauthorized, ex.Message);
             }
             catch (NotFoundException ex)
             {
-                _logger.LogError("ExceptionMiddleware - InvokeAsync - NOT FOUND");
+                _logger.LogError("ExceptionMiddleware - InvokeAsync - NOT FOUND - {Message}", ex.Message);
                 await HandleExceptionAsync(context, HttpStatusCode.NotFound, ex.Message);
             }
             catch (AppException ex)
             {
-                _logger.LogError("ExceptionMiddleware - InvokeAsync - APP EXCEPTION");
+                _logger.LogError("ExceptionMiddleware - InvokeAsync - APP EXCEPTION - {Message}", ex.Message);
                 await HandleExceptionAsync(context, HttpStatusCode.InternalServerError, ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError("ExceptionMiddleware - InvokeAsync - EXCEPTION");
+                _logger.LogError("ExceptionMiddleware - InvokeAsync - EXCEPTION - {Message}", ex.Message);
                 _logger.LogError(ex.Message);
                 await HandleExceptionAsync(context, HttpStatusCode.InternalServerError, "An error occurred");
             }
@@ -77,7 +77,8 @@ namespace HabitTracker.Server.Middleware
             context.Response.StatusCode = (int)statusCode;
 
             int? userId = GetUserId(context);
-
+            _logger.LogDebug("ExceptionMiddleware - HandleExceptionAsync - user id: {UserId}", userId);
+            _logger.LogDebug("ExceptionMiddleware - HandleExceptionAsync - is active: {Active}", _eventService.IsActiveForUser((int)userId));
             if (userId != null && _eventService.IsActiveForUser((int)userId))
             {
                 _logger.LogError("ExceptionMiddleware - HandleExceptionAsync - adding error event to event stream");
